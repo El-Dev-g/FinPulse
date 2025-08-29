@@ -29,10 +29,12 @@ const columns: TaskStatus[] = ["To Do", "In Progress", "Done"];
 
 function KanbanView({
   tasks,
+  goals,
   onDragEnd,
   onEdit,
 }: {
   tasks: FinancialTask[];
+  goals: Goal[];
   onDragEnd: (event: DragEndEvent) => void;
   onEdit: (task: FinancialTask) => void;
 }) {
@@ -44,6 +46,7 @@ function KanbanView({
             key={status}
             status={status}
             tasks={tasks.filter((task) => task.status === status)}
+            goals={goals}
             onEditTask={onEdit}
           />
         ))}
@@ -259,6 +262,7 @@ export default function OrganizerPage() {
             <TabsContent value="board" className="h-full">
                 <KanbanView
                 tasks={tasks}
+                goals={goals}
                 onDragEnd={handleDragEnd}
                 onEdit={setEditingTask}
                 />
