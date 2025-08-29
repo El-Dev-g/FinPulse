@@ -83,7 +83,7 @@ function DashboardSidebar() {
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild
-                isActive={pathname.startsWith(item.href)}
+                isActive={pathname.startsWith(item.href) && item.href !== "/dashboard" || pathname === "/dashboard" && item.href === "/dashboard"}
                 tooltip={{ children: item.label }}
                 onClick={handleLinkClick}
               >
@@ -104,7 +104,7 @@ function DashboardSidebar() {
               isActive={pathname === "/dashboard/settings"}
               tooltip={{ children: "Settings" }}
             >
-              <Link href="#">
+              <Link href="/dashboard/settings">
                 <Settings />
                 <span>Settings</span>
               </Link>
