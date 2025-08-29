@@ -10,6 +10,7 @@ import {
   Car,
   Home,
   Shirt,
+  Wallet,
 } from "lucide-react";
 
 export interface Transaction {
@@ -105,7 +106,7 @@ export const transactionsData: Transaction[] = [
     description: "The Cozy Diner",
     amount: -45.2,
     date: "2024-07-18",
-    category: "Dining",
+    category: "Dining Out",
     Icon: UtensilsCrossed,
   },
   {
@@ -119,7 +120,7 @@ export const transactionsData: Transaction[] = [
   {
     id: 'txn_6',
     description: 'Contribution to House Fund',
-    amount: 500,
+    amount: -500,
     date: '2024-07-15',
     category: 'Savings',
     Icon: ArrowRightLeft,
@@ -134,6 +135,30 @@ export const transactionsData: Transaction[] = [
     Icon: ArrowRightLeft,
     goalId: 'goal_2',
   },
+  {
+    id: 'txn_8',
+    description: 'Gas',
+    amount: -45.67,
+    date: '2024-07-23',
+    category: 'Transport',
+    Icon: Car,
+  },
+  {
+    id: 'txn_9',
+    description: 'Zara',
+    amount: -120.50,
+    date: '2024-07-21',
+    category: 'Shopping',
+    Icon: Shirt,
+  },
+  {
+    id: 'txn_10',
+    description: 'Rent',
+    amount: -1450,
+    date: '2024-07-01',
+    category: 'Housing',
+    Icon: Home,
+  }
 ];
 
 export const goalsData: Goal[] = [
@@ -158,13 +183,13 @@ export const goalsData: Goal[] = [
   },
 ];
 
-export const budgetsData: Budget[] = [
-    { id: 'budget_1', category: 'Groceries', limit: 800, spent: 450.75, Icon: ShoppingCart },
-    { id: 'budget_2', category: 'Dining Out', limit: 200, spent: 180.50, Icon: UtensilsCrossed },
-    { id: 'budget_3', category: 'Transport', limit: 150, spent: 95.00, Icon: Car },
-    { id: 'budget_4', category: 'Shopping', limit: 250, spent: 275.00, Icon: Shirt },
-    { id: 'budget_5', category: 'Housing', limit: 1500, spent: 1450.00, Icon: Home },
-    { id: 'budget_6', category: 'Entertainment', limit: 100, spent: 65.00, Icon: Film },
+export const budgetsData: Omit<Budget, 'spent'>[] = [
+    { id: 'budget_1', category: 'Groceries', limit: 800, Icon: ShoppingCart },
+    { id: 'budget_2', category: 'Dining Out', limit: 200, Icon: UtensilsCrossed },
+    { id: 'budget_3', category: 'Transport', limit: 150, Icon: Car },
+    { id: 'budget_4', category: 'Shopping', limit: 250, Icon: Shirt },
+    { id: 'budget_5', category: 'Housing', limit: 1500, Icon: Home },
+    { id: 'budget_6', category: 'Entertainment', limit: 100, Icon: Film },
 ];
 
 
@@ -183,8 +208,8 @@ export const categorySpendingData = [
   { name: "Transport", value: 210, fill: "hsl(var(--chart-3))" },
   { name: "Entertainment", value: 480, fill: "hsl(var(--chart-4))" },
   { name: "Health", value: 150, fill: "hsl(var(--chart-5))" },
-  { name: "Shopping", value: 275, fill: "hsl(var(--chart-1))" },
-  { name: "Housing", value: 1450, fill: "hsl(var(--chart-2))" },
+  { name_neg: "Shopping", value: 275, fill: "hsl(var(--chart-1))" },
+  { name_neg: "Housing", value: 1450, fill: "hsl(var(--chart-2))" },
   { name: "Other", value: 300, fill: "hsl(var(--muted))" },
 ];
 

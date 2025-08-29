@@ -1,9 +1,10 @@
 // src/app/dashboard/budgets/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   budgetsData as initialBudgetsData,
+  transactionsData,
 } from "@/lib/placeholder-data";
 import type { Budget } from "@/lib/placeholder-data";
 import { Button } from "@/components/ui/button";
@@ -34,18 +35,27 @@ const categoryIcons: { [key: string]: LucideIcon } = {
 
 
 export default function BudgetsPage() {
-  const [budgets, setBudgets] = useState<Budget[]>(initialBudgetsData);
+  const [budgets, setBudgets] = useState<Omit<Budget, 'spent'>[]>(initialBudgetsData);
   const [isAddBudgetDialogOpen, setIsAddBudgetDialogOpen] = useState(false);
   
   const handleAddBudget = (newBudget: Omit<Budget, "id" | "spent" | "Icon">) => {
-    const budgetWithId: Budget = {
+    const budgetWithId = {
       ...newBudget,
       id: `budget_${budgets.length + 1}`,
-      spent: 0,
       Icon: categoryIcons[newBudget.category] || Wallet,
     };
     setBudgets([...budgets, budgetWithId]);
   };
+
+  const processedBudgets = useMemo(() => {
+    // In a real app, you'd filter transactions by the current month
+    return budgets.map(budget => {
+      const spent = transactionsData
+        .filter(t => t.category === budget.category && t.amount < 0)
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+      return { ...budget, spent };
+    });
+  }, [budgets]);
   
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
@@ -67,7 +77,7 @@ export default function BudgetsPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {budgets.map((budget) => (
+          {processedBudgets.map((budget) => (
             <BudgetCard key={budget.id} budget={budget} />
           ))}
         </div>
