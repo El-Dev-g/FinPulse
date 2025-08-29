@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function SettingsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -65,7 +66,7 @@ export default function SettingsPage() {
 
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl mx-auto space-y-8">
         <div className="mb-8">
           <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
             <Settings className="h-8 w-8" />
@@ -115,6 +116,20 @@ export default function SettingsPage() {
               </Button>
             </CardFooter>
           </form>
+        </Card>
+        <Card>
+           <CardHeader>
+              <CardTitle>Appearance</CardTitle>
+              <CardDescription>
+                Customize the look and feel of your app.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="theme">Theme</Label>
+                <ThemeToggle />
+              </div>
+            </CardContent>
         </Card>
       </div>
     </main>
