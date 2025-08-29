@@ -11,12 +11,14 @@ import { Progress } from "@/components/ui/progress";
 import type { Budget } from "@/lib/placeholder-data";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
+import { MoveUpRight } from "lucide-react";
 
 interface BudgetCardProps {
   budget: Budget;
+  onSweep: () => void;
 }
 
-export function BudgetCard({ budget }: BudgetCardProps) {
+export function BudgetCard({ budget, onSweep }: BudgetCardProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -30,7 +32,7 @@ export function BudgetCard({ budget }: BudgetCardProps) {
   const isOverBudget = progress > 100;
 
   return (
-    <Card>
+    <Card className="flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
         <div className="flex items-center gap-3">
           <div className="bg-muted p-2 rounded-md">
@@ -39,7 +41,7 @@ export function BudgetCard({ budget }: BudgetCardProps) {
           <CardTitle className="text-xl">{budget.category}</CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 flex-grow">
         <div>
           <Progress value={Math.min(progress, 100)} className={cn(isOverBudget && "bg-destructive/20 [&>*]:bg-destructive")}/>
           <div className="flex justify-between text-sm mt-2">
@@ -50,12 +52,18 @@ export function BudgetCard({ budget }: BudgetCardProps) {
           </div>
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex justify-between items-center">
         <p className={cn("text-sm", isOverBudget ? "text-destructive font-semibold" : "text-muted-foreground")}>
           {isOverBudget 
             ? `${formatCurrency(Math.abs(remaining))} over budget` 
             : `${formatCurrency(remaining)} remaining`}
         </p>
+        {!isOverBudget && remaining > 0 && (
+          <Button variant="ghost" size="sm" onClick={onSweep}>
+            <MoveUpRight className="mr-2 h-4 w-4" />
+            Sweep to Goal
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
