@@ -166,3 +166,30 @@ export const budgetsData: Budget[] = [
     { id: 'budget_5', category: 'Housing', limit: 1500, spent: 1450.00, Icon: Home },
     { id: 'budget_6', category: 'Entertainment', limit: 100, spent: 65.00, Icon: Film },
 ];
+
+
+export const monthlyBreakdownData = [
+  { month: "Feb", income: 5100, expenses: 2400 },
+  { month: "Mar", income: 5200, expenses: 2500 },
+  { month: "Apr", income: 5300, expenses: 2600 },
+  { month: "May", income: 5400, expenses: 2550 },
+  { month: "Jun", income: 5500, expenses: 2700 },
+  { month: "Jul", income: 5231, expenses: 2510 },
+];
+
+export const categorySpendingData = [
+  { name: "Groceries", value: 650, fill: "hsl(var(--chart-1))" },
+  { name: "Dining Out", value: 320, fill: "hsl(var(--chart-2))" },
+  { name: "Transport", value: 210, fill: "hsl(var(--chart-3))" },
+  { name: "Entertainment", value: 480, fill: "hsl(var(--chart-4))" },
+  { name: "Health", value: 150, fill: "hsl(var(--chart-5))" },
+  { name: "Shopping", value: 275, fill: "hsl(var(--chart-1))" },
+  { name: "Housing", value: 1450, fill: "hsl(var(--chart-2))" },
+  { name: "Other", value: 300, fill: "hsl(var(--muted))" },
+];
+
+export const reportMetrics = {
+    avgIncome: 5288.50,
+    avgExpenses: 2543.33,
+    savingsRate: 51.9,
+}
