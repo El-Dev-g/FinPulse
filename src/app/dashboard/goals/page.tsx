@@ -22,7 +22,7 @@ import type { Goal } from "@/lib/types";
 import { addGoal, deleteGoal, getGoals, updateGoal } from "@/lib/db";
 import { processGoals } from "@/lib/utils";
 
-export default function GoalsPage() {
+function GoalsPageContent() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddGoalDialogOpen, setIsAddGoalDialogOpen] = useState(false);
@@ -42,13 +42,21 @@ export default function GoalsPage() {
       const goalId = searchParams.get('goalId');
       
       if (advice && goalId) {
-        const goalIndex = dbGoals.findIndex(g => g.id === goalId);
-        if (goalIndex !== -1) {
-          dbGoals[goalIndex].advice = decodeURIComponent(advice);
+        const goalExists = dbGoals.some(g => g.id === goalId);
+        if (goalExists) {
+          // Update the specific goal with the new advice in the database
           await updateGoal(goalId, { advice: decodeURIComponent(advice) });
+          // To avoid re-fetching, we can update the local state before setting it
+          const goalIndex = dbGoals.findIndex(g => g.id === goalId);
+          if (goalIndex !== -1) {
+             dbGoals[goalIndex].advice = decodeURIComponent(advice);
+          }
         }
-        // Remove query params after processing
-        router.replace('/dashboard/goals', {scroll: false});
+        // Remove query params after processing to avoid re-saving on refresh
+        const newParams = new URLSearchParams(searchParams.toString());
+        newParams.delete('advice');
+        newParams.delete('goalId');
+        router.replace(`/dashboard/goals?${newParams.toString()}`, {scroll: false});
       }
       
       const processed = processGoals(dbGoals as any[]);
@@ -179,4 +187,13 @@ export default function GoalsPage() {
       />
     </main>
   );
+}
+
+
+export default function GoalsPage() {
+  return (
+    <React.Suspense fallback={<div className="flex h-full w-full items-center justify-center"><Loader className="animate-spin" /></div>}>
+      <GoalsPageContent />
+    </React.Suspense>
+  )
 }
