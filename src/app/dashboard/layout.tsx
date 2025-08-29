@@ -12,6 +12,7 @@ import {
   PanelLeft,
   LogOut,
   Loader,
+  Calculator,
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,6 +43,7 @@ const navItems = [
   },
   { href: "/dashboard/goals", icon: Target, label: "Goals" },
   { href: "/dashboard/ai-advisor", icon: Bot, label: "AI Advisor" },
+  { href: "/dashboard/calculator", icon: Calculator, label: "Calculator" },
 ];
 
 function DashboardSidebar() {
