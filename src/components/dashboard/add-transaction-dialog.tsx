@@ -1,7 +1,7 @@
 // src/components/dashboard/add-transaction-dialog.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader } from "lucide-react";
+import { Loader, Sparkles } from "lucide-react";
 import type { Transaction } from "@/lib/placeholder-data";
 import {
   Select,
@@ -23,6 +23,8 @@ import {
   SelectValue,
 } from "../ui/select";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { categorizeTransactionAction } from "@/lib/actions";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface AddTransactionDialogProps {
   isOpen: boolean;
@@ -44,6 +46,48 @@ export function AddTransactionDialog({
   const [type, setType] = useState<"expense" | "income">("expense");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isCategorizing, setIsCategorizing] = useState(false);
+
+  const debouncedDescription = useDebounce(description, 500);
+
+  const getCategorySuggestion = useCallback(async (description: string) => {
+    if (description.length < 5 || type !== 'expense') return;
+
+    setIsCategorizing(true);
+    try {
+      const result = await categorizeTransactionAction({ description, categories });
+      if (result.success && result.category && categories.includes(result.category)) {
+        setCategory(result.category);
+      }
+    } catch (error) {
+      console.error("Failed to get category suggestion:", error);
+    } finally {
+      setIsCategorizing(false);
+    }
+  }, [categories, type]);
+
+  useEffect(() => {
+    if (debouncedDescription) {
+      getCategorySuggestion(debouncedDescription);
+    }
+  }, [debouncedDescription, getCategorySuggestion]);
+  
+  const resetForm = useCallback(() => {
+    setDescription("");
+    setAmount("");
+    setCategory("");
+    setDate(new Date().toISOString().split("T")[0]);
+    setType("expense");
+    setError(null);
+    setLoading(false);
+    setIsCategorizing(false);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      resetForm();
+    }
+  }, [isOpen, resetForm]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,12 +116,6 @@ export function AddTransactionDialog({
       });
       setLoading(false);
       onOpenChange(false);
-      // Reset form
-      setDescription("");
-      setAmount("");
-      setCategory("");
-      setDate(new Date().toISOString().split("T")[0]);
-      setType("expense");
     }, 500);
   };
 
@@ -95,7 +133,15 @@ export function AddTransactionDialog({
             <RadioGroup
               defaultValue="expense"
               value={type}
-              onValueChange={(value) => setType(value as "expense" | "income")}
+              onValueChange={(value) => {
+                const newType = value as "expense" | "income";
+                setType(newType);
+                if (newType === 'income') {
+                  setCategory('Income');
+                } else {
+                  setCategory('');
+                }
+              }}
               className="flex"
             >
               <div className="flex items-center space-x-2">
@@ -131,7 +177,14 @@ export function AddTransactionDialog({
 
             {type === "expense" && (
               <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="category">Category</Label>
+                   {isCategorizing && (
+                     <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Sparkles className="h-3 w-3 animate-pulse" /> AI Suggesting...
+                     </span>
+                   )}
+                </div>
                 <Select value={category} onValueChange={setCategory}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
