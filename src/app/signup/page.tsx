@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   createUserWithEmailAndPassword,
+  sendEmailVerification,
   signInWithPopup,
   GoogleAuthProvider,
   updateProfile,
@@ -57,8 +58,9 @@ export default function SignUpPage() {
         await updateProfile(userCredential.user, {
           displayName: displayName,
         });
+        await sendEmailVerification(userCredential.user);
       }
-      router.push("/welcome/onboarding");
+      router.push("/verify-email");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -72,6 +74,7 @@ export default function SignUpPage() {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
+      // Google-signed-in users are considered verified
       router.push("/welcome/onboarding");
     } catch (err: any) {
       setError(err.message);

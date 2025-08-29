@@ -22,7 +22,8 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
 });
 
-const AUTH_PAGES = ["/signin", "/signup", "/forgot-password", "/welcome/onboarding"];
+const AUTH_PAGES = ["/signin", "/signup", "/forgot-password", "/welcome/onboarding", "/verify-email"];
+const PUBLIC_PAGES = ["/", ...AUTH_PAGES];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -42,14 +43,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (loading) return;
 
-    const isAuthPage = AUTH_PAGES.includes(pathname);
-    const isLandingPage = pathname === "/";
+    const isPublicPage = PUBLIC_PAGES.includes(pathname);
 
-    if (!user && !isAuthPage && !isLandingPage) {
+    if (!user && !isPublicPage) {
       router.push("/signin");
-    } else if (user && (isAuthPage || isLandingPage) && pathname !== '/welcome/onboarding') {
-      router.push("/dashboard");
+      return;
     }
+
+    if (user) {
+      const isEmailVerified = user.emailVerified || user.providerData.some(p => p.providerId !== 'password');
+      if (!isEmailVerified && pathname !== '/verify-email') {
+        router.push('/verify-email');
+        return;
+      }
+      
+      if (isEmailVerified && (pathname === '/verify-email' || pathname === '/welcome/onboarding' || pathname === '/signin' || pathname === '/signup' || pathname === '/forgot-password' || pathname === '/')) {
+         router.push("/dashboard");
+         return;
+      }
+    }
+
+
   }, [user, loading, pathname, router]);
 
   return (
