@@ -5,9 +5,10 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card } from "@/components/ui/card";
 import { FinancialTask, Goal } from "@/lib/types";
-import { GripVertical, Pencil, Target } from "lucide-react";
+import { GripVertical, Pencil, Target, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
+import { isPast, startOfToday } from 'date-fns';
 
 interface TaskCardProps {
   task: FinancialTask;
@@ -31,14 +32,16 @@ export function TaskCard({ task, goal, onEdit }: TaskCardProps) {
     zIndex: isDragging ? 10 : "auto",
     opacity: isDragging ? 0.7 : 1,
   };
-
+  
+  const isOverdue = task.dueDate && isPast(new Date(task.dueDate)) && task.status !== 'Done';
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
       <Card
         className={cn(
-          "p-4 group relative",
-          isDragging && "shadow-lg"
+          "p-4 group relative transition-colors",
+          isDragging && "shadow-lg",
+          isOverdue && "border-destructive/50 bg-destructive/5 hover:border-destructive"
         )}
       >
         <div
@@ -56,12 +59,18 @@ export function TaskCard({ task, goal, onEdit }: TaskCardProps) {
         >
           <Pencil className="h-4 w-4" />
         </Button>
+        
+        {isOverdue && (
+           <div className="absolute top-2 right-8 text-destructive/80" title="This task is overdue.">
+              <TriangleAlert className="h-4 w-4" />
+            </div>
+        )}
 
         <p className="font-medium pr-8">{task.title}</p>
         
         <div className="flex flex-wrap gap-x-4 gap-y-1 items-center mt-1">
             {task.dueDate && (
-            <p className="text-xs text-muted-foreground">
+            <p className={cn("text-xs text-muted-foreground", isOverdue && "font-semibold text-destructive")}>
                 Due: {new Date(task.dueDate + "T00:00:00").toLocaleDateString(undefined, {
                 month: 'long',
                 day: 'numeric',
