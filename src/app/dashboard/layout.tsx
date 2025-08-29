@@ -1,3 +1,4 @@
+// src/app/dashboard/layout.tsx
 "use client";
 
 import Link from "next/link";
@@ -29,15 +30,25 @@ import { Separator } from "@/components/ui/separator";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/dashboard/transactions", icon: ArrowRightLeft, label: "Transactions" },
+  {
+    href: "/dashboard/transactions",
+    icon: ArrowRightLeft,
+    label: "Transactions",
+  },
   { href: "/dashboard/goals", icon: Target, label: "Goals" },
   { href: "/dashboard/ai-advisor", icon: Bot, label: "AI Advisor" },
 ];
 
 function DashboardSidebar() {
   const pathname = usePathname();
-  const { open, setOpen } = useSidebar();
+  const { open, setOpen, isMobile, setOpenMobile } = useSidebar();
   const isCollapsed = !open;
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <Sidebar
@@ -51,15 +62,16 @@ function DashboardSidebar() {
       </SidebarHeader>
 
       <Separator className="mx-4 mb-2 bg-border/80" />
-      
+
       <SidebarContent className="p-4">
         <SidebarMenu>
           {navItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === item.href}
+                isActive={pathname.startsWith(item.href)}
                 tooltip={{ children: item.label }}
+                onClick={handleLinkClick}
               >
                 <Link href={item.href}>
                   <item.icon />
@@ -85,17 +97,23 @@ function DashboardSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-             <div className="flex items-center gap-3 w-full mt-4">
-                <Avatar className="h-9 w-9">
-                    <AvatarImage src="https://picsum.photos/100" alt="User" data-ai-hint="person avatar"/>
-                    <AvatarFallback>U</AvatarFallback>
-                </Avatar>
-                {!isCollapsed && (
-                    <div className="flex flex-col">
-                        <span className="text-sm font-semibold">User</span>
-                        <span className="text-xs text-muted-foreground">user@finpulse.com</span>
-                    </div>
-                )}
+            <div className="flex items-center gap-3 w-full mt-4">
+              <Avatar className="h-9 w-9">
+                <AvatarImage
+                  src="https://picsum.photos/100"
+                  alt="User"
+                  data-ai-hint="person avatar"
+                />
+                <AvatarFallback>U</AvatarFallback>
+              </Avatar>
+              {!isCollapsed && (
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold">User</span>
+                  <span className="text-xs text-muted-foreground">
+                    user@finpulse.com
+                  </span>
+                </div>
+              )}
             </div>
           </SidebarMenuItem>
         </SidebarMenu>
