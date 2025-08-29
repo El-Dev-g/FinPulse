@@ -22,6 +22,8 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
 });
 
+const AUTH_PAGES = ["/signin", "/signup", "/forgot-password"];
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (loading) return;
 
-    const isAuthPage = pathname === "/signin" || pathname === "/signup";
+    const isAuthPage = AUTH_PAGES.includes(pathname);
     const isLandingPage = pathname === "/";
 
     if (!user && !isAuthPage && !isLandingPage) {
