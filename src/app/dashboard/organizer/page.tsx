@@ -16,16 +16,24 @@ import {
   type TaskStatus,
 } from "@/lib/placeholder-data";
 import { AddTaskDialog } from "@/components/dashboard/add-task-dialog";
+import { EditTaskDialog } from "@/components/dashboard/edit-task-dialog";
 import { TaskColumn } from "@/components/dashboard/task-column";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 
 const columns: TaskStatus[] = ["To Do", "In Progress", "Done"];
 
-function KanbanView({ tasks, onDragEnd }: { tasks: FinancialTask[], onDragEnd: (event: DragEndEvent) => void }) {
+function KanbanView({
+  tasks,
+  onDragEnd,
+  onEdit,
+}: {
+  tasks: FinancialTask[];
+  onDragEnd: (event: DragEndEvent) => void;
+  onEdit: (task: FinancialTask) => void;
+}) {
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow w-full">
@@ -34,6 +42,7 @@ function KanbanView({ tasks, onDragEnd }: { tasks: FinancialTask[], onDragEnd: (
             key={status}
             status={status}
             tasks={tasks.filter((task) => task.status === status)}
+            onEditTask={onEdit}
           />
         ))}
       </div>
@@ -42,86 +51,101 @@ function KanbanView({ tasks, onDragEnd }: { tasks: FinancialTask[], onDragEnd: (
 }
 
 function CalendarView({ tasks }: { tasks: FinancialTask[] }) {
-    const [date, setDate] = useState<Date | undefined>(new Date());
+  const [date, setDate] = useState<Date | undefined>(new Date());
 
-    const tasksByDate = useMemo(() => {
-        const groupedTasks: { [key: string]: FinancialTask[] } = {};
-        tasks.forEach(task => {
-            if (task.dueDate) {
-                const dateKey = task.dueDate;
-                if (!groupedTasks[dateKey]) {
-                    groupedTasks[dateKey] = [];
-                }
-                groupedTasks[dateKey].push(task);
-            }
-        });
-        return groupedTasks;
-    }, [tasks]);
-
-    const selectedDayTasks = date ? tasksByDate[date.toISOString().split('T')[0]] || [] : [];
-    
-    const getStatusBadgeVariant = (status: TaskStatus) => {
-        switch (status) {
-            case 'To Do': return 'secondary';
-            case 'In Progress': return 'default';
-            case 'Done': return 'outline';
-            default: return 'secondary';
+  const tasksByDate = useMemo(() => {
+    const groupedTasks: { [key: string]: FinancialTask[] } = {};
+    tasks.forEach((task) => {
+      if (task.dueDate) {
+        const dateKey = task.dueDate;
+        if (!groupedTasks[dateKey]) {
+          groupedTasks[dateKey] = [];
         }
-    };
+        groupedTasks[dateKey].push(task);
+      }
+    });
+    return groupedTasks;
+  }, [tasks]);
 
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow w-full">
-            <div className="md:col-span-2">
-                 <Card>
-                    <CardContent className="p-2">
-                        <CalendarComponent
-                            mode="single"
-                            selected={date}
-                            onSelect={setDate}
-                            className="rounded-md"
-                            modifiers={{
-                                due: Object.keys(tasksByDate).map(d => new Date(d + 'T00:00:00'))
-                            }}
-                            modifiersStyles={{
-                                due: {
-                                    fontWeight: 'bold',
-                                    textDecoration: 'underline',
-                                    textDecorationColor: 'hsl(var(--primary))',
-                                }
-                            }}
-                        />
-                    </CardContent>
-                </Card>
-            </div>
-            <div>
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>
-                           Tasks for {date ? date.toLocaleDateString() : 'selected date'}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        {selectedDayTasks.length > 0 ? (
-                            selectedDayTasks.map(task => (
-                                <div key={task.id} className="p-3 rounded-md border bg-card-foreground/5">
-                                    <p className="font-semibold">{task.title}</p>
-                                    <Badge variant={getStatusBadgeVariant(task.status)} className="mt-1">
-                                        {task.status}
-                                    </Badge>
-                                </div>
-                            ))
-                        ) : (
-                            <p className="text-muted-foreground text-sm">No tasks due on this day.</p>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
-    );
+  const selectedDayTasks = date
+    ? tasksByDate[date.toISOString().split("T")[0]] || []
+    : [];
+
+  const getStatusBadgeVariant = (status: TaskStatus) => {
+    switch (status) {
+      case "To Do":
+        return "secondary";
+      case "In Progress":
+        return "default";
+      case "Done":
+        return "outline";
+      default:
+        return "secondary";
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow w-full">
+      <div className="md:col-span-2">
+        <Card>
+          <CardContent className="p-2">
+            <CalendarComponent
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              className="rounded-md"
+              modifiers={{
+                due: Object.keys(tasksByDate).map((d) => new Date(d + "T00:00:00")),
+              }}
+              modifiersStyles={{
+                due: {
+                  fontWeight: "bold",
+                  textDecoration: "underline",
+                  textDecorationColor: "hsl(var(--primary))",
+                },
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+      <div>
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Tasks for {date ? date.toLocaleDateString() : "selected date"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {selectedDayTasks.length > 0 ? (
+              selectedDayTasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="p-3 rounded-md border bg-card-foreground/5"
+                >
+                  <p className="font-semibold">{task.title}</p>
+                  <Badge
+                    variant={getStatusBadgeVariant(task.status)}
+                    className="mt-1"
+                  >
+                    {task.status}
+                  </Badge>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                No tasks due on this day.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
 }
 
 export default function OrganizerPage() {
   const [tasks, setTasks] = useState<FinancialTask[]>(initialTasks);
+  const [editingTask, setEditingTask] = useState<FinancialTask | null>(null);
   const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("board");
 
@@ -133,6 +157,11 @@ export default function OrganizerPage() {
     };
     setTasks((prev) => [...prev, taskWithId]);
   };
+  
+  const handleEditTask = (updatedTask: FinancialTask) => {
+    setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
+  };
+
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -147,13 +176,16 @@ export default function OrganizerPage() {
     setTasks((tasks) => {
       const activeTask = tasks.find((t) => t.id === activeId);
       const overTask = tasks.find((t) => t.id === overId);
-      const overColumn = over.data.current?.sortable?.containerId as TaskStatus | undefined;
-      
+      const overColumn = over.data.current?.sortable
+        ?.containerId as TaskStatus | undefined;
+
       // If dropping over a column (but not on an item)
       if (overColumn && activeTask && activeTask.status !== overColumn) {
-        return tasks.map(t => t.id === activeId ? {...t, status: overColumn} : t);
+        return tasks.map((t) =>
+          t.id === activeId ? { ...t, status: overColumn } : t
+        );
       }
-      
+
       // If dropping over another task
       if (activeTask && overTask) {
         const oldIndex = tasks.findIndex((t) => t.id === activeId);
@@ -161,10 +193,10 @@ export default function OrganizerPage() {
         const newStatus = overTask.status;
 
         if (activeTask.status !== newStatus) {
-            const updatedTask = {...activeTask, status: newStatus};
-            const remainingTasks = tasks.filter(t => t.id !== activeId);
-            remainingTasks.splice(newIndex, 0, updatedTask);
-            return remainingTasks;
+          const updatedTask = { ...activeTask, status: newStatus };
+          const remainingTasks = tasks.filter((t) => t.id !== activeId);
+          remainingTasks.splice(newIndex, 0, updatedTask);
+          return remainingTasks;
         }
         return arrayMove(tasks, oldIndex, newIndex);
       }
@@ -196,16 +228,20 @@ export default function OrganizerPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="board">
-                <LayoutGrid className="mr-2" />
-                Board
+              <LayoutGrid className="mr-2" />
+              Board
             </TabsTrigger>
             <TabsTrigger value="calendar">
-                <Calendar className="mr-2" />
-                Calendar
+              <Calendar className="mr-2" />
+              Calendar
             </TabsTrigger>
           </TabsList>
           <TabsContent value="board" className="h-full">
-            <KanbanView tasks={tasks} onDragEnd={handleDragEnd} />
+            <KanbanView
+              tasks={tasks}
+              onDragEnd={handleDragEnd}
+              onEdit={setEditingTask}
+            />
           </TabsContent>
           <TabsContent value="calendar" className="h-full">
             <CalendarView tasks={tasks} />
@@ -216,6 +252,12 @@ export default function OrganizerPage() {
         isOpen={isAddTaskDialogOpen}
         onOpenChange={setIsAddTaskDialogOpen}
         onAddTask={handleAddTask}
+      />
+      <EditTaskDialog
+        task={editingTask}
+        isOpen={!!editingTask}
+        onOpenChange={(isOpen) => !isOpen && setEditingTask(null)}
+        onEditTask={handleEditTask}
       />
     </main>
   );
