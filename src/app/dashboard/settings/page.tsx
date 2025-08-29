@@ -1,10 +1,11 @@
 // src/app/dashboard/settings/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { updateProfile, deleteUser } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, storage } from "@/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, Settings, Trash } from "lucide-react";
+import { Loader, Settings, Trash, Upload, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
@@ -30,19 +31,24 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function SettingsPage() {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [displayName, setDisplayName] = useState("");
+  const [photoURL, setPhotoURL] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (user?.displayName) {
-      setDisplayName(user.displayName);
+    if (user) {
+      setDisplayName(user.displayName || "");
+      setPhotoURL(user.photoURL || "");
     }
   }, [user]);
 
@@ -65,6 +71,34 @@ export default function SettingsPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0] && user) {
+      const file = e.target.files[0];
+      setIsUploading(true);
+      try {
+        const storageRef = ref(storage, `profile-pictures/${user.uid}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+
+        await updateProfile(user, { photoURL: downloadURL });
+        setPhotoURL(downloadURL); // Update local state to re-render avatar
+        
+        toast({
+          title: "Success",
+          description: "Profile picture updated.",
+        });
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to upload image. Please try again.",
+        });
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -121,7 +155,23 @@ export default function SettingsPage() {
                   This information will be displayed on your profile.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
+                <div className="flex items-center gap-4">
+                    <Avatar className="h-20 w-20">
+                        <AvatarImage src={photoURL} alt={user?.displayName || "User"} data-ai-hint="person avatar" />
+                        <AvatarFallback>
+                            {user?.displayName?.[0].toUpperCase() || <User />}
+                        </AvatarFallback>
+                    </Avatar>
+                    <div>
+                        <Button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                            {isUploading ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                            Upload Image
+                        </Button>
+                        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/png, image/jpeg, image/gif" />
+                        <p className="text-xs text-muted-foreground mt-2">PNG, JPG, GIF up to 2MB.</p>
+                    </div>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="displayName">Username</Label>
                   <Input
