@@ -161,6 +161,10 @@ export default function OrganizerPage() {
   const handleEditTask = (updatedTask: FinancialTask) => {
     setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
   };
+  
+  const handleDeleteTask = (taskId: string) => {
+    setTasks(tasks.filter(t => t.id !== taskId));
+  };
 
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -258,6 +262,7 @@ export default function OrganizerPage() {
         isOpen={!!editingTask}
         onOpenChange={(isOpen) => !isOpen && setEditingTask(null)}
         onEditTask={handleEditTask}
+        onDeleteTask={handleDeleteTask}
       />
     </main>
   );
