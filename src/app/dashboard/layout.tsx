@@ -16,6 +16,7 @@ import {
   Wallet,
   PieChart,
   ClipboardList,
+  Repeat,
 } from "lucide-react";
 import {
   Sidebar,
@@ -44,6 +45,7 @@ const navItems = [
     icon: ArrowRightLeft,
     label: "Transactions",
   },
+  { href: "/dashboard/recurring", icon: Repeat, label: "Recurring" },
   { href: "/dashboard/goals", icon: Target, label: "Goals" },
   { href: "/dashboard/budgets", icon: Wallet, label: "Budgets" },
   { href: "/dashboard/reports", icon: PieChart, label: "Reports" },

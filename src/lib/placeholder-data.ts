@@ -11,6 +11,7 @@ import {
   Shirt,
   Wallet,
   ClipboardList,
+  Repeat,
 } from "lucide-react";
 
 export interface Transaction {
@@ -47,6 +48,18 @@ export interface Goal {
   current: number;
   target: number;
   advice?: string;
+}
+
+export type RecurringFrequency = 'weekly' | 'monthly' | 'yearly';
+
+export interface RecurringTransaction {
+  id: string;
+  description: string;
+  amount: number;
+  category: string;
+  frequency: RecurringFrequency;
+  startDate: string;
+  Icon: LucideIcon;
 }
 
 
@@ -212,26 +225,6 @@ export const budgetsData: Omit<Budget, 'spent'>[] = [
 ];
 
 
-export const monthlyBreakdownData = [
-  { month: "Feb", income: 5100, expenses: 2400 },
-  { month: "Mar", income: 5200, expenses: 2500 },
-  { month: "Apr", income: 5300, expenses: 2600 },
-  { month: "May", income: 5400, expenses: 2550 },
-  { month: "Jun", income: 5500, expenses: 2700 },
-  { month: "Jul", income: 5231, expenses: 2510 },
-];
-
-export const categorySpendingData = [
-  { name: "Groceries", value: 650, fill: "hsl(var(--chart-1))" },
-  { name: "Dining Out", value: 320, fill: "hsl(var(--chart-2))" },
-  { name: "Transport", value: 210, fill: "hsl(var(--chart-3))" },
-  { name: "Entertainment", value: 480, fill: "hsl(var(--chart-4))" },
-  { name: "Health", value: 150, fill: "hsl(var(--chart-5))" },
-  { name_neg: "Shopping", value: 275, fill: "hsl(var(--chart-1))" },
-  { name_neg: "Housing", value: 1450, fill: "hsl(var(--chart-2))" },
-  { name: "Other", value: 300, fill: "hsl(var(--muted))" },
-];
-
 export const reportMetrics = {
     avgIncome: 5288.50,
     avgExpenses: 2543.33,
@@ -245,4 +238,34 @@ export const tasksData: FinancialTask[] = [
     { id: 'task-4', title: 'File tax documents', status: 'Done' },
     { id: 'task-5', title: 'Research high-yield savings accounts', status: 'In Progress', goalId: 'goal_1' },
     { id: 'task-6', title: 'Book flights', status: 'To Do', dueDate: '2024-09-01', goalId: 'goal_2' },
+];
+
+export const recurringTransactionsData: RecurringTransaction[] = [
+    {
+        id: 'recur_1',
+        description: 'Monthly Salary',
+        amount: 3500.0,
+        category: 'Income',
+        frequency: 'monthly',
+        startDate: '2024-07-20',
+        Icon: ArrowRightLeft,
+    },
+    {
+        id: 'recur_2',
+        description: 'Netflix Subscription',
+        amount: -15.99,
+        category: 'Entertainment',
+        frequency: 'monthly',
+        startDate: '2024-07-19',
+        Icon: Film,
+    },
+    {
+        id: 'recur_3',
+        description: 'Rent',
+        amount: -1450,
+        category: 'Housing',
+        frequency: 'monthly',
+        startDate: '2024-07-01',
+        Icon: Home,
+    },
 ];
