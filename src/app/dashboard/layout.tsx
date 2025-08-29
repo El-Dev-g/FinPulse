@@ -37,13 +37,15 @@ const navItems = [
 
 function DashboardSidebar() {
   const pathname = usePathname();
-  const { state } = useSidebar();
-  const isCollapsed = state === "collapsed";
+  const { open, setOpen } = useSidebar();
+  const isCollapsed = !open;
 
   return (
     <Sidebar
       collapsible="icon"
       className="border-r border-border/80"
+      open={open}
+      onOpenChange={setOpen}
     >
       <SidebarHeader className="p-4">
         <Logo isCollapsed={isCollapsed} />
@@ -109,7 +111,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen">
         <DashboardSidebar />
         <SidebarInset className="bg-background flex-1">
