@@ -11,6 +11,7 @@ import {
   Home,
   Shirt,
   Wallet,
+  ClipboardList,
 } from "lucide-react";
 
 export interface Transaction {
@@ -30,6 +31,16 @@ export interface Budget {
     spent: number;
     Icon: LucideIcon;
 }
+
+export type TaskStatus = 'To Do' | 'In Progress' | 'Done';
+
+export interface FinancialTask {
+  id: string;
+  title: string;
+  status: TaskStatus;
+  dueDate?: string;
+}
+
 
 export const overviewData = {
   income: 5231.89,
@@ -217,4 +228,12 @@ export const reportMetrics = {
     avgIncome: 5288.50,
     avgExpenses: 2543.33,
     savingsRate: 51.9,
-}
+};
+
+export const tasksData: FinancialTask[] = [
+    { id: 'task-1', title: 'Pay credit card bill', status: 'To Do', dueDate: '2024-08-25' },
+    { id: 'task-2', title: 'Review monthly budget', status: 'In Progress' },
+    { id: 'task-3', title: 'Call insurance company about renewal', status: 'To Do', dueDate: '2024-08-20' },
+    { id: 'task-4', title: 'File tax documents', status: 'Done' },
+    { id: 'task-5', title: 'Research high-yield savings accounts', status: 'In Progress' },
+];

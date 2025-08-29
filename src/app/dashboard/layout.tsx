@@ -15,6 +15,7 @@ import {
   Calculator,
   Wallet,
   PieChart,
+  ClipboardList,
 } from "lucide-react";
 import {
   Sidebar,
@@ -46,6 +47,7 @@ const navItems = [
   { href: "/dashboard/goals", icon: Target, label: "Goals" },
   { href: "/dashboard/budgets", icon: Wallet, label: "Budgets" },
   { href: "/dashboard/reports", icon: PieChart, label: "Reports" },
+  { href: "/dashboard/organizer", icon: ClipboardList, label: "Organizer" },
   { href: "/dashboard/ai-advisor", icon: Bot, label: "AI Advisor" },
   { href: "/dashboard/calculator", icon: Calculator, label: "Calculator" },
 ];
