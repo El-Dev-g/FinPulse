@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader, Sparkles } from "lucide-react";
-import type { Transaction } from "@/lib/types";
+import type { Transaction, Category } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -25,20 +25,21 @@ import {
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { categorizeTransactionAction } from "@/lib/actions";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useAuth } from "@/hooks/use-auth";
+import { getCategories } from "@/lib/db";
 
 interface AddTransactionDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onAddTransaction: (newTransaction: Omit<Transaction, "id" | "Icon" | "createdAt">) => Promise<void>;
-  categories: string[];
 }
 
 export function AddTransactionDialog({
   isOpen,
   onOpenChange,
   onAddTransaction,
-  categories,
 }: AddTransactionDialogProps) {
+  const { user } = useAuth();
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
@@ -47,16 +48,28 @@ export function AddTransactionDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isCategorizing, setIsCategorizing] = useState(false);
+  const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
 
   const debouncedDescription = useDebounce(description, 500);
 
+  useEffect(() => {
+    async function fetchCategories() {
+      if (user) {
+        const allCategories = (await getCategories()) as Category[];
+        setAvailableCategories(allCategories.filter(c => c.name !== 'Income'));
+      }
+    }
+    fetchCategories();
+  }, [user]);
+
   const getCategorySuggestion = useCallback(async (description: string) => {
-    if (description.length < 5 || type !== 'expense') return;
+    const categoryNames = availableCategories.map(c => c.name);
+    if (description.length < 5 || type !== 'expense' || categoryNames.length === 0) return;
 
     setIsCategorizing(true);
     try {
-      const result = await categorizeTransactionAction({ description, categories });
-      if (result.success && result.category && categories.includes(result.category)) {
+      const result = await categorizeTransactionAction({ description, categories: categoryNames });
+      if (result.success && result.category && categoryNames.includes(result.category)) {
         setCategory(result.category);
       }
     } catch (error) {
@@ -64,7 +77,7 @@ export function AddTransactionDialog({
     } finally {
       setIsCategorizing(false);
     }
-  }, [categories, type]);
+  }, [availableCategories, type]);
 
   useEffect(() => {
     if (debouncedDescription) {
@@ -192,9 +205,9 @@ export function AddTransactionDialog({
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
+                    {availableCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

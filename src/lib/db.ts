@@ -1,7 +1,7 @@
 // src/lib/db.ts
 import { db } from './firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy } from 'firebase/firestore';
-import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction } from './types';
+import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category } from './types';
 import { auth } from './firebase';
 
 const getUid = () => {
@@ -76,3 +76,17 @@ export const deleteTask = (id: string) => deleteDataItem('tasks', id);
 // --- Recurring Transactions ---
 export const addRecurringTransaction = (transaction: Omit<RecurringTransaction, 'id' | 'Icon'>) => addDataItem<Omit<RecurringTransaction, 'id' | 'Icon'>>('recurring', transaction);
 export const getRecurringTransactions = () => getData<RecurringTransaction>('recurring');
+
+// --- Categories ---
+export const addCategory = async (category: Omit<Category, 'id' | 'createdAt'>): Promise<string> => {
+    const uid = getUid();
+    // Check if category already exists
+    const q = query(collection(db, `users/${uid}/categories`), where("name", "==", category.name));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+        throw new Error("Category already exists.");
+    }
+    return addDataItem<Omit<Category, 'id'>>('categories', category);
+};
+export const getCategories = () => getData<Category>('categories');
+export const deleteCategory = (id: string) => deleteDataItem('categories', id);

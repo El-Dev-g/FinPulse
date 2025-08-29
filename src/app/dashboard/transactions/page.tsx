@@ -232,7 +232,6 @@ export default function TransactionsPage() {
         isOpen={isAddTransactionDialogOpen}
         onOpenChange={setIsAddTransactionDialogOpen}
         onAddTransaction={handleAddTransaction}
-        categories={categories.filter((c) => c !== "all" && c !== "Income")}
       />
     </main>
   );

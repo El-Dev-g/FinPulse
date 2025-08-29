@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
-import type { RecurringTransaction, RecurringFrequency } from "@/lib/types";
+import type { RecurringTransaction, RecurringFrequency, Category } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -23,20 +23,21 @@ import {
   SelectValue,
 } from "../ui/select";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { getCategories } from "@/lib/db";
+import { useAuth } from "@/hooks/use-auth";
 
 interface AddRecurringTransactionDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onAddTransaction: (newTransaction: Omit<RecurringTransaction, "id" | "Icon" | "createdAt">) => Promise<void>;
-  categories: string[];
 }
 
 export function AddRecurringTransactionDialog({
   isOpen,
   onOpenChange,
   onAddTransaction,
-  categories,
 }: AddRecurringTransactionDialogProps) {
+  const { user } = useAuth();
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
@@ -45,7 +46,18 @@ export function AddRecurringTransactionDialog({
   const [type, setType] = useState<"expense" | "income">("expense");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
   
+  useEffect(() => {
+    async function fetchCategories() {
+      if (user) {
+        const dbCategories = (await getCategories()) as Category[];
+        setAllCategories(dbCategories.filter(c => c.name !== 'Income'));
+      }
+    }
+    fetchCategories();
+  }, [user]);
+
   const resetForm = useCallback(() => {
     setDescription("");
     setAmount("");
@@ -160,9 +172,9 @@ export function AddRecurringTransactionDialog({
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
+                    {allCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

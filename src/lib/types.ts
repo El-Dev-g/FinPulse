@@ -77,6 +77,12 @@ export interface ClientRecurringTransaction extends Omit<RecurringTransaction, '
     createdAt: Date;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  createdAt: any; // Firestore timestamp
+}
+
 
 export const spendingChartConfig = {
   amount: {

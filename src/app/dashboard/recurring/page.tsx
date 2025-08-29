@@ -22,15 +22,14 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Plus, Repeat, ArrowRightLeft, Loader } from "lucide-react";
 import { AddRecurringTransactionDialog } from "@/components/dashboard/add-recurring-transaction-dialog";
-import type { RecurringTransaction, ClientRecurringTransaction, Transaction } from "@/lib/types";
+import type { RecurringTransaction, ClientRecurringTransaction } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
-import { addRecurringTransaction, getRecurringTransactions, getTransactions } from "@/lib/db";
+import { addRecurringTransaction, getRecurringTransactions } from "@/lib/db";
 import { processRecurringTransactions, getIconForCategory } from "@/lib/utils";
 
 export default function RecurringPage() {
   const { user } = useAuth();
   const [recurring, setRecurring] = useState<ClientRecurringTransaction[]>([]);
-  const [allCategories, setAllCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
@@ -38,16 +37,9 @@ export default function RecurringPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const [dbRecurring, dbTransactions] = await Promise.all([
-        getRecurringTransactions(),
-        getTransactions(),
-      ]);
+      const dbRecurring = await getRecurringTransactions();
       const processed = processRecurringTransactions(dbRecurring as RecurringTransaction[]);
       setRecurring(processed);
-
-      const uniqueCategories = Array.from(new Set(dbTransactions.map((t: Transaction) => t.category)));
-      setAllCategories(uniqueCategories.filter(c => c !== 'Income'));
-
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -172,7 +164,6 @@ export default function RecurringPage() {
         isOpen={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onAddTransaction={handleAddTransaction}
-        categories={allCategories}
       />
     </main>
   );

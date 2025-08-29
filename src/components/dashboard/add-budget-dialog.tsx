@@ -1,7 +1,7 @@
 // src/components/dashboard/add-budget-dialog.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
-import type { Budget } from "@/lib/types";
+import type { Budget, Category } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -22,6 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { getCategories } from "@/lib/db";
+import { useAuth } from "@/hooks/use-auth";
 
 interface AddBudgetDialogProps {
   isOpen: boolean;
@@ -36,21 +38,25 @@ export function AddBudgetDialog({
   onAddBudget,
   existingCategories,
 }: AddBudgetDialogProps) {
+  const { user } = useAuth();
   const [category, setCategory] = useState("");
   const [limit, setLimit] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
 
-  const availableCategories = [
-    "Groceries",
-    "Dining Out",
-    "Transport",
-    "Shopping",
-    "Housing",
-    "Entertainment",
-    "Health",
-    "Other",
-  ].filter(cat => !existingCategories.includes(cat));
+  useEffect(() => {
+    async function fetchCategories() {
+      if (user && isOpen) {
+        const allCategories = (await getCategories()) as Category[];
+        const filtered = allCategories.filter(
+          (c) => !existingCategories.includes(c.name) && c.name !== "Income"
+        );
+        setAvailableCategories(filtered);
+      }
+    }
+    fetchCategories();
+  }, [user, isOpen, existingCategories]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,8 +116,8 @@ export function AddBudgetDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {availableCategories.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
