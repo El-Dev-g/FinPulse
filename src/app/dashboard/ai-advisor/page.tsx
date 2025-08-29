@@ -28,7 +28,7 @@ function AIAdvisorPageContent() {
 
 export default function AIAdvisorPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense>
       <AIAdvisorPageContent />
     </Suspense>
   );

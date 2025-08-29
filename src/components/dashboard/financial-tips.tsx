@@ -72,21 +72,21 @@ export function FinancialTips() {
     setLoading(true);
     setError(null);
     setAdvice(null);
-    const result = await generateAdviceAction(values);
+
+    const goalId = searchParams.get("goalId");
+    const result = await generateAdviceAction(values, goalId);
+    
     setLoading(false);
     
-    if (result.success && result.advice) {
-      setAdvice(result.advice);
-      const goalId = searchParams.get("goalId");
-      if (goalId) {
-        // Redirect back to the goals page with the advice
-        router.push(
-          `/dashboard/goals?goalId=${goalId}&advice=${encodeURIComponent(
-            JSON.stringify(result.advice)
-          )}`
-        );
-      }
+    if (result.success && result.advice && result.goalId) {
+      // Always redirect to the goal page with the new advice
+      router.push(
+        `/dashboard/goals?goalId=${result.goalId}&advice=${encodeURIComponent(
+          JSON.stringify(result.advice)
+        )}`
+      );
     } else {
+      setAdvice(null);
       setError(result.message || "An unexpected error occurred.");
     }
   }
@@ -137,24 +137,9 @@ export function FinancialTips() {
                 </FormItem>
               )}
             />
-            {(advice || error) && (
-              <div className="p-4 bg-muted/50 rounded-lg border border-muted-foreground/20">
-                {advice ? (
-                  <>
-                  <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    {advice.title}
-                  </h4>
-                  <p className="text-sm text-muted-foreground italic mb-4">{advice.subtitle}</p>
-                   <ol className="list-decimal list-inside space-y-2 text-sm">
-                      {advice.steps.map((step, index) => (
-                        <li key={index}>{step}</li>
-                      ))}
-                    </ol>
-                  </>
-                ) : (
-                   <p className="text-sm text-destructive">{error}</p>
-                )}
+            {error && (
+              <div className="p-4 bg-muted/50 rounded-lg border border-destructive/20">
+                <p className="text-sm text-destructive">{error}</p>
               </div>
             )}
           </CardContent>

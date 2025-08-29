@@ -56,6 +56,17 @@ export const getGoal = async (id: string): Promise<(Goal & {id: string}) | null>
     }
     return null;
 }
+export const getGoalByTitle = async (title: string): Promise<(Goal & {id: string}) | null> => {
+    const uid = getUid();
+    const q = query(collection(db, `users/${uid}/goals`), where("title", "==", title));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        return { id: doc.id, ...doc.data() } as Goal & { id: string };
+    }
+    return null;
+}
+
 
 // --- Budgets ---
 export const addBudget = (budget: Omit<Budget, 'id'>) => addDataItem<Omit<Budget, 'id'>>('budgets', budget);

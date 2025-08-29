@@ -9,16 +9,31 @@ import {
   categorizeTransaction,
   type CategorizeTransactionInput,
 } from "@/ai/flows/categorize-transaction";
+import { createGoalForAdvice } from "@/ai/flows/create-goal-for-advice";
+import type { Advice } from "./types";
 
 
 export async function generateAdviceAction(
-  input: PersonalizedFinancialAdviceInput
+  input: PersonalizedFinancialAdviceInput,
+  goalId?: string | null
 ) {
   try {
-    const result = await getPersonalizedFinancialAdvice(input);
+    const advice : Advice = (await getPersonalizedFinancialAdvice(input)).advice;
+
+    if (!goalId) {
+      // If no goalId is provided, create/find the general advice goal
+      const generalGoal = await createGoalForAdvice(input);
+      return {
+        success: true,
+        advice: advice,
+        goalId: generalGoal.id
+      }
+    }
+    
     return {
       success: true,
-      advice: result.advice,
+      advice: advice,
+      goalId: goalId,
     };
   } catch (error) {
     console.error(error);
