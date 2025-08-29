@@ -46,12 +46,18 @@ export interface ClientFinancialTask extends Omit<FinancialTask, 'createdAt'>{
   createdAt: Date;
 }
 
+export interface Advice {
+  title: string;
+  subtitle: string;
+  steps: string[];
+}
+
 export interface Goal {
   id: string;
   title: string;
   current: number;
   target: number;
-  advice?: string;
+  advice?: Advice;
   createdAt: any; // Firestore timestamp
 }
 

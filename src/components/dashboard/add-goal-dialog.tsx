@@ -15,12 +15,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
 import type { Goal } from "@/lib/types";
-import { Textarea } from "../ui/textarea";
 
 interface AddGoalDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddGoal: (newGoal: Omit<Goal, "id" | "current" | "createdAt">) => Promise<void>;
+  onAddGoal: (newGoal: Omit<Goal, "id" | "current" | "createdAt" | "advice">) => Promise<void>;
 }
 
 export function AddGoalDialog({
@@ -30,7 +29,6 @@ export function AddGoalDialog({
 }: AddGoalDialogProps) {
   const [title, setTitle] = useState("");
   const [target, setTarget] = useState("");
-  const [advice, setAdvice] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,11 +50,10 @@ export function AddGoalDialog({
     setLoading(true);
 
     try {
-      await onAddGoal({ title, target: targetAmount, advice });
+      await onAddGoal({ title, target: targetAmount });
       onOpenChange(false);
       setTitle("");
       setTarget("");
-      setAdvice("");
     } catch (err) {
        setError("Failed to add goal. Please try again.");
     } finally {
@@ -69,7 +66,6 @@ export function AddGoalDialog({
       if (!open) {
         setTitle("");
         setTarget("");
-        setAdvice("");
         setError(null);
       }
       onOpenChange(open);
@@ -104,18 +100,6 @@ export function AddGoalDialog({
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
                 placeholder="e.g., 5000"
-              />
-            </div>
-             <div className="space-y-2">
-              <Label htmlFor="advice">
-                Personal Notes (Optional)
-              </Label>
-              <Textarea
-                id="advice"
-                value={advice}
-                onChange={(e) => setAdvice(e.target.value)}
-                placeholder="e.g., My strategy for this goal is to..."
-                rows={3}
               />
             </div>
           </div>

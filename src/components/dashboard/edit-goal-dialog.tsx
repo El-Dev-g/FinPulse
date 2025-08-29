@@ -25,7 +25,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader, Trash } from "lucide-react";
 import type { Goal } from "@/lib/types";
-import { Textarea } from "../ui/textarea";
 
 interface EditGoalDialogProps {
   goal: Goal | null;
@@ -45,7 +44,6 @@ export function EditGoalDialog({
   const [title, setTitle] = useState("");
   const [current, setCurrent] = useState("");
   const [target, setTarget] = useState("");
-  const [advice, setAdvice] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -55,7 +53,6 @@ export function EditGoalDialog({
       setTitle(goal.title);
       setCurrent(goal.current.toString());
       setTarget(goal.target.toString());
-      setAdvice(goal.advice || "");
     }
   }, [goal]);
 
@@ -95,7 +92,6 @@ export function EditGoalDialog({
             title,
             current: currentAmount,
             target: targetAmount,
-            advice,
             });
         }
         onOpenChange(false);
@@ -164,18 +160,6 @@ export function EditGoalDialog({
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
                 placeholder="e.g., 5000"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="advice">
-                AI Advice (Optional)
-              </Label>
-              <Textarea
-                id="advice"
-                value={advice}
-                onChange={(e) => setAdvice(e.target.value)}
-                placeholder="e.g., Cut down on daily coffees to save $5 a day."
-                rows={3}
               />
             </div>
           </div>

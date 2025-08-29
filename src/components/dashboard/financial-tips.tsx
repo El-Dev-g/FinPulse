@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/form";
 import { generateAdviceAction } from "@/lib/actions";
 import { useSearchParams, useRouter } from "next/navigation";
+import type { Advice } from "@/lib/types";
 
 const formSchema = z.object({
   spendingHabits: z
@@ -37,7 +38,7 @@ const formSchema = z.object({
 
 export function FinancialTips() {
   const [loading, setLoading] = useState(false);
-  const [advice, setAdvice] = useState<string | null>(null);
+  const [advice, setAdvice] = useState<Advice | null>(null);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -57,7 +58,13 @@ export function FinancialTips() {
       form.setValue("financialGoals", `My primary goal is to ${goal}.`);
     }
     if (existingAdvice) {
-      form.setValue("spendingHabits", `Based on my current plan: "${existingAdvice}". Please provide more detailed advice or alternative strategies.`);
+      try {
+        const parsedAdvice: Advice = JSON.parse(decodeURIComponent(existingAdvice));
+        form.setValue("spendingHabits", `My current AI-generated plan is: "${parsedAdvice.subtitle}". Please provide more detailed advice or alternative strategies.`);
+      } catch (e) {
+        // Fallback for old advice format
+        form.setValue("spendingHabits", `Based on my current plan: "${existingAdvice}". Please provide more detailed advice or alternative strategies.`);
+      }
     }
   }, [searchParams, form]);
 
@@ -75,7 +82,7 @@ export function FinancialTips() {
         // Redirect back to the goals page with the advice
         router.push(
           `/dashboard/goals?goalId=${goalId}&advice=${encodeURIComponent(
-            result.advice
+            JSON.stringify(result.advice)
           )}`
         );
       }
@@ -132,12 +139,22 @@ export function FinancialTips() {
             />
             {(advice || error) && (
               <div className="p-4 bg-muted/50 rounded-lg border border-muted-foreground/20">
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  Your Personalized Advice
-                </h4>
-                {advice && <p className="text-sm whitespace-pre-wrap">{advice}</p>}
-                {error && <p className="text-sm text-destructive">{error}</p>}
+                {advice ? (
+                  <>
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    {advice.title}
+                  </h4>
+                  <p className="text-sm text-muted-foreground italic mb-4">{advice.subtitle}</p>
+                   <ol className="list-decimal list-inside space-y-2 text-sm">
+                      {advice.steps.map((step, index) => (
+                        <li key={index}>{step}</li>
+                      ))}
+                    </ol>
+                  </>
+                ) : (
+                   <p className="text-sm text-destructive">{error}</p>
+                )}
               </div>
             )}
           </CardContent>

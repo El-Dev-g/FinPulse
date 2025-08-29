@@ -17,7 +17,7 @@ import { getGoal, getTasks, getTransactions } from "@/lib/db";
 import { ArrowLeft, Calculator, Bot, Sparkles, ClipboardList, Loader } from "lucide-react";
 import Link from "next/link";
 import { ActivityList } from "@/components/dashboard/activity-list";
-import type { ClientGoal, ClientFinancialTask, ClientTransaction, Goal, Transaction, FinancialTask } from "@/lib/types";
+import type { ClientGoal, ClientFinancialTask, ClientTransaction, Goal, Transaction, FinancialTask, Advice } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
 import { processGoal, processTasks, processTransactions } from "@/lib/utils";
 
@@ -104,7 +104,7 @@ export default function GoalDetailPage() {
   const aiAdvisorLink = `/dashboard/ai-advisor?goal=${encodeURIComponent(
     goal.title
   )}&goalId=${goal.id}${
-    goal.advice ? `&advice=${encodeURIComponent(goal.advice)}` : ""
+    goal.advice ? `&advice=${encodeURIComponent(JSON.stringify(goal.advice))}` : ""
   }`;
 
   return (
@@ -178,13 +178,20 @@ export default function GoalDetailPage() {
             {goal.advice && (
                <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-xl">
+                    <CardTitle className="flex items-center gap-2 text-xl font-headline">
                         <Sparkles className="h-5 w-5 text-primary" />
-                        AI Generated Advice
+                        {goal.advice.title}
                     </CardTitle>
+                    <CardDescription className="italic">
+                      {goal.advice.subtitle}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-muted-foreground whitespace-pre-wrap">{goal.advice}</p>
+                   <ol className="list-decimal list-inside space-y-3 text-sm text-muted-foreground">
+                      {goal.advice.steps.map((step, index) => (
+                        <li key={index}>{step}</li>
+                      ))}
+                    </ol>
                 </CardContent>
                </Card>
             )}

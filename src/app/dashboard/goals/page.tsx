@@ -18,7 +18,7 @@ import { Plus, Sparkles, Loader } from "lucide-react";
 import { AddGoalDialog } from "@/components/dashboard/add-goal-dialog";
 import { EditGoalDialog } from "@/components/dashboard/edit-goal-dialog";
 import { useAuth } from "@/hooks/use-auth";
-import type { Goal } from "@/lib/types";
+import type { Goal, Advice } from "@/lib/types";
 import { addGoal, deleteGoal, getGoals, updateGoal } from "@/lib/db";
 import { processGoals } from "@/lib/utils";
 
@@ -38,18 +38,21 @@ function GoalsPageContent() {
     try {
       const dbGoals = await getGoals();
       
-      const advice = searchParams.get('advice');
+      const adviceParam = searchParams.get('advice');
       const goalId = searchParams.get('goalId');
       
-      if (advice && goalId) {
+      if (adviceParam && goalId) {
         const goalExists = dbGoals.some(g => g.id === goalId);
         if (goalExists) {
-          // Update the specific goal with the new advice in the database
-          await updateGoal(goalId, { advice: decodeURIComponent(advice) });
-          // To avoid re-fetching, we can update the local state before setting it
-          const goalIndex = dbGoals.findIndex(g => g.id === goalId);
-          if (goalIndex !== -1) {
-             dbGoals[goalIndex].advice = decodeURIComponent(advice);
+          try {
+            const parsedAdvice: Advice = JSON.parse(decodeURIComponent(adviceParam));
+            await updateGoal(goalId, { advice: parsedAdvice });
+            const goalIndex = dbGoals.findIndex(g => g.id === goalId);
+            if (goalIndex !== -1) {
+              dbGoals[goalIndex].advice = parsedAdvice;
+            }
+          } catch (e) {
+            console.error("Failed to parse or save advice:", e);
           }
         }
         // Remove query params after processing to avoid re-saving on refresh
@@ -140,7 +143,7 @@ function GoalsPageContent() {
                   {goal.advice && (
                     <div className="mt-4 p-3 bg-accent/50 rounded-lg text-sm text-accent-foreground border border-accent/20 flex items-start gap-2">
                        <Sparkles className="h-4 w-4 shrink-0 mt-0.5" />
-                       <p className="line-clamp-2">{goal.advice}</p>
+                       <p className="line-clamp-2 italic">"{goal.advice.subtitle}"</p>
                     </div>
                   )}
                 </CardContent>

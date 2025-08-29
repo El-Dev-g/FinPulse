@@ -24,8 +24,14 @@ export type PersonalizedFinancialAdviceInput = z.infer<
   typeof PersonalizedFinancialAdviceInputSchema
 >;
 
+const AdviceDetailsSchema = z.object({
+  title: z.string().describe("A catchy, concise title for the financial advice (e.g., 'Supercharge Your Savings')."),
+  subtitle: z.string().describe("A brief, one-sentence summary of the core advice strategy."),
+  steps: z.array(z.string()).describe("An array of 3-5 actionable, numbered steps or points for the user to follow."),
+});
+
 const PersonalizedFinancialAdviceOutputSchema = z.object({
-  advice: z.string().describe('Personalized financial advice for the user.'),
+  advice: AdviceDetailsSchema.describe('Personalized financial advice for the user, structured with a title, subtitle, and steps.'),
 });
 export type PersonalizedFinancialAdviceOutput = z.infer<
   typeof PersonalizedFinancialAdviceOutputSchema
@@ -41,12 +47,14 @@ const prompt = ai.definePrompt({
   name: 'personalizedFinancialAdvicePrompt',
   input: {schema: PersonalizedFinancialAdviceInputSchema},
   output: {schema: PersonalizedFinancialAdviceOutputSchema},
-  prompt: `You are a financial advisor. Provide personalized financial advice to the user based on their spending habits and financial goals.
+  prompt: `You are a friendly and encouraging financial advisor. Provide personalized financial advice to the user based on their spending habits and financial goals.
+
+The advice should be structured with a clear title, a short subtitle, and a list of 3-5 concrete, actionable steps.
 
 Spending Habits: {{{spendingHabits}}}
 Financial Goals: {{{financialGoals}}}
 
-Advice:`,
+Generate the structured advice.`,
 });
 
 const personalizedFinancialAdviceFlow = ai.defineFlow(
