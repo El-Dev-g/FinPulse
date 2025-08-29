@@ -45,9 +45,8 @@ const formSchema = z.object({
 });
 
 const availableModels = [
-    { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash (Fast & Efficient)" },
-    { id: "gemini-pro", name: "Gemini Pro (Balanced)" },
-    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro (Powerful & Creative)" },
+    { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash" },
+    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro" },
 ];
 
 export function FinancialTips() {
