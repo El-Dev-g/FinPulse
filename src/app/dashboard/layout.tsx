@@ -11,6 +11,7 @@ import {
   Target,
   PanelLeft,
   LogOut,
+  Loader,
 } from "lucide-react";
 import {
   Sidebar,
