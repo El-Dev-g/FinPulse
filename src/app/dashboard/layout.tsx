@@ -111,6 +111,7 @@ function DashboardSidebar() {
               asChild
               isActive={pathname === "/dashboard/settings"}
               tooltip={{ children: "Settings" }}
+              onClick={handleLinkClick}
             >
               <Link href="/dashboard/settings">
                 <Settings />
