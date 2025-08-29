@@ -19,7 +19,7 @@ import { Progress } from "@/components/ui/progress";
 import { Loader, Rocket, Award, ShieldCheck } from "lucide-react";
 import { AddGoalDialog } from "@/components/dashboard/add-goal-dialog";
 import { AddBudgetDialog } from "@/components/dashboard/add-budget-dialog";
-import { goalsData, Goal, budgetsData, Budget } from "@/lib/placeholder-data";
+import { goalsData, type Goal, budgetsData, type Budget } from "@/lib/placeholder-data";
 
 export default function OnboardingPage() {
   const { user } = useAuth();
@@ -59,7 +59,7 @@ export default function OnboardingPage() {
      budgetsData.push({
       ...newBudget,
       id: `budget_${budgetsData.length + 1}`,
-     });
+     } as Budget);
     api?.scrollNext();
   };
 
@@ -172,7 +172,6 @@ export default function OnboardingPage() {
       <AddBudgetDialog
         isOpen={isAddBudgetDialogOpen}
         onOpenChange={setIsAddBudgetDialogOpen}
-        onAddGoal={() => {}}
         onAddBudget={handleAddBudget}
         existingCategories={[]}
       />
