@@ -1,5 +1,4 @@
 import type { ChartConfig } from "@/components/ui/chart";
-import type { Goal } from "@/app/dashboard/goals/page";
 import {
   ArrowRightLeft,
   Film,
@@ -40,6 +39,14 @@ export interface FinancialTask {
   status: TaskStatus;
   dueDate?: string;
   goalId?: string;
+}
+
+export interface Goal {
+  id: string;
+  title: string;
+  current: number;
+  target: number;
+  advice?: string;
 }
 
 

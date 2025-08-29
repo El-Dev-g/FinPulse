@@ -14,21 +14,15 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { goalsData as initialGoalsData } from "@/lib/placeholder-data";
+import { goalsData, type Goal as GoalType } from "@/lib/placeholder-data";
 import { Plus, Sparkles } from "lucide-react";
 import { AddGoalDialog } from "@/components/dashboard/add-goal-dialog";
 import { EditGoalDialog } from "@/components/dashboard/edit-goal-dialog";
 
-export interface Goal {
-  id: string;
-  title: string;
-  current: number;
-  target: number;
-  advice?: string;
-}
+export interface Goal extends GoalType {}
 
 export default function GoalsPage() {
-  const [goals, setGoals] = useState<Goal[]>(initialGoalsData);
+  const [goals, setGoals] = useState<Goal[]>(goalsData);
   const [isAddGoalDialogOpen, setIsAddGoalDialogOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
 
@@ -58,14 +52,20 @@ export default function GoalsPage() {
   const handleAddGoal = (newGoal: Omit<Goal, "id" | "current">) => {
     const goalWithId: Goal = {
       ...newGoal,
-      id: `goal_${goals.length + 1}`,
+      id: `goal_${goalsData.length + 1}`,
       current: 0,
     };
-    setGoals([...goals, goalWithId]);
+    // Add to the original array to simulate a database update
+    goalsData.push(goalWithId);
+    setGoals([...goalsData]);
   };
 
   const handleEditGoal = (updatedGoal: Goal) => {
-    setGoals(goals.map((g) => (g.id === updatedGoal.id ? updatedGoal : g)));
+    const goalIndex = goalsData.findIndex(g => g.id === updatedGoal.id);
+    if (goalIndex !== -1) {
+      goalsData[goalIndex] = updatedGoal;
+    }
+    setGoals([...goalsData]);
   };
 
   return (
