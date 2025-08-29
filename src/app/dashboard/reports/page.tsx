@@ -1,7 +1,7 @@
 // src/app/dashboard/reports/page.tsx
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -23,13 +23,96 @@ import {
   Cell,
 } from "recharts";
 import {
-  categorySpendingData,
-  monthlyBreakdownData,
-  reportMetrics,
+  transactionsData,
 } from "@/lib/placeholder-data";
 import { DollarSign, TrendingUp, TrendingDown, PieChart as PieChartIcon } from "lucide-react";
+import { subMonths, format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+
+const COLORS = [
+    "hsl(var(--chart-1))",
+    "hsl(var(--chart-2))",
+    "hsl(var(--chart-3))",
+    "hsl(var(--chart-4))",
+    "hsl(var(--chart-5))",
+    "hsl(var(--muted))",
+];
 
 export default function ReportsPage() {
+    const {
+        monthlyBreakdownData,
+        categorySpendingData,
+        reportMetrics
+    } = useMemo(() => {
+        const now = new Date();
+        const monthlyData: { [key: string]: { income: number; expenses: number } } = {};
+        
+        // Initialize last 6 months
+        for (let i = 5; i >= 0; i--) {
+            const date = subMonths(now, i);
+            const monthKey = format(date, 'MMM');
+            monthlyData[monthKey] = { income: 0, expenses: 0 };
+        }
+
+        const sixMonthsAgo = startOfMonth(subMonths(now, 5));
+        
+        const categorySpending: { [key: string]: number } = {};
+        const currentMonthInterval = { start: startOfMonth(now), end: endOfMonth(now) };
+
+        let totalIncome = 0;
+        let totalExpenses = 0;
+
+        transactionsData.forEach(t => {
+            const tDate = new Date(t.date);
+             // Monthly breakdown
+            if (isWithinInterval(tDate, { start: sixMonthsAgo, end: now })) {
+                const monthKey = format(tDate, 'MMM');
+                if (t.amount > 0) {
+                    monthlyData[monthKey].income += t.amount;
+                } else {
+                    monthlyData[monthKey].expenses += Math.abs(t.amount);
+                }
+            }
+            // All time metrics
+            if (t.amount > 0) {
+                totalIncome += t.amount;
+            } else {
+                totalExpenses += Math.abs(t.amount);
+            }
+             // Current month category spending
+             if (isWithinInterval(tDate, currentMonthInterval) && t.amount < 0) {
+                categorySpending[t.category] = (categorySpending[t.category] || 0) + Math.abs(t.amount);
+            }
+        });
+
+        const processedMonthlyData = Object.entries(monthlyData).map(([month, values]) => ({
+            month,
+            ...values,
+        }));
+
+        const processedCategoryData = Object.entries(categorySpending).map(([name, value], index) => ({
+            name,
+            value,
+            fill: COLORS[index % COLORS.length]
+        }));
+        
+        // This is a simplified metric calculation
+        const uniqueMonths = new Set(transactionsData.map(t => format(new Date(t.date), 'yyyy-MM'))).size;
+        const avgIncome = uniqueMonths > 0 ? totalIncome / uniqueMonths : 0;
+        const avgExpenses = uniqueMonths > 0 ? totalExpenses / uniqueMonths : 0;
+        const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0;
+        
+        return {
+            monthlyBreakdownData: processedMonthlyData,
+            categorySpendingData: processedCategoryData,
+            reportMetrics: {
+                avgIncome,
+                avgExpenses,
+                savingsRate
+            }
+        };
+
+    }, []);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -95,8 +178,8 @@ export default function ReportsPage() {
                         <YAxis tickFormatter={(value) => formatCurrency(value as number)} />
                         <Tooltip formatter={(value) => formatCurrency(value as number)}/>
                         <Legend />
-                        <Line type="monotone" dataKey="income" stroke="hsl(var(--chart-1))" activeDot={{ r: 8 }} />
-                        <Line type="monotone" dataKey="expenses" stroke="hsl(var(--chart-2))" />
+                        <Line type="monotone" dataKey="income" stroke="hsl(var(--chart-1))" activeDot={{ r: 8 }} name="Income" />
+                        <Line type="monotone" dataKey="expenses" stroke="hsl(var(--chart-2))" name="Expenses" />
                         </LineChart>
                     </ResponsiveContainer>
                 </CardContent>
