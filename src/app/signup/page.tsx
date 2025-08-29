@@ -4,7 +4,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  updateProfile,
+} from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +36,7 @@ const GoogleIcon = () => (
 
 
 export default function SignUpPage() {
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +48,16 @@ export default function SignUpPage() {
     setLoading(true);
     setError(null);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      if (userCredential.user) {
+        await updateProfile(userCredential.user, {
+          displayName: displayName,
+        });
+      }
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.message);
@@ -50,8 +65,8 @@ export default function SignUpPage() {
       setLoading(false);
     }
   };
-  
-    const handleGoogleSignIn = async () => {
+
+  const handleGoogleSignIn = async () => {
     setLoading(true);
     setError(null);
     try {
@@ -80,6 +95,17 @@ export default function SignUpPage() {
           </CardHeader>
           <form onSubmit={handleSignUp}>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="displayName">Username</Label>
+                <Input
+                  id="displayName"
+                  type="text"
+                  placeholder="John Doe"
+                  required
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -110,7 +136,13 @@ export default function SignUpPage() {
                 {loading ? <Loader className="animate-spin" /> : <UserPlus />}
                 Sign Up
               </Button>
-               <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} type="button" disabled={loading}>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleGoogleSignIn}
+                type="button"
+                disabled={loading}
+              >
                 <GoogleIcon />
                 Sign Up with Google
               </Button>
