@@ -115,7 +115,11 @@ export default function GoalDetailPage() {
             </Card>
           </div>
           <div>
-            <RecentTransactions />
+            <RecentTransactions 
+              goalId={goal.id}
+              title="Goal Contributions"
+              description="Transactions assigned to this goal."
+            />
           </div>
         </div>
       </div>

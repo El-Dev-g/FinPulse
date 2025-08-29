@@ -15,6 +15,7 @@ export interface Transaction {
   date: string;
   category: string;
   Icon: LucideIcon;
+  goalId?: string;
 }
 
 export const overviewData = {
@@ -102,6 +103,24 @@ export const transactionsData: Transaction[] = [
     date: "2024-07-17",
     category: "Health",
     Icon: HeartPulse,
+  },
+  {
+    id: 'txn_6',
+    description: 'Contribution to House Fund',
+    amount: 500,
+    date: '2024-07-15',
+    category: 'Savings',
+    Icon: ArrowRightLeft,
+    goalId: 'goal_1',
+  },
+  {
+    id: 'txn_7',
+    description: 'Birthday Money',
+    amount: 100,
+    date: '2024-07-10',
+    category: 'Income',
+    Icon: ArrowRightLeft,
+    goalId: 'goal_2',
   },
 ];
 
