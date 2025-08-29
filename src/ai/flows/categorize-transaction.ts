@@ -64,7 +64,7 @@ const categorizeTransactionFlow = ai.defineFlow(
     }
     
     try {
-      const {output} = await prompt(input, {model: 'gemini-1.5-flash'});
+      const {output} = await prompt(input, {model: 'googleai/gemini-pro'});
       return output!;
     } catch (e) {
       console.error(e);

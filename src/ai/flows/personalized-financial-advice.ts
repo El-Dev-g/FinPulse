@@ -65,7 +65,7 @@ const personalizedFinancialAdviceFlow = ai.defineFlow(
   },
   async input => {
     try {
-      const {output} = await prompt(input, {model: 'gemini-1.5-flash'});
+      const {output} = await prompt(input, {model: 'googleai/gemini-pro'});
       return output!;
     } catch (e) {
       console.error('All AI models failed to generate a response.', e);
