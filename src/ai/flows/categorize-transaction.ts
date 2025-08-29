@@ -9,8 +9,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
-
 
 const CategorizeTransactionInputSchema = z.object({
   description: z.string().describe('The description of the transaction.'),
@@ -36,11 +34,6 @@ export async function categorizeTransaction(
 ): Promise<CategorizeTransactionOutput> {
   return categorizeTransactionFlow(input);
 }
-
-const modelsToTry = [
-  googleAI('gemini-2.5-flash'),
-  googleAI('gemini-1.5-flash'),
-];
 
 const prompt = ai.definePrompt({
   name: 'categorizeTransactionPrompt',
@@ -70,22 +63,12 @@ const categorizeTransactionFlow = ai.defineFlow(
       return { category: '' };
     }
     
-    let lastError: any | undefined;
-    for (const model of modelsToTry) {
-      try {
-        const {output} = await prompt(input, {model});
-        return output!;
-      } catch (e) {
-        lastError = e;
-        console.warn(
-          `Failed to generate with ${model.name}, trying next model.`,
-          e
-        );
-      }
+    try {
+      const {output} = await prompt(input, {model: 'gemini-1.5-flash'});
+      return output!;
+    } catch (e) {
+      console.error(e);
+      throw new Error('The AI model failed to generate a response.', { cause: e });
     }
-
-    throw new Error('All AI models failed to generate a response.', {
-      cause: lastError,
-    });
   }
 );

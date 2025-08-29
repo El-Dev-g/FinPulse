@@ -10,7 +10,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/googleai';
 import {z} from 'genkit';
 
 const PersonalizedFinancialAdviceInputSchema = z.object({
@@ -44,11 +43,6 @@ export async function getPersonalizedFinancialAdvice(
   return personalizedFinancialAdviceFlow(input);
 }
 
-const modelsToTry = [
-  googleAI('gemini-2.5-flash'),
-  googleAI('gemini-1.5-flash'),
-];
-
 const prompt = ai.definePrompt({
   name: 'personalizedFinancialAdvicePrompt',
   input: {schema: PersonalizedFinancialAdviceInputSchema},
@@ -70,21 +64,14 @@ const personalizedFinancialAdviceFlow = ai.defineFlow(
     outputSchema: PersonalizedFinancialAdviceOutputSchema,
   },
   async input => {
-    let lastError: any | undefined;
-    for (const model of modelsToTry) {
-      try {
-        const {output} = await prompt(input, {model});
-        return output!;
-      } catch (e) {
-        lastError = e;
-        console.warn(
-          `Failed to generate with ${model.name}, trying next model.`,
-          e
-        );
-      }
+    try {
+      const {output} = await prompt(input, {model: 'gemini-1.5-flash'});
+      return output!;
+    } catch (e) {
+      console.error('All AI models failed to generate a response.', e);
+      throw new Error('All AI models failed to generate a response.', {
+        cause: e,
+      });
     }
-    throw new Error('All AI models failed to generate a response.', {
-      cause: lastError,
-    });
   }
 );
