@@ -22,7 +22,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
 });
 
-const AUTH_PAGES = ["/signin", "/signup", "/forgot-password"];
+const AUTH_PAGES = ["/signin", "/signup", "/forgot-password", "/welcome/onboarding"];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (!user && !isAuthPage && !isLandingPage) {
       router.push("/signin");
-    } else if (user && (isAuthPage || isLandingPage)) {
+    } else if (user && (isAuthPage || isLandingPage) && pathname !== '/welcome/onboarding') {
       router.push("/dashboard");
     }
   }, [user, loading, pathname, router]);

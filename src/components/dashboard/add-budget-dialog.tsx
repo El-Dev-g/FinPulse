@@ -80,7 +80,14 @@ export function AddBudgetDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        setCategory("");
+        setLimit("");
+        setError(null);
+      }
+      onOpenChange(open);
+    }}>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>

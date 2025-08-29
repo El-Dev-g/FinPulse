@@ -63,7 +63,15 @@ export function AddGoalDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        setTitle("");
+        setTarget("");
+        setAdvice("");
+        setError(null);
+      }
+      onOpenChange(open);
+    }}>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
@@ -98,13 +106,13 @@ export function AddGoalDialog({
             </div>
              <div className="space-y-2">
               <Label htmlFor="advice">
-                AI Advice (Optional)
+                Personal Notes (Optional)
               </Label>
               <Textarea
                 id="advice"
                 value={advice}
                 onChange={(e) => setAdvice(e.target.value)}
-                placeholder="e.g., Cut down on daily coffees to save $5 a day."
+                placeholder="e.g., My strategy for this goal is to..."
                 rows={3}
               />
             </div>

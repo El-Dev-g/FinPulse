@@ -58,7 +58,7 @@ export default function SignUpPage() {
           displayName: displayName,
         });
       }
-      router.push("/dashboard");
+      router.push("/welcome/onboarding");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -72,7 +72,7 @@ export default function SignUpPage() {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-      router.push("/dashboard");
+      router.push("/welcome/onboarding");
     } catch (err: any) {
       setError(err.message);
     } finally {
