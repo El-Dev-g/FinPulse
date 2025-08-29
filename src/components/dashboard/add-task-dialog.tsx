@@ -15,20 +15,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
 import type { FinancialTask } from "@/lib/placeholder-data";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import type { Goal } from "@/app/dashboard/goals/page";
 
 interface AddTaskDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onAddTask: (newTask: Omit<FinancialTask, "id" | "status">) => void;
+  goals: Goal[];
 }
 
 export function AddTaskDialog({
   isOpen,
   onOpenChange,
   onAddTask,
+  goals,
 }: AddTaskDialogProps) {
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [goalId, setGoalId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,11 +56,12 @@ export function AddTaskDialog({
 
     // Simulate API call
     setTimeout(() => {
-      onAddTask({ title, dueDate });
+      onAddTask({ title, dueDate, goalId: goalId === "none" ? undefined : goalId });
       setLoading(false);
       onOpenChange(false);
       setTitle("");
       setDueDate("");
+      setGoalId(undefined);
     }, 500);
   };
 
@@ -85,6 +97,24 @@ export function AddTaskDialog({
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="goalId">
+                Link to Goal (Optional)
+              </Label>
+              <Select value={goalId} onValueChange={setGoalId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a goal" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {goals.map((goal) => (
+                    <SelectItem key={goal.id} value={goal.id}>
+                      {goal.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           {error && <p className="text-sm text-destructive mb-4">{error}</p>}

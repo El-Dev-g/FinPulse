@@ -4,8 +4,8 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card } from "@/components/ui/card";
-import { FinancialTask } from "@/lib/placeholder-data";
-import { GripVertical, Pencil } from "lucide-react";
+import { FinancialTask, goalsData } from "@/lib/placeholder-data";
+import { GripVertical, Pencil, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 
@@ -30,6 +30,10 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
     zIndex: isDragging ? 10 : "auto",
     opacity: isDragging ? 0.7 : 1,
   };
+
+  const goal = task.goalId
+    ? goalsData.find((g) => g.id === task.goalId)
+    : null;
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
@@ -56,15 +60,24 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
         </Button>
 
         <p className="font-medium pr-8">{task.title}</p>
-        {task.dueDate && (
-          <p className="text-xs text-muted-foreground mt-1">
-            Due: {new Date(task.dueDate + "T00:00:00").toLocaleDateString(undefined, {
-              month: 'long',
-              day: 'numeric',
-              year: 'numeric'
-            })}
-          </p>
-        )}
+        
+        <div className="flex flex-wrap gap-x-4 gap-y-1 items-center mt-1">
+            {task.dueDate && (
+            <p className="text-xs text-muted-foreground">
+                Due: {new Date(task.dueDate + "T00:00:00").toLocaleDateString(undefined, {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+                })}
+            </p>
+            )}
+            {goal && (
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Target className="h-3 w-3 text-primary/70"/>
+                    <p>{goal.title}</p>
+                </div>
+            )}
+        </div>
       </Card>
     </div>
   );

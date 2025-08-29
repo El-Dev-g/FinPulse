@@ -1,4 +1,4 @@
-// src/components/dashboard/recent-transactions.tsx
+// src/components/dashboard/activity-list.tsx
 import {
   Card,
   CardContent,
@@ -15,21 +15,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { transactionsData, Transaction } from "@/lib/placeholder-data";
+import { Transaction, FinancialTask } from "@/lib/placeholder-data";
 import { cn } from "@/lib/utils";
+import { ArrowRightLeft, ClipboardList, LucideIcon } from "lucide-react";
 
-interface RecentTransactionsProps {
-  goalId?: string;
-  title?: string;
-  description?: string;
-  showViewAll?: boolean;
+interface ActivityListProps {
+  transactions?: Transaction[];
+  tasks?: FinancialTask[];
+  title: string;
+  description: string;
+  Icon?: LucideIcon;
 }
 
-export function RecentTransactions({
-  goalId,
-  title = "Recent Transactions",
-  description = "Here are your latest financial activities.",
-}: RecentTransactionsProps) {
+export function ActivityList({
+  transactions,
+  tasks,
+  title,
+  description,
+  Icon = ArrowRightLeft,
+}: ActivityListProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -37,28 +41,38 @@ export function RecentTransactions({
     }).format(amount);
   };
 
-  const filteredTransactions = goalId
-    ? transactionsData.filter((t) => t.goalId === goalId)
-    : transactionsData.slice(0, 5);
+  const hasContent = (transactions && transactions.length > 0) || (tasks && tasks.length > 0);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+            <Icon className="h-5 w-5" />
+            {title}
+        </CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        {filteredTransactions.length > 0 ? (
+        {hasContent ? (
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Description</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-              </TableRow>
+                {transactions && (
+                    <TableRow>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                    </TableRow>
+                )}
+                {tasks && (
+                    <TableRow>
+                        <TableHead>Task</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Due Date</TableHead>
+                    </TableRow>
+                )}
             </TableHeader>
             <TableBody>
-              {filteredTransactions.map((transaction) => (
+              {transactions?.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
@@ -91,11 +105,28 @@ export function RecentTransactions({
                   </TableCell>
                 </TableRow>
               ))}
+              {tasks?.map((task) => (
+                <TableRow key={task.id}>
+                  <TableCell>
+                    <div className="font-medium">{task.title}</div>
+                  </TableCell>
+                   <TableCell>
+                     <Badge variant={task.status === 'Done' ? 'outline' : 'secondary'}>{task.status}</Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-xs">
+                     {task.dueDate ? new Date(task.dueDate + "T00:00:00").toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    }) : 'No due date'}
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         ) : (
           <div className="text-center py-12 text-muted-foreground">
-            <p>No recent transactions.</p>
+            <p>No activity found.</p>
           </div>
         )}
       </CardContent>

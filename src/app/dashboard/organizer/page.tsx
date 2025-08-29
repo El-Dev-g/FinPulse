@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { ClipboardList, Plus, Calendar, LayoutGrid } from "lucide-react";
 import {
   tasksData as initialTasks,
+  goalsData,
   type FinancialTask,
   type TaskStatus,
 } from "@/lib/placeholder-data";
@@ -256,6 +257,7 @@ export default function OrganizerPage() {
         isOpen={isAddTaskDialogOpen}
         onOpenChange={setIsAddTaskDialogOpen}
         onAddTask={handleAddTask}
+        goals={goalsData}
       />
       <EditTaskDialog
         task={editingTask}
@@ -263,6 +265,7 @@ export default function OrganizerPage() {
         onOpenChange={(isOpen) => !isOpen && setEditingTask(null)}
         onEditTask={handleEditTask}
         onDeleteTask={handleDeleteTask}
+        goals={goalsData}
       />
     </main>
   );

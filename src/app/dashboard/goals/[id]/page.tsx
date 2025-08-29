@@ -13,10 +13,11 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { goalsData } from "@/lib/placeholder-data";
-import { ArrowLeft, Calculator, Bot, Sparkles } from "lucide-react";
+import { goalsData, transactionsData, tasksData } from "@/lib/placeholder-data";
+import { ArrowLeft, Calculator, Bot, Sparkles, ClipboardList } from "lucide-react";
 import Link from "next/link";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
+import { ActivityList } from "@/components/dashboard/activity-list";
 
 export default function GoalDetailPage() {
   const params = useParams();
@@ -51,10 +52,14 @@ export default function GoalDetailPage() {
   };
 
   const progress = (goal.current / goal.target) * 100;
+  
+  const relatedTransactions = transactionsData.filter(t => t.goalId === goal.id);
+  const relatedTasks = tasksData.filter(t => t.goalId === goal.id);
+
 
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <Button asChild variant="outline" size="sm">
             <Link href="/dashboard/goals">
@@ -64,8 +69,8 @@ export default function GoalDetailPage() {
           </Button>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2">
-          <div className="space-y-8">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-8">
             <Card>
               <CardHeader>
                 <CardTitle className="text-3xl font-headline">
@@ -134,11 +139,17 @@ export default function GoalDetailPage() {
                </Card>
             )}
           </div>
-          <div>
-            <RecentTransactions 
-              goalId={goal.id}
+          <div className="space-y-8">
+            <ActivityList 
+              transactions={relatedTransactions}
               title="Goal Contributions"
               description="Transactions assigned to this goal."
+            />
+            <ActivityList 
+              tasks={relatedTasks}
+              title="Related Tasks"
+              description="Tasks to help you reach this goal."
+              Icon={ClipboardList}
             />
           </div>
         </div>

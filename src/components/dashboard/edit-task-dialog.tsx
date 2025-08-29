@@ -25,6 +25,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader, Trash } from "lucide-react";
 import type { FinancialTask } from "@/lib/placeholder-data";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import type { Goal } from "@/app/dashboard/goals/page";
 
 interface EditTaskDialogProps {
   task: FinancialTask | null;
@@ -32,6 +40,7 @@ interface EditTaskDialogProps {
   onOpenChange: (isOpen: boolean) => void;
   onEditTask: (updatedTask: FinancialTask) => void;
   onDeleteTask: (taskId: string) => void;
+  goals: Goal[];
 }
 
 export function EditTaskDialog({
@@ -40,9 +49,11 @@ export function EditTaskDialog({
   onOpenChange,
   onEditTask,
   onDeleteTask,
+  goals,
 }: EditTaskDialogProps) {
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [goalId, setGoalId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -51,6 +62,7 @@ export function EditTaskDialog({
     if (task) {
       setTitle(task.title);
       setDueDate(task.dueDate || "");
+      setGoalId(task.goalId);
     }
   }, [task]);
 
@@ -72,6 +84,7 @@ export function EditTaskDialog({
           ...task,
           title,
           dueDate,
+          goalId: goalId === "none" ? undefined : goalId,
         });
       }
       setLoading(false);
@@ -118,6 +131,24 @@ export function EditTaskDialog({
                   onChange={(e) => setDueDate(e.target.value)}
                 />
               </div>
+              <div className="space-y-2">
+              <Label htmlFor="goalId">
+                Link to Goal (Optional)
+              </Label>
+              <Select value={goalId || 'none'} onValueChange={setGoalId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a goal" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {goals.map((goal) => (
+                    <SelectItem key={goal.id} value={goal.id}>
+                      {goal.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             </div>
             {error && <p className="text-sm text-destructive mb-4">{error}</p>}
             <DialogFooter className="justify-between">

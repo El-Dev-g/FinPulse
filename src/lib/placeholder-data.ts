@@ -39,6 +39,7 @@ export interface FinancialTask {
   title: string;
   status: TaskStatus;
   dueDate?: string;
+  goalId?: string;
 }
 
 
@@ -235,5 +236,6 @@ export const tasksData: FinancialTask[] = [
     { id: 'task-2', title: 'Review monthly budget', status: 'In Progress' },
     { id: 'task-3', title: 'Call insurance company about renewal', status: 'To Do', dueDate: '2024-08-20' },
     { id: 'task-4', title: 'File tax documents', status: 'Done' },
-    { id: 'task-5', title: 'Research high-yield savings accounts', status: 'In Progress' },
+    { id: 'task-5', title: 'Research high-yield savings accounts', status: 'In Progress', goalId: 'goal_1' },
+    { id: 'task-6', title: 'Book flights', status: 'To Do', dueDate: '2024-09-01', goalId: 'goal_2' },
 ];
