@@ -15,10 +15,7 @@ export default function DashboardPage() {
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
       <div className="flex-col md:flex">
         <div
-          className={cn(
-            "flex-1 space-y-4 transition-all duration-300",
-            !open && "md:hidden"
-          )}
+          className="flex-1 space-y-4"
         >
           <h2 className="text-3xl font-bold tracking-tight font-headline">
             Dashboard

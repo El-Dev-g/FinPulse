@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 const navItems = [
@@ -43,7 +42,7 @@ function DashboardSidebar() {
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r border-border/80"
+      variant="sidebar"
       open={open}
       onOpenChange={setOpen}
     >
@@ -111,7 +110,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider>
       <div className="flex min-h-screen">
         <DashboardSidebar />
         <SidebarInset className="bg-background flex-1">
