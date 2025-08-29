@@ -3,9 +3,19 @@ import {
   ArrowRightLeft,
   Film,
   HeartPulse,
+  LucideIcon,
   ShoppingCart,
   UtensilsCrossed,
 } from "lucide-react";
+
+export interface Transaction {
+  id: string;
+  description: string;
+  amount: number;
+  date: string;
+  category: string;
+  Icon: LucideIcon;
+}
 
 export const overviewData = {
   income: 5231.89,
@@ -52,7 +62,7 @@ export const spendingChartConfig = {
   },
 } satisfies ChartConfig;
 
-export const transactionsData = [
+export const transactionsData: Transaction[] = [
   {
     id: "txn_1",
     description: "Trader Joe's",

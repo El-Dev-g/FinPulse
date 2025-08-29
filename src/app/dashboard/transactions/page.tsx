@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { transactionsData as allTransactions } from "@/lib/placeholder-data";
+import { transactionsData as initialTransactions } from "@/lib/placeholder-data";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import {
@@ -29,11 +29,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Plus } from "lucide-react";
+import { AddTransactionDialog } from "@/components/dashboard/add-transaction-dialog";
+import type { Transaction } from "@/lib/placeholder-data";
 
 export default function TransactionsPage() {
+  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [isAddTransactionDialogOpen, setIsAddTransactionDialogOpen] =
+    useState(false);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -44,10 +49,10 @@ export default function TransactionsPage() {
 
   const categories = [
     "all",
-    ...Array.from(new Set(allTransactions.map((t) => t.category))),
+    ...Array.from(new Set(initialTransactions.map((t) => t.category))),
   ];
 
-  const filteredTransactions = allTransactions
+  const filteredTransactions = transactions
     .filter((transaction) =>
       transaction.description.toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -55,6 +60,17 @@ export default function TransactionsPage() {
       (transaction) =>
         categoryFilter === "all" || transaction.category === categoryFilter
     );
+
+  const handleAddTransaction = (
+    newTransaction: Omit<Transaction, "id" | "Icon">
+  ) => {
+    const transactionWithId: Transaction = {
+      ...newTransaction,
+      id: `txn_${transactions.length + 1}`,
+      Icon: ArrowRightLeft, // Default icon, can be improved
+    };
+    setTransactions([transactionWithId, ...transactions]);
+  };
 
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
@@ -68,10 +84,16 @@ export default function TransactionsPage() {
               View and manage all your financial activities.
             </p>
           </div>
-          <Button variant="outline">
-            <Download className="mr-2" />
-            Export CSV
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline">
+              <Download className="mr-2" />
+              Export CSV
+            </Button>
+            <Button onClick={() => setIsAddTransactionDialogOpen(true)}>
+              <Plus className="mr-2" />
+              Add Transaction
+            </Button>
+          </div>
         </div>
 
         <Card>
@@ -119,10 +141,12 @@ export default function TransactionsPage() {
                           <div className="bg-muted p-2 rounded-md">
                             <transaction.Icon className="h-4 w-4 text-muted-foreground" />
                           </div>
-                          <div className="font-medium">{transaction.description}</div>
+                          <div className="font-medium">
+                            {transaction.description}
+                          </div>
                         </div>
                       </TableCell>
-                       <TableCell className="text-muted-foreground">
+                      <TableCell className="text-muted-foreground">
                         {transaction.date}
                       </TableCell>
                       <TableCell>
@@ -153,6 +177,12 @@ export default function TransactionsPage() {
           </CardContent>
         </Card>
       </div>
+      <AddTransactionDialog
+        isOpen={isAddTransactionDialogOpen}
+        onOpenChange={setIsAddTransactionDialogOpen}
+        onAddTransaction={handleAddTransaction}
+        categories={categories.filter((c) => c !== "all" && c !== "Income")}
+      />
     </main>
   );
 }
