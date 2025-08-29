@@ -22,6 +22,7 @@ export default function GoalDetailPage() {
   const params = useParams();
   const { id } = params;
 
+  // In a real app, you'd fetch this from your state management or API
   const goal = goalsData.find((g) => g.id === id);
 
   if (!goal) {
@@ -112,7 +113,7 @@ export default function GoalDetailPage() {
                   </Link>
                 </Button>
                 <Button asChild className="w-full" variant="outline">
-                  <Link href={`/dashboard/ai-advisor?goal=${encodeURIComponent(goal.title)}`}>
+                  <Link href={`/dashboard/ai-advisor?goal=${encodeURIComponent(goal.title)}&goalId=${goal.id}`}>
                     <Bot className="mr-2" />
                     Get AI Savings Tips
                   </Link>
@@ -128,7 +129,7 @@ export default function GoalDetailPage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-muted-foreground">{goal.advice}</p>
+                    <p className="text-muted-foreground whitespace-pre-wrap">{goal.advice}</p>
                 </CardContent>
                </Card>
             )}

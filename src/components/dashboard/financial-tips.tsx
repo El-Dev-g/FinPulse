@@ -24,7 +24,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { generateAdviceAction } from "@/lib/actions";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 const formSchema = z.object({
   spendingHabits: z
@@ -40,6 +40,7 @@ export function FinancialTips() {
   const [advice, setAdvice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -52,7 +53,7 @@ export function FinancialTips() {
   useEffect(() => {
     const goal = searchParams.get("goal");
     if (goal) {
-      form.setValue("financialGoals", `My goal is to ${goal}.`);
+      form.setValue("financialGoals", `My primary goal is to ${goal}.`);
     }
   }, [searchParams, form]);
 
@@ -61,12 +62,22 @@ export function FinancialTips() {
     setError(null);
     setAdvice(null);
     const result = await generateAdviceAction(values);
-    if (result.success) {
-      setAdvice(result.advice || "No advice generated.");
+    setLoading(false);
+    
+    if (result.success && result.advice) {
+      setAdvice(result.advice);
+      const goalId = searchParams.get("goalId");
+      if (goalId) {
+        // Redirect back to the goals page with the advice
+        router.push(
+          `/dashboard/goals?goalId=${goalId}&advice=${encodeURIComponent(
+            result.advice
+          )}`
+        );
+      }
     } else {
       setError(result.message || "An unexpected error occurred.");
     }
-    setLoading(false);
   }
 
   return (

@@ -1,8 +1,9 @@
 // src/app/dashboard/goals/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -14,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { goalsData as initialGoalsData } from "@/lib/placeholder-data";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import { AddGoalDialog } from "@/components/dashboard/add-goal-dialog";
 import { EditGoalDialog } from "@/components/dashboard/edit-goal-dialog";
 
@@ -30,6 +31,21 @@ export default function GoalsPage() {
   const [goals, setGoals] = useState<Goal[]>(initialGoalsData);
   const [isAddGoalDialogOpen, setIsAddGoalDialogOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const advice = searchParams.get('advice');
+    const goalId = searchParams.get('goalId');
+
+    if (advice && goalId) {
+      setGoals(prevGoals =>
+        prevGoals.map(goal =>
+          goal.id === goalId ? { ...goal, advice: decodeURIComponent(advice) } : goal
+        )
+      );
+    }
+  }, [searchParams]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -89,6 +105,12 @@ export default function GoalsPage() {
                       <span>{formatCurrency(goal.current)}</span>
                     </div>
                   </div>
+                  {goal.advice && (
+                    <div className="mt-4 p-3 bg-accent/50 rounded-lg text-sm text-accent-foreground border border-accent/20 flex items-start gap-2">
+                       <Sparkles className="h-4 w-4 shrink-0 mt-0.5" />
+                       <p className="line-clamp-2">{goal.advice}</p>
+                    </div>
+                  )}
                 </CardContent>
                 <CardFooter className="flex gap-2">
                   <Button
