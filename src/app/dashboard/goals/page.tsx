@@ -1,7 +1,7 @@
 // src/app/dashboard/goals/page.tsx
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -12,16 +12,36 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { goalsData } from "@/lib/placeholder-data";
+import { goalsData as initialGoalsData } from "@/lib/placeholder-data";
 import { Plus } from "lucide-react";
+import { AddGoalDialog } from "@/components/dashboard/add-goal-dialog";
+
+export interface Goal {
+  id: string;
+  title: string;
+  current: number;
+  target: number;
+}
 
 export default function GoalsPage() {
+  const [goals, setGoals] = useState<Goal[]>(initialGoalsData);
+  const [isAddGoalDialogOpen, setIsAddGoalDialogOpen] = useState(false);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const handleAddGoal = (newGoal: Omit<Goal, "id" | "current">) => {
+    const goalWithId: Goal = {
+      ...newGoal,
+      id: `goal_${goals.length + 1}`,
+      current: 0,
+    };
+    setGoals([...goals, goalWithId]);
   };
 
   return (
@@ -36,14 +56,14 @@ export default function GoalsPage() {
               Track and manage your financial milestones.
             </p>
           </div>
-          <Button>
+          <Button onClick={() => setIsAddGoalDialogOpen(true)}>
             <Plus className="mr-2" />
             Add New Goal
           </Button>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {goalsData.map((goal) => {
+          {goals.map((goal) => {
             const progress = (goal.current / goal.target) * 100;
             return (
               <Card key={goal.id}>
@@ -75,6 +95,11 @@ export default function GoalsPage() {
           })}
         </div>
       </div>
+      <AddGoalDialog
+        isOpen={isAddGoalDialogOpen}
+        onOpenChange={setIsAddGoalDialogOpen}
+        onAddGoal={handleAddGoal}
+      />
     </main>
   );
 }
