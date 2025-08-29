@@ -19,7 +19,8 @@ import { Progress } from "@/components/ui/progress";
 import { Loader, Rocket, Award, ShieldCheck } from "lucide-react";
 import { AddGoalDialog } from "@/components/dashboard/add-goal-dialog";
 import { AddBudgetDialog } from "@/components/dashboard/add-budget-dialog";
-import { goalsData, type Goal, budgetsData, type Budget } from "@/lib/placeholder-data";
+import { addGoal, addBudget } from "@/lib/db";
+import type { Goal, Budget } from "@/lib/types";
 
 export default function OnboardingPage() {
   const { user } = useAuth();
@@ -45,23 +46,16 @@ export default function OnboardingPage() {
     });
   }, [api]);
   
-  const handleAddGoal = (newGoal: Omit<Goal, "id" | "current">) => {
-    const goalWithId: Goal = {
-      ...newGoal,
-      id: `goal_${goalsData.length + 1}`,
-      current: 0,
-    };
-    goalsData.push(goalWithId);
+  const handleAddGoal = async (newGoal: Omit<Goal, "id" | "createdAt">) => {
+    await addGoal({ ...newGoal, current: 0 });
     api?.scrollNext();
   };
   
-  const handleAddBudget = (newBudget: Omit<Budget, "id" | "spent" | "Icon">) => {
-     budgetsData.push({
-      ...newBudget,
-      id: `budget_${budgetsData.length + 1}`,
-     } as Budget);
+  const handleAddBudget = async (newBudget: Omit<Budget, "id" | "createdAt">) => {
+    await addBudget(newBudget);
     api?.scrollNext();
   };
+
 
   if (!user) {
     return (

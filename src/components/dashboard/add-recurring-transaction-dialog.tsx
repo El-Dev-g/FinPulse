@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
-import type { RecurringTransaction, RecurringFrequency } from "@/lib/placeholder-data";
+import type { RecurringTransaction, RecurringFrequency } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -27,7 +27,7 @@ import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 interface AddRecurringTransactionDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddTransaction: (newTransaction: Omit<RecurringTransaction, "id" | "Icon">) => void;
+  onAddTransaction: (newTransaction: Omit<RecurringTransaction, "id" | "Icon" | "createdAt">) => Promise<void>;
   categories: string[];
 }
 
@@ -63,7 +63,7 @@ export function AddRecurringTransactionDialog({
     }
   }, [isOpen, resetForm]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -80,18 +80,20 @@ export function AddRecurringTransactionDialog({
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      onAddTransaction({
+    try {
+      await onAddTransaction({
         description,
         amount: type === "expense" ? -transactionAmount : transactionAmount,
         category: type === "income" ? "Income" : category,
         startDate,
         frequency,
       });
-      setLoading(false);
       onOpenChange(false);
-    }, 500);
+    } catch (err) {
+      setError("Failed to add recurring transaction.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

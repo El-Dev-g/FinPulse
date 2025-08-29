@@ -24,15 +24,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader, Trash } from "lucide-react";
-import type { Goal } from "@/app/dashboard/goals/page";
+import type { Goal } from "@/lib/types";
 import { Textarea } from "../ui/textarea";
 
 interface EditGoalDialogProps {
   goal: Goal | null;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onEditGoal: (updatedGoal: Goal) => void;
-  onDeleteGoal: (goalId: string) => void;
+  onEditGoal: (updatedGoal: Goal) => Promise<void>;
+  onDeleteGoal: (goalId: string) => Promise<void>;
 }
 
 export function EditGoalDialog({
@@ -59,7 +59,7 @@ export function EditGoalDialog({
     }
   }, [goal]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -88,27 +88,33 @@ export function EditGoalDialog({
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      if (goal) {
-        onEditGoal({
-          ...goal,
-          title,
-          current: currentAmount,
-          target: targetAmount,
-          advice,
-        });
-      }
-      setLoading(false);
-      onOpenChange(false);
-    }, 500);
+    try {
+        if (goal) {
+            await onEditGoal({
+            ...goal,
+            title,
+            current: currentAmount,
+            target: targetAmount,
+            advice,
+            });
+        }
+        onOpenChange(false);
+    } catch (err) {
+        setError("Failed to update goal. Please try again.");
+    } finally {
+        setLoading(false);
+    }
   };
   
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (goal) {
-      onDeleteGoal(goal.id);
-      setIsDeleteDialogOpen(false);
-      onOpenChange(false);
+      try {
+        await onDeleteGoal(goal.id);
+        setIsDeleteDialogOpen(false);
+        onOpenChange(false);
+      } catch (err) {
+        setError("Failed to delete goal.");
+      }
     }
   };
 

@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
-import type { Budget } from "@/lib/placeholder-data";
+import type { Budget } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -26,7 +26,7 @@ import {
 interface AddBudgetDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddBudget: (newBudget: Omit<Budget, "id" | "spent" | "Icon">) => void;
+  onAddBudget: (newBudget: Omit<Budget, "id" | "createdAt">) => Promise<void>;
   existingCategories: string[];
 }
 
@@ -53,7 +53,7 @@ export function AddBudgetDialog({
   ].filter(cat => !existingCategories.includes(cat));
 
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -70,13 +70,16 @@ export function AddBudgetDialog({
 
     setLoading(true);
 
-    setTimeout(() => {
-      onAddBudget({ category, limit: limitAmount });
-      setLoading(false);
-      onOpenChange(false);
-      setCategory("");
-      setLimit("");
-    }, 500);
+    try {
+        await onAddBudget({ category, limit: limitAmount });
+        onOpenChange(false);
+        setCategory("");
+        setLimit("");
+    } catch (err) {
+        setError("Failed to add budget. Please try again.");
+    } finally {
+        setLoading(false);
+    }
   };
 
   return (

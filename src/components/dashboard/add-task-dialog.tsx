@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
-import type { FinancialTask } from "@/lib/placeholder-data";
+import type { FinancialTask, Goal } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -22,12 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import type { Goal } from "@/app/dashboard/goals/page";
 
 interface AddTaskDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddTask: (newTask: Omit<FinancialTask, "id" | "status">) => void;
+  onAddTask: (newTask: Omit<FinancialTask, "id" | "status" | "createdAt">) => Promise<void>;
   goals: Goal[];
 }
 
@@ -43,7 +42,7 @@ export function AddTaskDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -54,15 +53,17 @@ export function AddTaskDialog({
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      onAddTask({ title, dueDate, goalId: goalId === "none" ? undefined : goalId });
-      setLoading(false);
-      onOpenChange(false);
-      setTitle("");
-      setDueDate("");
-      setGoalId(undefined);
-    }, 500);
+    try {
+        await onAddTask({ title, dueDate, goalId: goalId === "none" ? undefined : goalId });
+        onOpenChange(false);
+        setTitle("");
+        setDueDate("");
+        setGoalId(undefined);
+    } catch (err) {
+        setError("Failed to add task. Please try again.");
+    } finally {
+        setLoading(false);
+    }
   };
 
   return (

@@ -1,0 +1,109 @@
+// src/lib/types.ts
+import type { ChartConfig } from "@/components/ui/chart";
+import type { LucideIcon } from "lucide-react";
+
+export interface Transaction {
+  id: string;
+  description: string;
+  amount: number;
+  date: string; // ISO string
+  category: string;
+  goalId?: string;
+  createdAt: any; // Firestore timestamp
+}
+
+export interface ClientTransaction extends Omit<Transaction, 'createdAt'>{
+  Icon: LucideIcon;
+  createdAt: Date;
+}
+
+
+export interface Budget {
+    id: string;
+    category: string;
+    limit: number;
+    createdAt: any; // Firestore timestamp
+}
+
+export interface ClientBudget extends Omit<Budget, 'createdAt'>{
+  spent: number;
+  Icon: LucideIcon;
+  createdAt: Date;
+}
+
+export type TaskStatus = 'To Do' | 'In Progress' | 'Done';
+
+export interface FinancialTask {
+  id: string;
+  title: string;
+  status: TaskStatus;
+  dueDate?: string; // ISO string
+  goalId?: string;
+  createdAt: any; // Firestore timestamp
+}
+
+export interface ClientFinancialTask extends Omit<FinancialTask, 'createdAt'>{
+  createdAt: Date;
+}
+
+export interface Goal {
+  id: string;
+  title: string;
+  current: number;
+  target: number;
+  advice?: string;
+  createdAt: any; // Firestore timestamp
+}
+
+export interface ClientGoal extends Omit<Goal, 'createdAt'>{
+  createdAt: Date;
+}
+
+
+export type RecurringFrequency = 'weekly' | 'monthly' | 'yearly';
+
+export interface RecurringTransaction {
+  id: string;
+  description: string;
+  amount: number;
+  category: string;
+  frequency: RecurringFrequency;
+  startDate: string; // ISO string
+  createdAt: any; // Firestore timestamp
+}
+
+export interface ClientRecurringTransaction extends Omit<RecurringTransaction, 'createdAt'>{
+    Icon: LucideIcon;
+    createdAt: Date;
+}
+
+
+export const spendingChartConfig = {
+  amount: {
+    label: "$",
+  },
+  groceries: {
+    label: "Groceries",
+    color: "hsl(var(--chart-1))",
+  },
+  dining: {
+    label: "Dining",
+    color: "hsl(var(--chart-2))",
+  },
+  transport: {
+    label: "Transport",
+    color: "hsl(var(--chart-3))",
+  },
+  entertainment: {
+    label: "Entertainment",
+    color: "hsl(var(--chart-4))",
+  },
+  health: {
+    label: "Health",
+    color: "hsl(var(--chart-5))",
+  },
+  other: {
+    label: "Other",
+    color: "hsl(var(--muted))",
+  },
+} satisfies ChartConfig;

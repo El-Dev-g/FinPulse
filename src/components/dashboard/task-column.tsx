@@ -6,18 +6,23 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
-import { FinancialTask, TaskStatus } from "@/lib/placeholder-data";
+import { FinancialTask, TaskStatus, Goal } from "@/lib/types";
 import { TaskCard } from "./task-card";
 
 interface TaskColumnProps {
   status: TaskStatus;
   tasks: FinancialTask[];
+  goals: Goal[];
   onEditTask: (task: FinancialTask) => void;
 }
 
-export function TaskColumn({ status, tasks, onEditTask }: TaskColumnProps) {
+export function TaskColumn({ status, tasks, goals, onEditTask }: TaskColumnProps) {
   const { setNodeRef } = useDroppable({
     id: status,
+    data: {
+      type: 'column',
+      status: status
+    }
   });
 
   return (
@@ -28,9 +33,12 @@ export function TaskColumn({ status, tasks, onEditTask }: TaskColumnProps) {
         strategy={verticalListSortingStrategy}
       >
         <div className="space-y-4 flex-grow">
-          {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} onEdit={onEditTask} />
-          ))}
+          {tasks.map((task) => {
+            const goal = task.goalId ? goals.find(g => g.id === task.goalId) : null;
+            return (
+              <TaskCard key={task.id} task={task} goal={goal} onEdit={onEditTask} />
+            )
+          })}
           {tasks.length === 0 && (
             <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed border-muted-foreground/20 rounded-lg h-full flex items-center justify-center">
               <p>Drop tasks here</p>

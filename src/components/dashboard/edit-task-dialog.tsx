@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader, Trash } from "lucide-react";
-import type { FinancialTask } from "@/lib/placeholder-data";
+import type { FinancialTask, Goal } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -32,14 +32,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import type { Goal } from "@/app/dashboard/goals/page";
 
 interface EditTaskDialogProps {
   task: FinancialTask | null;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onEditTask: (updatedTask: FinancialTask) => void;
-  onDeleteTask: (taskId: string) => void;
+  onEditTask: (updatedTask: FinancialTask) => Promise<void>;
+  onDeleteTask: (taskId: string) => Promise<void>;
   goals: Goal[];
 }
 
@@ -66,7 +65,7 @@ export function EditTaskDialog({
     }
   }, [task]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -77,26 +76,32 @@ export function EditTaskDialog({
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
       if (task) {
-        onEditTask({
+        await onEditTask({
           ...task,
           title,
           dueDate,
           goalId: goalId === "none" ? undefined : goalId,
         });
       }
-      setLoading(false);
       onOpenChange(false);
-    }, 500);
+    } catch (err) {
+      setError("Failed to update task.");
+    } finally {
+      setLoading(false);
+    }
   };
   
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (task) {
-      onDeleteTask(task.id);
-      setIsDeleteDialogOpen(false);
-      onOpenChange(false);
+      try {
+        await onDeleteTask(task.id);
+        setIsDeleteDialogOpen(false);
+        onOpenChange(false);
+      } catch (err) {
+        setError("Failed to delete task.");
+      }
     }
   };
 

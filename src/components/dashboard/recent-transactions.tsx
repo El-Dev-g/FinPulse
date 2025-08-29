@@ -1,4 +1,7 @@
 // src/components/dashboard/recent-transactions.tsx
+"use client";
+
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -15,21 +18,44 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { transactionsData, Transaction } from "@/lib/placeholder-data";
 import { cn } from "@/lib/utils";
+import type { ClientTransaction, Transaction } from '@/lib/types';
+import { getTransactions } from '@/lib/db';
+import { useAuth } from '@/hooks/use-auth';
+import { processTransactions, getIconForCategory } from '@/lib/utils';
+import { Loader } from 'lucide-react';
 
 interface RecentTransactionsProps {
-  goalId?: string;
   title?: string;
   description?: string;
-  showViewAll?: boolean;
 }
 
 export function RecentTransactions({
-  goalId,
   title = "Recent Transactions",
   description = "Here are your latest financial activities.",
 }: RecentTransactionsProps) {
+    const { user } = useAuth();
+    const [transactions, setTransactions] = useState<ClientTransaction[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchRecentTransactions = async () => {
+            if (!user) return;
+            setLoading(true);
+            try {
+                const dbTransactions = await getTransactions();
+                const processed = processTransactions(dbTransactions as Transaction[]);
+                setTransactions(processed.slice(0, 5)); // Get 5 most recent
+            } catch (error) {
+                console.error("Error fetching recent transactions:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchRecentTransactions();
+    }, [user]);
+
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -37,9 +63,6 @@ export function RecentTransactions({
     }).format(amount);
   };
 
-  const filteredTransactions = goalId
-    ? transactionsData.filter((t) => t.goalId === goalId)
-    : transactionsData.slice(0, 5);
 
   return (
     <Card>
@@ -48,7 +71,11 @@ export function RecentTransactions({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        {filteredTransactions.length > 0 ? (
+        {loading ? (
+            <div className="flex justify-center items-center h-64">
+                <Loader className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        ) : transactions.length > 0 ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -58,12 +85,14 @@ export function RecentTransactions({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredTransactions.map((transaction) => (
+              {transactions.map((transaction) => {
+                const Icon = getIconForCategory(transaction.category);
+                return (
                 <TableRow key={transaction.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="bg-muted p-2 rounded-md">
-                        <transaction.Icon className="h-4 w-4 text-muted-foreground" />
+                        <Icon className="h-4 w-4 text-muted-foreground" />
                       </div>
                       <div>
                         <div className="font-medium">
@@ -90,7 +119,7 @@ export function RecentTransactions({
                     {formatCurrency(transaction.amount)}
                   </TableCell>
                 </TableRow>
-              ))}
+              )})}
             </TableBody>
           </Table>
         ) : (

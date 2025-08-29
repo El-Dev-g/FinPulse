@@ -1,7 +1,7 @@
 // src/app/dashboard/reports/page.tsx
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -22,8 +22,10 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { transactionsData } from "@/lib/placeholder-data";
-import { PieChart as PieChartIcon } from "lucide-react";
+import { getTransactions } from "@/lib/db";
+import type { Transaction } from "@/lib/types";
+import { useAuth } from "@/hooks/use-auth";
+import { PieChart as PieChartIcon, Loader } from "lucide-react";
 import { subDays, format, isWithinInterval, startOfDay } from 'date-fns';
 import { DateRangePicker } from "@/components/dashboard/date-range-picker";
 import type { DateRange } from "react-day-picker";
@@ -39,11 +41,32 @@ const COLORS = [
 ];
 
 export default function ReportsPage() {
+    const { user } = useAuth();
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [loading, setLoading] = useState(true);
     const today = startOfDay(new Date());
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
         from: subDays(today, 29),
         to: today,
     });
+
+    const fetchData = useCallback(async () => {
+        if(!user) return;
+        setLoading(true);
+        try {
+            const dbTransactions = await getTransactions();
+            setTransactions(dbTransactions as Transaction[]);
+        } catch (error) {
+            console.error("Error fetching transactions: ", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [user]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
 
     const {
         timeSeriesData,
@@ -53,12 +76,12 @@ export default function ReportsPage() {
         const fromDate = dateRange?.from;
         const toDate = dateRange?.to;
 
-        if (!fromDate || !toDate) {
+        if (!fromDate || !toDate || !transactions) {
             return { timeSeriesData: [], categorySpendingData: [], reportMetrics: { totalIncome: 0, totalExpenses: 0, netSavings: 0 } };
         }
         
         const interval = { start: fromDate, end: toDate };
-        const filteredTransactions = transactionsData.filter(t => isWithinInterval(new Date(t.date), interval));
+        const filteredTransactions = transactions.filter(t => isWithinInterval(new Date(t.date), interval));
         
         // --- Time Series Data (Income vs Expense) ---
         const dailyData: { [key: string]: { income: number; expenses: number } } = {};
@@ -113,7 +136,7 @@ export default function ReportsPage() {
             }
         };
 
-    }, [dateRange]);
+    }, [dateRange, transactions]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -139,73 +162,81 @@ export default function ReportsPage() {
             <DateRangePicker dateRange={dateRange} onDateChange={setDateRange} />
         </div>
 
-        <ReportMetrics metrics={reportMetrics} />
+        {loading ? (
+             <div className="flex justify-center items-center h-96">
+                <Loader className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        ) : (
+            <>
+                <ReportMetrics metrics={reportMetrics} />
 
-        <div className="grid gap-8 md:grid-cols-5 mt-8">
-            <Card className="md:col-span-3">
-                <CardHeader>
-                    <CardTitle>Income vs. Expense</CardTitle>
-                    <CardDescription>Trend for the selected period.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={timeSeriesData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis tickFormatter={(value) => formatCurrency(value as number)} />
-                        <Tooltip formatter={(value) => formatCurrency(value as number)}/>
-                        <Legend />
-                        <Line type="monotone" dataKey="income" stroke="hsl(var(--chart-1))" activeDot={{ r: 8 }} name="Income" />
-                        <Line type="monotone" dataKey="expenses" stroke="hsl(var(--chart-2))" name="Expenses" />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </CardContent>
-            </Card>
-            <Card className="md:col-span-2">
-                <CardHeader>
-                    <CardTitle>Expense Breakdown</CardTitle>
-                    <CardDescription>Spending by category for the selected period.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                   {categorySpendingData.length > 0 ? (
-                     <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
-                            <Pie
-                                data={categorySpendingData}
-                                dataKey="value"
-                                nameKey="name"
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={80}
-                                labelLine={false}
-                                label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-                                  if (percent < 0.05) return null; // Don't render label for small slices
-                                  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                                  const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
-                                  const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
-                                  return (
-                                    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" className="text-xs font-bold">
-                                      {`${(percent * 100).toFixed(0)}%`}
-                                    </text>
-                                  );
-                                }}
-                            >
-                                {categorySpendingData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.fill} />
-                                ))}
-                            </Pie>
-                            <Tooltip formatter={(value) => formatCurrency(value as number)}/>
-                            <Legend />
-                        </PieChart>
-                    </ResponsiveContainer>
-                   ) : (
-                     <div className="flex items-center justify-center h-[300px] text-muted-foreground text-sm">
-                        No expense data for this period.
-                     </div>
-                   )}
-                </CardContent>
-            </Card>
-        </div>
+                <div className="grid gap-8 md:grid-cols-5 mt-8">
+                    <Card className="md:col-span-3">
+                        <CardHeader>
+                            <CardTitle>Income vs. Expense</CardTitle>
+                            <CardDescription>Trend for the selected period.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ResponsiveContainer width="100%" height={300}>
+                                <LineChart data={timeSeriesData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="date" />
+                                <YAxis tickFormatter={(value) => formatCurrency(value as number)} />
+                                <Tooltip formatter={(value) => formatCurrency(value as number)}/>
+                                <Legend />
+                                <Line type="monotone" dataKey="income" stroke="hsl(var(--chart-1))" activeDot={{ r: 8 }} name="Income" />
+                                <Line type="monotone" dataKey="expenses" stroke="hsl(var(--chart-2))" name="Expenses" />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+                    <Card className="md:col-span-2">
+                        <CardHeader>
+                            <CardTitle>Expense Breakdown</CardTitle>
+                            <CardDescription>Spending by category for the selected period.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                        {categorySpendingData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={300}>
+                                <PieChart>
+                                    <Pie
+                                        data={categorySpendingData}
+                                        dataKey="value"
+                                        nameKey="name"
+                                        cx="50%"
+                                        cy="50%"
+                                        outerRadius={80}
+                                        labelLine={false}
+                                        label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                                        if (percent < 0.05) return null; // Don't render label for small slices
+                                        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                                        const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
+                                        const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
+                                        return (
+                                            <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" className="text-xs font-bold">
+                                            {`${(percent * 100).toFixed(0)}%`}
+                                            </text>
+                                        );
+                                        }}
+                                    >
+                                        {categorySpendingData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip formatter={(value) => formatCurrency(value as number)}/>
+                                    <Legend />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="flex items-center justify-center h-[300px] text-muted-foreground text-sm">
+                                No expense data for this period.
+                            </div>
+                        )}
+                        </CardContent>
+                    </Card>
+                </div>
+            </>
+        )}
       </div>
     </main>
   );

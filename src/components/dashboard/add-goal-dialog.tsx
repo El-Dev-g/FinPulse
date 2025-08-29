@@ -14,13 +14,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
-import type { Goal } from "@/app/dashboard/goals/page";
+import type { Goal } from "@/lib/types";
 import { Textarea } from "../ui/textarea";
 
 interface AddGoalDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddGoal: (newGoal: Omit<Goal, "id" | "current">) => void;
+  onAddGoal: (newGoal: Omit<Goal, "id" | "current" | "createdAt">) => Promise<void>;
 }
 
 export function AddGoalDialog({
@@ -34,7 +34,7 @@ export function AddGoalDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -51,15 +51,17 @@ export function AddGoalDialog({
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      onAddGoal({ title, target: targetAmount, advice });
-      setLoading(false);
+    try {
+      await onAddGoal({ title, target: targetAmount, advice });
       onOpenChange(false);
       setTitle("");
       setTarget("");
       setAdvice("");
-    }, 500);
+    } catch (err) {
+       setError("Failed to add goal. Please try again.");
+    } finally {
+        setLoading(false);
+    }
   };
 
   return (

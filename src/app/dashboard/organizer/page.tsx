@@ -1,7 +1,7 @@
 // src/app/dashboard/organizer/page.tsx
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   DndContext,
   closestCenter,
@@ -9,13 +9,12 @@ import {
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
-import { ClipboardList, Plus, Calendar, LayoutGrid } from "lucide-react";
+import { ClipboardList, Plus, Calendar, LayoutGrid, Loader } from "lucide-react";
 import {
-  tasksData as initialTasks,
-  goalsData,
   type FinancialTask,
   type TaskStatus,
-} from "@/lib/placeholder-data";
+  type Goal,
+} from "@/lib/types";
 import { AddTaskDialog } from "@/components/dashboard/add-task-dialog";
 import { EditTaskDialog } from "@/components/dashboard/edit-task-dialog";
 import { TaskColumn } from "@/components/dashboard/task-column";
@@ -23,6 +22,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/use-auth";
+import { getTasks, getGoals, addTask, updateTask, deleteTask } from "@/lib/db";
 
 const columns: TaskStatus[] = ["To Do", "In Progress", "Done"];
 
@@ -145,30 +146,50 @@ function CalendarView({ tasks }: { tasks: FinancialTask[] }) {
 }
 
 export default function OrganizerPage() {
-  const [tasks, setTasks] = useState<FinancialTask[]>(initialTasks);
+  const { user } = useAuth();
+  const [tasks, setTasks] = useState<FinancialTask[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editingTask, setEditingTask] = useState<FinancialTask | null>(null);
   const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("board");
 
-  const handleAddTask = (newTask: Omit<FinancialTask, "id" | "status">) => {
-    const taskWithId: FinancialTask = {
-      ...newTask,
-      id: `task_${tasks.length + 1}`,
-      status: "To Do",
-    };
-    setTasks((prev) => [...prev, taskWithId]);
+  const fetchData = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const [dbTasks, dbGoals] = await Promise.all([getTasks(), getGoals()]);
+      setTasks(dbTasks as FinancialTask[]);
+      setGoals(dbGoals as Goal[]);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+
+  const handleAddTask = async (newTask: Omit<FinancialTask, "id" | "status" | "createdAt">) => {
+    await addTask({ ...newTask, status: "To Do" });
+    fetchData();
   };
   
-  const handleEditTask = (updatedTask: FinancialTask) => {
-    setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
+  const handleEditTask = async (updatedTask: FinancialTask) => {
+    await updateTask(updatedTask.id, updatedTask);
+    fetchData();
   };
   
-  const handleDeleteTask = (taskId: string) => {
-    setTasks(tasks.filter(t => t.id !== taskId));
+  const handleDeleteTask = async (taskId: string) => {
+    await deleteTask(taskId);
+    fetchData();
   };
 
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (!over) return;
@@ -176,38 +197,26 @@ export default function OrganizerPage() {
     const activeId = active.id;
     const overId = over.id;
 
-    if (activeId === overId) return;
+    const activeTask = tasks.find((t) => t.id === activeId);
+    if (!activeTask) return;
 
-    setTasks((tasks) => {
-      const activeTask = tasks.find((t) => t.id === activeId);
-      const overTask = tasks.find((t) => t.id === overId);
-      const overColumn = over.data.current?.sortable
-        ?.containerId as TaskStatus | undefined;
+    // Dropping on a column
+    const overColumn = over.data.current?.sortable?.containerId as TaskStatus | undefined;
+    if (overColumn && activeTask.status !== overColumn) {
+        const updatedTask = { ...activeTask, status: overColumn };
+        await updateTask(activeId as string, { status: overColumn });
+        setTasks(tasks.map((t) => (t.id === activeId ? updatedTask : t)));
+        return;
+    }
 
-      // If dropping over a column (but not on an item)
-      if (overColumn && activeTask && activeTask.status !== overColumn) {
-        return tasks.map((t) =>
-          t.id === activeId ? { ...t, status: overColumn } : t
-        );
-      }
-
-      // If dropping over another task
-      if (activeTask && overTask) {
-        const oldIndex = tasks.findIndex((t) => t.id === activeId);
-        const newIndex = tasks.findIndex((t) => t.id === overId);
-        const newStatus = overTask.status;
-
-        if (activeTask.status !== newStatus) {
-          const updatedTask = { ...activeTask, status: newStatus };
-          const remainingTasks = tasks.filter((t) => t.id !== activeId);
-          remainingTasks.splice(newIndex, 0, updatedTask);
-          return remainingTasks;
-        }
-        return arrayMove(tasks, oldIndex, newIndex);
-      }
-
-      return tasks;
-    });
+    // Dropping on another task
+    if (activeId !== overId) {
+      const oldIndex = tasks.findIndex((t) => t.id === activeId);
+      const newIndex = tasks.findIndex((t) => t.id === overId);
+      const newTasks = arrayMove(tasks, oldIndex, newIndex);
+      setTasks(newTasks);
+      // Note: For persistence, you'd need to update an 'order' field in Firestore
+    }
   };
 
   return (
@@ -241,23 +250,31 @@ export default function OrganizerPage() {
               Calendar
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="board" className="h-full">
-            <KanbanView
-              tasks={tasks}
-              onDragEnd={handleDragEnd}
-              onEdit={setEditingTask}
-            />
-          </TabsContent>
-          <TabsContent value="calendar" className="h-full">
-            <CalendarView tasks={tasks} />
-          </TabsContent>
+          {loading ? (
+             <div className="flex justify-center items-center h-96">
+                <Loader className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+          <>
+            <TabsContent value="board" className="h-full">
+                <KanbanView
+                tasks={tasks}
+                onDragEnd={handleDragEnd}
+                onEdit={setEditingTask}
+                />
+            </TabsContent>
+            <TabsContent value="calendar" className="h-full">
+                <CalendarView tasks={tasks} />
+            </TabsContent>
+           </>
+          )}
         </Tabs>
       </div>
       <AddTaskDialog
         isOpen={isAddTaskDialogOpen}
         onOpenChange={setIsAddTaskDialogOpen}
         onAddTask={handleAddTask}
-        goals={goalsData}
+        goals={goals}
       />
       <EditTaskDialog
         task={editingTask}
@@ -265,7 +282,7 @@ export default function OrganizerPage() {
         onOpenChange={(isOpen) => !isOpen && setEditingTask(null)}
         onEditTask={handleEditTask}
         onDeleteTask={handleDeleteTask}
-        goals={goalsData}
+        goals={goals}
       />
     </main>
   );

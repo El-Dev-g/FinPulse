@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader, Sparkles } from "lucide-react";
-import type { Transaction } from "@/lib/placeholder-data";
+import type { Transaction } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -29,7 +29,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 interface AddTransactionDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddTransaction: (newTransaction: Omit<Transaction, "id" | "Icon">) => void;
+  onAddTransaction: (newTransaction: Omit<Transaction, "id" | "Icon" | "createdAt">) => Promise<void>;
   categories: string[];
 }
 
@@ -89,7 +89,7 @@ export function AddTransactionDialog({
     }
   }, [isOpen, resetForm]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -106,17 +106,19 @@ export function AddTransactionDialog({
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      onAddTransaction({
+    try {
+      await onAddTransaction({
         description,
         amount: type === "expense" ? -transactionAmount : transactionAmount,
         category: type === "income" ? "Income" : category,
         date,
       });
-      setLoading(false);
       onOpenChange(false);
-    }, 500);
+    } catch (err) {
+        setError("Failed to add transaction. Please try again.");
+    } finally {
+        setLoading(false);
+    }
   };
 
   return (

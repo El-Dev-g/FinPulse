@@ -1,5 +1,7 @@
+// src/components/dashboard/spending-chart.tsx
 "use client";
 
+import React, { useState, useEffect } from "react";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import {
   Card,
@@ -13,9 +15,58 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { spendingData, spendingChartConfig } from "@/lib/placeholder-data";
+import { spendingChartConfig } from "@/lib/types";
+import { getTransactions } from "@/lib/db";
+import { useAuth } from "@/hooks/use-auth";
+import type { Transaction } from "@/lib/types";
+import { startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
+import { Loader } from "lucide-react";
 
 export function SpendingChart() {
+  const { user } = useAuth();
+  const [spendingData, setSpendingData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const calculateSpending = async () => {
+      if (!user) return;
+      setLoading(true);
+      const transactions = await getTransactions() as Transaction[];
+
+      const now = new Date();
+      const currentMonthStart = startOfMonth(now);
+      const currentMonthEnd = endOfMonth(now);
+
+      const categorySpending: { [key: string]: number } = {};
+
+      transactions.forEach((t) => {
+        const tDate = new Date(t.date);
+        if (
+          t.amount < 0 &&
+          isWithinInterval(tDate, {
+            start: currentMonthStart,
+            end: currentMonthEnd,
+          })
+        ) {
+          const expense = Math.abs(t.amount);
+          categorySpending[t.category] =
+            (categorySpending[t.category] || 0) + expense;
+        }
+      });
+      
+      const chartData = Object.entries(categorySpending).map(([category, amount]) => ({
+          category,
+          amount,
+          fill: `var(--color-${category.toLowerCase().replace(' ', '')})`
+      })).sort((a,b) => b.amount - a.amount);
+
+      setSpendingData(chartData);
+      setLoading(false);
+    };
+
+    calculateSpending();
+  }, [user]);
+
   return (
     <Card>
       <CardHeader>
@@ -25,6 +76,11 @@ export function SpendingChart() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {loading ? (
+           <div className="flex justify-center items-center h-64">
+            <Loader className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : spendingData.length > 0 ? (
         <ChartContainer config={spendingChartConfig} className="h-64 w-full">
           <ResponsiveContainer>
             <BarChart accessibilityLayer data={spendingData}>
@@ -48,6 +104,11 @@ export function SpendingChart() {
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
+         ) : (
+            <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
+                No spending data for this month.
+            </div>
+         )}
       </CardContent>
     </Card>
   );

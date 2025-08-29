@@ -4,17 +4,18 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card } from "@/components/ui/card";
-import { FinancialTask, goalsData } from "@/lib/placeholder-data";
+import { FinancialTask, Goal } from "@/lib/types";
 import { GripVertical, Pencil, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 
 interface TaskCardProps {
   task: FinancialTask;
+  goal?: Goal | null; // Pass goal as a prop
   onEdit: (task: FinancialTask) => void;
 }
 
-export function TaskCard({ task, onEdit }: TaskCardProps) {
+export function TaskCard({ task, goal, onEdit }: TaskCardProps) {
   const {
     attributes,
     listeners,
@@ -22,7 +23,7 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: task.id });
+  } = useSortable({ id: task.id, data: {type: 'task', task} });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -31,9 +32,6 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
     opacity: isDragging ? 0.7 : 1,
   };
 
-  const goal = task.goalId
-    ? goalsData.find((g) => g.id === task.goalId)
-    : null;
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>

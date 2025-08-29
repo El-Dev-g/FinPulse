@@ -8,13 +8,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import type { Budget } from "@/lib/placeholder-data";
+import type { ClientBudget } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { MoveUpRight } from "lucide-react";
 
 interface BudgetCardProps {
-  budget: Budget;
+  budget: ClientBudget;
   onSweep: () => void;
 }
 

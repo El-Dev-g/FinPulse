@@ -1,9 +1,9 @@
 // src/app/dashboard/goals/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -14,32 +14,56 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { goalsData, type Goal as GoalType } from "@/lib/placeholder-data";
-import { Plus, Sparkles } from "lucide-react";
+import { Plus, Sparkles, Loader } from "lucide-react";
 import { AddGoalDialog } from "@/components/dashboard/add-goal-dialog";
 import { EditGoalDialog } from "@/components/dashboard/edit-goal-dialog";
-
-export interface Goal extends GoalType {}
+import { useAuth } from "@/hooks/use-auth";
+import type { Goal } from "@/lib/types";
+import { addGoal, deleteGoal, getGoals, updateGoal } from "@/lib/db";
+import { processGoals } from "@/lib/utils";
 
 export default function GoalsPage() {
-  const [goals, setGoals] = useState<Goal[]>(goalsData);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAddGoalDialogOpen, setIsAddGoalDialogOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
 
+  const { user } = useAuth();
   const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const fetchGoals = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const dbGoals = await getGoals();
+      
+      const advice = searchParams.get('advice');
+      const goalId = searchParams.get('goalId');
+      
+      if (advice && goalId) {
+        const goalIndex = dbGoals.findIndex(g => g.id === goalId);
+        if (goalIndex !== -1) {
+          dbGoals[goalIndex].advice = decodeURIComponent(advice);
+          await updateGoal(goalId, { advice: decodeURIComponent(advice) });
+        }
+        // Remove query params after processing
+        router.replace('/dashboard/goals', {scroll: false});
+      }
+      
+      const processed = processGoals(dbGoals as any[]);
+      setGoals(processed);
+    } catch (error) {
+      console.error("Error fetching goals: ", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, searchParams, router]);
+
 
   useEffect(() => {
-    const advice = searchParams.get('advice');
-    const goalId = searchParams.get('goalId');
-
-    if (advice && goalId) {
-      const goalIndex = goalsData.findIndex(g => g.id === goalId);
-      if (goalIndex !== -1) {
-        goalsData[goalIndex].advice = decodeURIComponent(advice);
-      }
-      setGoals([...goalsData]);
-    }
-  }, [searchParams]);
+    fetchGoals();
+  }, [fetchGoals]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -49,33 +73,24 @@ export default function GoalsPage() {
     }).format(amount);
   };
 
-  const handleAddGoal = (newGoal: Omit<Goal, "id" | "current">) => {
-    const goalWithId: Goal = {
-      ...newGoal,
-      id: `goal_${goalsData.length + 1}`,
-      current: 0,
-    };
-    // Add to the original array to simulate a database update
-    goalsData.push(goalWithId);
-    setGoals([...goalsData]);
+  const handleAddGoal = async (newGoal: Omit<Goal, "id" | "current" | "createdAt">) => {
+    await addGoal({ ...newGoal, current: 0 });
+    fetchGoals();
   };
 
-  const handleEditGoal = (updatedGoal: Goal) => {
-    const goalIndex = goalsData.findIndex(g => g.id === updatedGoal.id);
-    if (goalIndex !== -1) {
-      goalsData[goalIndex] = updatedGoal;
-    }
-    setGoals([...goalsData]);
+  const handleEditGoal = async (updatedGoal: Goal) => {
+    await updateGoal(updatedGoal.id, updatedGoal);
+    fetchGoals();
   };
 
-  const handleDeleteGoal = (goalId: string) => {
-    const goalIndex = goalsData.findIndex(g => g.id === goalId);
-    if (goalIndex !== -1) {
-      goalsData.splice(goalIndex, 1);
-    }
-    setGoals([...goalsData]);
+  const handleDeleteGoal = async (goalId: string) => {
+    await deleteGoal(goalId);
+    fetchGoals();
   };
 
+  if(loading){
+    return <div className="flex h-full w-full items-center justify-center"><Loader className="animate-spin" /></div>
+  }
 
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
@@ -143,6 +158,12 @@ export default function GoalsPage() {
             );
           })}
         </div>
+        {goals.length === 0 && !loading && (
+          <div className="text-center py-12 text-muted-foreground">
+              <h3 className="text-lg font-semibold">No Goals Yet!</h3>
+              <p>Click "Add New Goal" to get started.</p>
+          </div>
+        )}
       </div>
       <AddGoalDialog
         isOpen={isAddGoalDialogOpen}

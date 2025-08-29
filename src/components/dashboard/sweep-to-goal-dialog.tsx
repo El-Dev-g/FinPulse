@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
-import type { Budget, Goal } from "@/lib/placeholder-data";
+import type { ClientBudget, Goal } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -24,11 +24,11 @@ import {
 import { Card, CardContent } from "../ui/card";
 
 interface SweepToGoalDialogProps {
-  budget: Budget | null;
+  budget: ClientBudget | null;
   goals: Goal[];
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onSweep: (budget: Budget, goal: Goal) => void;
+  onSweep: (budget: ClientBudget, goal: Goal) => Promise<void>;
 }
 
 export function SweepToGoalDialog({
@@ -50,7 +50,7 @@ export function SweepToGoalDialog({
     }
   }, [isOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -67,12 +67,14 @@ export function SweepToGoalDialog({
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      onSweep(budget, selectedGoal);
-      setLoading(false);
-      onOpenChange(false);
-    }, 500);
+    try {
+        await onSweep(budget, selectedGoal);
+        onOpenChange(false);
+    } catch (err) {
+        setError("Failed to sweep funds. Please try again.");
+    } finally {
+        setLoading(false);
+    }
   };
   
   const formatCurrency = (amount: number) => {

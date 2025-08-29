@@ -1,7 +1,7 @@
 // src/app/dashboard/goals/[id]/page.tsx
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import {
   Card,
@@ -13,17 +13,66 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { goalsData, transactionsData, tasksData } from "@/lib/placeholder-data";
-import { ArrowLeft, Calculator, Bot, Sparkles, ClipboardList } from "lucide-react";
+import { getGoal, getTasks, getTransactions } from "@/lib/db";
+import { ArrowLeft, Calculator, Bot, Sparkles, ClipboardList, Loader } from "lucide-react";
 import Link from "next/link";
 import { ActivityList } from "@/components/dashboard/activity-list";
+import type { ClientGoal, ClientFinancialTask, ClientTransaction, Goal, Transaction, FinancialTask } from "@/lib/types";
+import { useAuth } from "@/hooks/use-auth";
+import { processGoal, processTasks, processTransactions } from "@/lib/utils";
 
 export default function GoalDetailPage() {
   const params = useParams();
   const { id } = params;
+  const { user } = useAuth();
+  
+  const [goal, setGoal] = useState<ClientGoal | null>(null);
+  const [relatedTransactions, setRelatedTransactions] = useState<ClientTransaction[]>([]);
+  const [relatedTasks, setRelatedTasks] = useState<ClientFinancialTask[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // In a real app, you'd fetch this from your state management or API
-  const goal = goalsData.find((g) => g.id === id);
+  const fetchData = useCallback(async () => {
+    if (!user || typeof id !== 'string') return;
+    setLoading(true);
+    try {
+      const [goalData, transactionsData, tasksData] = await Promise.all([
+        getGoal(id),
+        getTransactions(),
+        getTasks(),
+      ]);
+
+      if (goalData) {
+        setGoal(processGoal(goalData as Goal));
+        
+        const filteredTransactions = transactionsData.filter(t => t.goalId === id);
+        setRelatedTransactions(processTransactions(filteredTransactions as Transaction[]));
+        
+        const filteredTasks = tasksData.filter(t => t.goalId === id);
+        setRelatedTasks(processTasks(filteredTasks as FinancialTask[]));
+
+      } else {
+        setGoal(null);
+      }
+    } catch (error) {
+      console.error("Error fetching goal details:", error);
+      setGoal(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, id]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+
+  if (loading) {
+    return (
+      <main className="flex-1 p-4 md:p-6 lg:p-8 flex items-center justify-center">
+        <Loader className="h-12 w-12 animate-spin text-primary" />
+      </main>
+    );
+  }
 
   if (!goal) {
     return (
@@ -51,9 +100,6 @@ export default function GoalDetailPage() {
   };
 
   const progress = (goal.current / goal.target) * 100;
-  
-  const relatedTransactions = transactionsData.filter(t => t.goalId === goal.id);
-  const relatedTasks = tasksData.filter(t => t.goalId === goal.id);
 
   const aiAdvisorLink = `/dashboard/ai-advisor?goal=${encodeURIComponent(
     goal.title

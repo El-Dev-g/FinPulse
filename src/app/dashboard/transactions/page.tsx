@@ -1,13 +1,11 @@
 // src/app/dashboard/transactions/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import {
   Table,
@@ -18,7 +16,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { transactionsData as initialTransactions } from "@/lib/placeholder-data";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import {
@@ -29,16 +26,39 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ArrowRightLeft, Download, Plus } from "lucide-react";
+import { ArrowRightLeft, Download, Plus, Loader } from "lucide-react";
 import { AddTransactionDialog } from "@/components/dashboard/add-transaction-dialog";
-import type { Transaction } from "@/lib/placeholder-data";
+import type { ClientTransaction, Transaction } from "@/lib/types";
+import { addTransaction, getTransactions } from "@/lib/db";
+import { processTransactions, getIconForCategory } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function TransactionsPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+  const [transactions, setTransactions] = useState<ClientTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isAddTransactionDialogOpen, setIsAddTransactionDialogOpen] =
     useState(false);
+  const { user } = useAuth();
+  
+  const fetchTransactions = React.useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const dbTransactions = await getTransactions();
+      const processed = processTransactions(dbTransactions as Transaction[]);
+      setTransactions(processed);
+    } catch (error) {
+      console.error("Error fetching transactions: ", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -49,7 +69,7 @@ export default function TransactionsPage() {
 
   const categories = [
     "all",
-    ...Array.from(new Set(initialTransactions.map((t) => t.category))),
+    ...Array.from(new Set(transactions.map((t) => t.category))),
   ];
 
   const filteredTransactions = transactions
@@ -61,15 +81,11 @@ export default function TransactionsPage() {
         categoryFilter === "all" || transaction.category === categoryFilter
     );
 
-  const handleAddTransaction = (
-    newTransaction: Omit<Transaction, "id" | "Icon">
+  const handleAddTransaction = async (
+    newTransaction: Omit<Transaction, "id" | "Icon" | "createdAt">
   ) => {
-    const transactionWithId: Transaction = {
-      ...newTransaction,
-      id: `txn_${transactions.length + 1}`,
-      Icon: ArrowRightLeft, // Default icon, can be improved
-    };
-    setTransactions([transactionWithId, ...transactions]);
+    await addTransaction(newTransaction);
+    fetchTransactions(); // Refetch
   };
 
   const handleExportCSV = () => {
@@ -150,6 +166,11 @@ export default function TransactionsPage() {
             </div>
           </CardHeader>
           <CardContent>
+            {loading ? (
+                 <div className="flex justify-center items-center h-64">
+                    <Loader className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            ) : (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -161,12 +182,14 @@ export default function TransactionsPage() {
               </TableHeader>
               <TableBody>
                 {filteredTransactions.length > 0 ? (
-                  filteredTransactions.map((transaction) => (
+                  filteredTransactions.map((transaction) => {
+                    const Icon = getIconForCategory(transaction.category);
+                    return (
                     <TableRow key={transaction.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="bg-muted p-2 rounded-md">
-                            <transaction.Icon className="h-4 w-4 text-muted-foreground" />
+                            <Icon className="h-4 w-4 text-muted-foreground" />
                           </div>
                           <div className="font-medium">
                             {transaction.description}
@@ -191,7 +214,7 @@ export default function TransactionsPage() {
                         {formatCurrency(transaction.amount)}
                       </TableCell>
                     </TableRow>
-                  ))
+                  )})
                 ) : (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center h-24">
@@ -201,6 +224,7 @@ export default function TransactionsPage() {
                 )}
               </TableBody>
             </Table>
+            )}
           </CardContent>
         </Card>
       </div>

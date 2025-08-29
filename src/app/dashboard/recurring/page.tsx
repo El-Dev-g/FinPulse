@@ -1,7 +1,7 @@
 // src/app/dashboard/recurring/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -18,21 +18,47 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-  recurringTransactionsData as initialRecurringTransactions,
-  transactionsData,
-} from "@/lib/placeholder-data";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Plus, Repeat, ArrowRightLeft } from "lucide-react";
+import { Plus, Repeat, ArrowRightLeft, Loader } from "lucide-react";
 import { AddRecurringTransactionDialog } from "@/components/dashboard/add-recurring-transaction-dialog";
-import type { RecurringTransaction } from "@/lib/placeholder-data";
+import type { RecurringTransaction, ClientRecurringTransaction, Transaction } from "@/lib/types";
+import { useAuth } from "@/hooks/use-auth";
+import { addRecurringTransaction, getRecurringTransactions, getTransactions } from "@/lib/db";
+import { processRecurringTransactions, getIconForCategory } from "@/lib/utils";
 
 export default function RecurringPage() {
-  const [recurring, setRecurring] = useState<RecurringTransaction[]>(
-    initialRecurringTransactions
-  );
+  const { user } = useAuth();
+  const [recurring, setRecurring] = useState<ClientRecurringTransaction[]>([]);
+  const [allCategories, setAllCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const [dbRecurring, dbTransactions] = await Promise.all([
+        getRecurringTransactions(),
+        getTransactions(),
+      ]);
+      const processed = processRecurringTransactions(dbRecurring as RecurringTransaction[]);
+      setRecurring(processed);
+
+      const uniqueCategories = Array.from(new Set(dbTransactions.map((t: Transaction) => t.category)));
+      setAllCategories(uniqueCategories.filter(c => c !== 'Income'));
+
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -41,17 +67,11 @@ export default function RecurringPage() {
     }).format(amount);
   };
   
-  const allCategories = Array.from(new Set(transactionsData.map(t => t.category)));
-
-  const handleAddTransaction = (
-    newTransaction: Omit<RecurringTransaction, "id" | "Icon">
+  const handleAddTransaction = async (
+    newTransaction: Omit<RecurringTransaction, "id" | "Icon" | "createdAt">
   ) => {
-    const transactionWithId: RecurringTransaction = {
-      ...newTransaction,
-      id: `recur_${recurring.length + 1}`,
-      Icon: ArrowRightLeft, // Default icon
-    };
-    setRecurring([transactionWithId, ...recurring]);
+    await addRecurringTransaction(newTransaction);
+    fetchData();
   };
 
   return (
@@ -84,6 +104,11 @@ export default function RecurringPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {loading ? (
+                <div className="flex justify-center items-center h-64">
+                    <Loader className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            ) : (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -96,12 +121,14 @@ export default function RecurringPage() {
               </TableHeader>
               <TableBody>
                 {recurring.length > 0 ? (
-                  recurring.map((transaction) => (
+                  recurring.map((transaction) => {
+                    const Icon = getIconForCategory(transaction.category);
+                    return (
                     <TableRow key={transaction.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="bg-muted p-2 rounded-md">
-                            <transaction.Icon className="h-4 w-4 text-muted-foreground" />
+                            <Icon className="h-4 w-4 text-muted-foreground" />
                           </div>
                           <div className="font-medium">
                             {transaction.description}
@@ -127,7 +154,7 @@ export default function RecurringPage() {
                         {formatCurrency(transaction.amount)}
                       </TableCell>
                     </TableRow>
-                  ))
+                  )})
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center h-24">
@@ -137,6 +164,7 @@ export default function RecurringPage() {
                 )}
               </TableBody>
             </Table>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -144,7 +172,7 @@ export default function RecurringPage() {
         isOpen={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onAddTransaction={handleAddTransaction}
-        categories={allCategories.filter((c) => c !== "all")}
+        categories={allCategories}
       />
     </main>
   );

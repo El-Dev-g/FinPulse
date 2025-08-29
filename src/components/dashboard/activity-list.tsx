@@ -15,13 +15,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Transaction, FinancialTask } from "@/lib/placeholder-data";
-import { cn } from "@/lib/utils";
-import { ArrowRightLeft, ClipboardList, LucideIcon } from "lucide-react";
+import type { ClientTransaction, ClientFinancialTask } from "@/lib/types";
+import { cn, getIconForCategory } from "@/lib/utils";
+import { ArrowRightLeft, LucideIcon } from "lucide-react";
 
 interface ActivityListProps {
-  transactions?: Transaction[];
-  tasks?: FinancialTask[];
+  transactions?: ClientTransaction[];
+  tasks?: ClientFinancialTask[];
   title: string;
   description: string;
   Icon?: LucideIcon;
@@ -72,12 +72,14 @@ export function ActivityList({
                 )}
             </TableHeader>
             <TableBody>
-              {transactions?.map((transaction) => (
+              {transactions?.map((transaction) => {
+                const ItemIcon = getIconForCategory(transaction.category);
+                return (
                 <TableRow key={transaction.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="bg-muted p-2 rounded-md">
-                        <transaction.Icon className="h-4 w-4 text-muted-foreground" />
+                        <ItemIcon className="h-4 w-4 text-muted-foreground" />
                       </div>
                       <div>
                         <div className="font-medium">
@@ -104,7 +106,7 @@ export function ActivityList({
                     {formatCurrency(transaction.amount)}
                   </TableCell>
                 </TableRow>
-              ))}
+              )})}
               {tasks?.map((task) => (
                 <TableRow key={task.id}>
                   <TableCell>
