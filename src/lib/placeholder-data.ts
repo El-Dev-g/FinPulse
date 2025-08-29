@@ -7,6 +7,9 @@ import {
   LucideIcon,
   ShoppingCart,
   UtensilsCrossed,
+  Car,
+  Home,
+  Shirt,
 } from "lucide-react";
 
 export interface Transaction {
@@ -17,6 +20,14 @@ export interface Transaction {
   category: string;
   Icon: LucideIcon;
   goalId?: string;
+}
+
+export interface Budget {
+    id: string;
+    category: string;
+    limit: number;
+    spent: number;
+    Icon: LucideIcon;
 }
 
 export const overviewData = {
@@ -145,4 +156,13 @@ export const goalsData: Goal[] = [
     current: 12500,
     target: 15000,
   },
+];
+
+export const budgetsData: Budget[] = [
+    { id: 'budget_1', category: 'Groceries', limit: 800, spent: 450.75, Icon: ShoppingCart },
+    { id: 'budget_2', category: 'Dining Out', limit: 200, spent: 180.50, Icon: UtensilsCrossed },
+    { id: 'budget_3', category: 'Transport', limit: 150, spent: 95.00, Icon: Car },
+    { id: 'budget_4', category: 'Shopping', limit: 250, spent: 275.00, Icon: Shirt },
+    { id: 'budget_5', category: 'Housing', limit: 1500, spent: 1450.00, Icon: Home },
+    { id: 'budget_6', category: 'Entertainment', limit: 100, spent: 65.00, Icon: Film },
 ];

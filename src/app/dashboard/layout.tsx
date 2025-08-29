@@ -13,6 +13,7 @@ import {
   LogOut,
   Loader,
   Calculator,
+  Wallet,
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,6 +43,7 @@ const navItems = [
     label: "Transactions",
   },
   { href: "/dashboard/goals", icon: Target, label: "Goals" },
+  { href: "/dashboard/budgets", icon: Wallet, label: "Budgets" },
   { href: "/dashboard/ai-advisor", icon: Bot, label: "AI Advisor" },
   { href: "/dashboard/calculator", icon: Calculator, label: "Calculator" },
 ];
@@ -167,7 +169,7 @@ export default function DashboardLayout({
   }
 
   if (!user) {
-    router.push("/signin");
+    // router.push("/signin");
     return null;
   }
   
