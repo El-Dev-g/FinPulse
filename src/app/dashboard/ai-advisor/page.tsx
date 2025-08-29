@@ -3,8 +3,10 @@
 
 import { FinancialTips } from "@/components/dashboard/financial-tips";
 import React from "react";
+import { Suspense } from 'react';
 
-export default function AIAdvisorPage() {
+
+function AIAdvisorPageContent() {
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
       <div className="max-w-3xl mx-auto">
@@ -21,5 +23,13 @@ export default function AIAdvisorPage() {
         <FinancialTips />
       </div>
     </main>
+  );
+}
+
+export default function AIAdvisorPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AIAdvisorPageContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,6 +24,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { generateAdviceAction } from "@/lib/actions";
+import { useSearchParams } from "next/navigation";
 
 const formSchema = z.object({
   spendingHabits: z
@@ -38,6 +39,7 @@ export function FinancialTips() {
   const [loading, setLoading] = useState(false);
   const [advice, setAdvice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,6 +48,13 @@ export function FinancialTips() {
       financialGoals: "",
     },
   });
+
+  useEffect(() => {
+    const goal = searchParams.get("goal");
+    if (goal) {
+      form.setValue("financialGoals", `My goal is to ${goal}.`);
+    }
+  }, [searchParams, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
