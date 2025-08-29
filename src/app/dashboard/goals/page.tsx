@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -97,8 +98,13 @@ export default function GoalsPage() {
                   >
                     Edit
                   </Button>
-                  <Button variant="ghost" size="sm" className="w-full">
-                    Details
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full"
+                    asChild
+                  >
+                    <Link href={`/dashboard/goals/${goal.id}`}>Details</Link>
                   </Button>
                 </CardFooter>
               </Card>
