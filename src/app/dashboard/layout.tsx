@@ -17,6 +17,7 @@ import {
   PieChart,
   ClipboardList,
   Repeat,
+  BookOpen,
 } from "lucide-react";
 import {
   Sidebar,
@@ -50,6 +51,7 @@ const navItems = [
   { href: "/dashboard/budgets", icon: Wallet, label: "Budgets" },
   { href: "/dashboard/reports", icon: PieChart, label: "Reports" },
   { href: "/dashboard/organizer", icon: ClipboardList, label: "Organizer" },
+  { href: "/dashboard/catalog", icon: BookOpen, label: "Catalog" },
   { href: "/dashboard/ai-advisor", icon: Bot, label: "AI Advisor" },
   { href: "/dashboard/calculator", icon: Calculator, label: "Calculator" },
 ];
