@@ -1,13 +1,12 @@
 // src/app/dashboard/organizer/page.tsx
 "use client";
 
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   DndContext,
   closestCenter,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
 import { ClipboardList, Plus, Calendar, LayoutGrid, Loader } from "lucide-react";
 import {
@@ -17,48 +16,19 @@ import {
 } from "@/lib/types";
 import { AddTaskDialog } from "@/components/dashboard/add-task-dialog";
 import { EditTaskDialog } from "@/components/dashboard/edit-task-dialog";
-import { TaskColumn } from "@/components/dashboard/task-column";
+import { TaskBoard } from "@/components/dashboard/task-board";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { getTasks, getGoals, addTask, updateTask, deleteTask } from "@/lib/db";
-
-const columns: TaskStatus[] = ["To Do", "In Progress", "Done"];
-
-function KanbanView({
-  tasks,
-  goals,
-  onDragEnd,
-  onEdit,
-}: {
-  tasks: FinancialTask[];
-  goals: Goal[];
-  onDragEnd: (event: DragEndEvent) => void;
-  onEdit: (task: FinancialTask) => void;
-}) {
-  return (
-    <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow w-full">
-        {columns.map((status) => (
-          <TaskColumn
-            key={status}
-            status={status}
-            tasks={tasks.filter((task) => task.status === status)}
-            goals={goals}
-            onEditTask={onEdit}
-          />
-        ))}
-      </div>
-    </DndContext>
-  );
-}
+import { startOfToday, isBefore, isSameDay } from 'date-fns';
 
 function CalendarView({ tasks }: { tasks: FinancialTask[] }) {
   const [date, setDate] = useState<Date | undefined>(new Date());
 
-  const tasksByDate = useMemo(() => {
+  const tasksByDate = React.useMemo(() => {
     const groupedTasks: { [key: string]: FinancialTask[] } = {};
     tasks.forEach((task) => {
       if (task.dueDate) {
@@ -175,7 +145,6 @@ export default function OrganizerPage() {
     fetchData();
   }, [fetchData]);
 
-
   const handleAddTask = async (newTask: Omit<FinancialTask, "id" | "status" | "createdAt">) => {
     await addTask({ ...newTask, status: "To Do" });
     fetchData();
@@ -185,42 +154,42 @@ export default function OrganizerPage() {
     await updateTask(updatedTask.id, updatedTask);
     fetchData();
   };
+
+  const handleUpdateTaskStatus = async (taskId: string, status: TaskStatus) => {
+    await updateTask(taskId, { status });
+    fetchData();
+  };
   
   const handleDeleteTask = async (taskId: string) => {
     await deleteTask(taskId);
     fetchData();
   };
-
-
+  
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
+    if (!over || !active.data.current) return;
+    
+    const task = active.data.current.task as FinancialTask;
+    const newStatus = over.id as TaskStatus;
 
-    if (!over) return;
-
-    const activeId = active.id;
-    const overId = over.id;
-
-    const activeTask = tasks.find((t) => t.id === activeId);
-    if (!activeTask) return;
-
-    // Dropping on a column
-    const overColumn = over.data.current?.sortable?.containerId as TaskStatus | undefined;
-    if (overColumn && activeTask.status !== overColumn) {
-        const updatedTask = { ...activeTask, status: overColumn };
-        await updateTask(activeId as string, { status: overColumn });
-        setTasks(tasks.map((t) => (t.id === activeId ? updatedTask : t)));
-        return;
-    }
-
-    // Dropping on another task
-    if (activeId !== overId) {
-      const oldIndex = tasks.findIndex((t) => t.id === activeId);
-      const newIndex = tasks.findIndex((t) => t.id === overId);
-      const newTasks = arrayMove(tasks, oldIndex, newIndex);
-      setTasks(newTasks);
-      // Note: For persistence, you'd need to update an 'order' field in Firestore
+    if (task.status !== newStatus) {
+      await handleUpdateTaskStatus(task.id, newStatus);
     }
   };
+
+  const { overdueTasks, todayTasks, upcomingTasks, otherTasks, doneTasks } = React.useMemo(() => {
+    const today = startOfToday();
+    const done = tasks.filter(t => t.status === 'Done');
+    const notDone = tasks.filter(t => t.status !== 'Done');
+
+    return {
+      overdueTasks: notDone.filter(t => t.dueDate && isBefore(new Date(t.dueDate), today)),
+      todayTasks: notDone.filter(t => t.dueDate && isSameDay(new Date(t.dueDate), today)),
+      upcomingTasks: notDone.filter(t => t.dueDate && isBefore(today, new Date(t.dueDate))),
+      otherTasks: notDone.filter(t => !t.dueDate),
+      doneTasks: done,
+    };
+  }, [tasks]);
 
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8 flex flex-col">
@@ -260,12 +229,20 @@ export default function OrganizerPage() {
           ) : (
           <>
             <TabsContent value="board" className="h-full">
-                <KanbanView
-                tasks={tasks}
-                goals={goals}
-                onDragEnd={handleDragEnd}
-                onEdit={setEditingTask}
+              <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+                <TaskBoard
+                  goals={goals}
+                  onEdit={setEditingTask}
+                  onStatusChange={handleUpdateTaskStatus}
+                  sections={{
+                    "Overdue": overdueTasks,
+                    "Today": todayTasks,
+                    "Upcoming": upcomingTasks,
+                    "Other": otherTasks,
+                    "Done": doneTasks
+                  }}
                 />
+              </DndContext>
             </TabsContent>
             <TabsContent value="calendar" className="h-full">
                 <CalendarView tasks={tasks} />

@@ -5,7 +5,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useDroppable } from "@dnd-kit/core";
+import { useDroppable } from "@d-kit/core";
 import { FinancialTask, TaskStatus, Goal } from "@/lib/types";
 import { TaskCard } from "./task-card";
 
