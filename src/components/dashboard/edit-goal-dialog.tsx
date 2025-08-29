@@ -10,10 +10,20 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader } from "lucide-react";
+import { Loader, Trash } from "lucide-react";
 import type { Goal } from "@/app/dashboard/goals/page";
 import { Textarea } from "../ui/textarea";
 
@@ -22,6 +32,7 @@ interface EditGoalDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onEditGoal: (updatedGoal: Goal) => void;
+  onDeleteGoal: (goalId: string) => void;
 }
 
 export function EditGoalDialog({
@@ -29,6 +40,7 @@ export function EditGoalDialog({
   isOpen,
   onOpenChange,
   onEditGoal,
+  onDeleteGoal,
 }: EditGoalDialogProps) {
   const [title, setTitle] = useState("");
   const [current, setCurrent] = useState("");
@@ -36,6 +48,7 @@ export function EditGoalDialog({
   const [advice, setAdvice] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     if (goal) {
@@ -90,8 +103,18 @@ export function EditGoalDialog({
       onOpenChange(false);
     }, 500);
   };
+  
+  const handleDelete = () => {
+    if (goal) {
+      onDeleteGoal(goal.id);
+      setIsDeleteDialogOpen(false);
+      onOpenChange(false);
+    }
+  };
+
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
@@ -151,7 +174,15 @@ export function EditGoalDialog({
             </div>
           </div>
           {error && <p className="text-sm text-destructive mb-4">{error}</p>}
-          <DialogFooter>
+          <DialogFooter className="justify-between">
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => setIsDeleteDialogOpen(true)}
+              >
+                <Trash className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
             <Button type="submit" disabled={loading}>
               {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
@@ -160,5 +191,26 @@ export function EditGoalDialog({
         </form>
       </DialogContent>
     </Dialog>
+    <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete this
+              goal and any associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

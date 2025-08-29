@@ -68,6 +68,15 @@ export default function GoalsPage() {
     setGoals([...goalsData]);
   };
 
+  const handleDeleteGoal = (goalId: string) => {
+    const goalIndex = goalsData.findIndex(g => g.id === goalId);
+    if (goalIndex !== -1) {
+      goalsData.splice(goalIndex, 1);
+    }
+    setGoals([...goalsData]);
+  };
+
+
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
       <div className="max-w-6xl mx-auto">
@@ -145,6 +154,7 @@ export default function GoalsPage() {
         isOpen={!!editingGoal}
         onOpenChange={(isOpen) => !isOpen && setEditingGoal(null)}
         onEditGoal={handleEditGoal}
+        onDeleteGoal={handleDeleteGoal}
       />
     </main>
   );
