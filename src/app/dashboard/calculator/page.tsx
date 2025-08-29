@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calculator, Target, TrendingUp } from "lucide-react";
+import { Calculator, Target, TrendingUp, CreditCard } from "lucide-react";
 
 function InvestmentCalculator() {
   const [initial, setInitial] = useState("1000");
@@ -140,6 +140,83 @@ function SavingsGoalCalculator() {
     );
 }
 
+function DebtPayoffCalculator() {
+  const [debtAmount, setDebtAmount] = useState("10000");
+  const [interestRate, setInterestRate] = useState("18");
+  const [monthlyPayment, setMonthlyPayment] = useState("250");
+
+  const { payoffTime, totalInterest } = useMemo(() => {
+    const P = parseFloat(debtAmount);
+    const r = parseFloat(interestRate) / 100 / 12; // Monthly interest rate
+    const p = parseFloat(monthlyPayment);
+
+    if (isNaN(P) || isNaN(r) || isNaN(p) || r <= 0 || p <= P * r) {
+      return { payoffTime: "N/A", totalInterest: 0 };
+    }
+    
+    // Loan amortization formula to find number of payments (n)
+    const n = -(Math.log(1 - (P * r) / p)) / Math.log(1 + r);
+    const totalMonths = Math.ceil(n);
+
+    if (!isFinite(totalMonths) || totalMonths <= 0) {
+       return { payoffTime: "N/A", totalInterest: 0 };
+    }
+
+    const years = Math.floor(totalMonths / 12);
+    const months = totalMonths % 12;
+    
+    const payoffTime = `${years > 0 ? `${years}y` : ''} ${months > 0 ? `${months}m` : ''}`.trim() || 'Instantly';
+
+    const totalPaid = p * totalMonths;
+    const totalInterest = totalPaid - P;
+
+    return { payoffTime, totalInterest };
+  }, [debtAmount, interestRate, monthlyPayment]);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
+  };
+  
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-xl font-semibold">Debt Payoff Planner</h3>
+        <p className="text-muted-foreground text-sm">See how fast you can become debt-free.</p>
+      </div>
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+                <Label htmlFor="debtAmount">Total Debt ($)</Label>
+                <Input id="debtAmount" type="number" value={debtAmount} onChange={(e) => setDebtAmount(e.target.value)} />
+            </div>
+             <div className="space-y-2">
+                <Label htmlFor="interestRate">Annual Rate (%)</Label>
+                <Input id="interestRate" type="number" value={interestRate} onChange={(e) => setInterestRate(e.target.value)} />
+            </div>
+        </div>
+        <div className="space-y-2">
+            <Label htmlFor="monthlyPayment">Monthly Payment ($)</Label>
+            <Input id="monthlyPayment" type="number" value={monthlyPayment} onChange={(e) => setMonthlyPayment(e.target.value)} />
+        </div>
+      </div>
+       <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 bg-muted rounded-lg text-center">
+                <p className="text-muted-foreground text-sm">Payoff Time</p>
+                <p className="text-3xl font-bold text-primary">{payoffTime}</p>
+            </div>
+            <div className="p-4 bg-muted rounded-lg text-center">
+                <p className="text-muted-foreground text-sm">Total Interest</p>
+                <p className="text-3xl font-bold text-primary">{formatCurrency(totalInterest)}</p>
+            </div>
+       </div>
+    </div>
+  );
+}
+
+
 // Wrap the main export in a Suspense boundary
 export default function CalculatorPage() {
     return (
@@ -173,7 +250,7 @@ function CalculatorPageContent() {
         <Card>
           <CardContent className="p-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="investment">
                     <TrendingUp className="mr-2"/>
                     Investment
@@ -182,12 +259,19 @@ function CalculatorPageContent() {
                     <Target className="mr-2"/>
                     Savings Goals
                 </TabsTrigger>
+                <TabsTrigger value="debt">
+                    <CreditCard className="mr-2"/>
+                    Debt Payoff
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="investment" className="pt-6">
                 <InvestmentCalculator />
               </TabsContent>
               <TabsContent value="goals" className="pt-6">
                 <SavingsGoalCalculator />
+              </TabsContent>
+               <TabsContent value="debt" className="pt-6">
+                <DebtPayoffCalculator />
               </TabsContent>
             </Tabs>
           </CardContent>
