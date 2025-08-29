@@ -188,7 +188,7 @@ export default function GoalDetailPage() {
                 </CardHeader>
                 <CardContent>
                    <ol className="list-decimal list-inside space-y-3 text-sm text-muted-foreground">
-                      {goal.advice.steps.map((step, index) => (
+                      {goal.advice.steps && Array.isArray(goal.advice.steps) && goal.advice.steps.map((step, index) => (
                         <li key={index}>{step}</li>
                       ))}
                     </ol>
