@@ -3,9 +3,6 @@
 import { useSidebar } from "@/components/ui/sidebar";
 import { OverviewCards } from "@/components/dashboard/overview-cards";
 import { SpendingChart } from "@/components/dashboard/spending-chart";
-import { RecentTransactions } from "@/components/dashboard/recent-transactions";
-import { GoalTracker } from "@/components/dashboard/goal-tracker";
-import { FinancialTips } from "@/components/dashboard/financial-tips";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -28,21 +25,8 @@ export default function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <OverviewCards />
       </div>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <div className="lg:col-span-4">
-          <SpendingChart />
-        </div>
-        <div className="lg:col-span-3">
-          <FinancialTips />
-        </div>
-      </div>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <div className="lg:col-span-4">
-          <RecentTransactions />
-        </div>
-        <div className="lg:col-span-3">
-          <GoalTracker />
-        </div>
+      <div className="grid gap-6">
+        <SpendingChart />
       </div>
     </main>
   );
