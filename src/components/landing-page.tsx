@@ -58,10 +58,10 @@ export default function LandingPage() {
         <Logo />
         <nav className="flex items-center gap-4">
           <Button variant="ghost" asChild>
-            <Link href="/dashboard">Log In</Link>
+            <Link href="/signin">Log In</Link>
           </Button>
           <Button asChild>
-            <Link href="/dashboard">Sign Up</Link>
+            <Link href="/signup">Sign Up</Link>
           </Button>
         </nav>
       </header>
@@ -79,7 +79,7 @@ export default function LandingPage() {
               </p>
               <div className="flex gap-4">
                 <Button size="lg" asChild>
-                  <Link href="/dashboard">Get Started for Free</Link>
+                  <Link href="/signup">Get Started for Free</Link>
                 </Button>
               </div>
             </div>
@@ -139,7 +139,7 @@ export default function LandingPage() {
               future with FinPulse. It's free to get started.
             </p>
             <Button variant="secondary" size="lg" className="mt-8" asChild>
-              <Link href="/dashboard">Create Your Account</Link>
+              <Link href="/signup">Create Your Account</Link>
             </Button>
           </div>
         </section>

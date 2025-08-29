@@ -17,9 +17,7 @@ export function Logo({
     >
       <div className="bg-primary-foreground/10 p-2 rounded-lg">
         <PiggyBank
-          className={`h-6 w-6 transition-all duration-300 ${
-            isCollapsed ? "rotate-12" : ""
-          }`}
+          className={`h-6 w-6 transition-all duration-300`}
         />
       </div>
       {!isCollapsed && (

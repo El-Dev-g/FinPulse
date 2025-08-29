@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowRightLeft,
   Bot,
@@ -10,6 +10,7 @@ import {
   Settings,
   Target,
   PanelLeft,
+  LogOut,
 } from "lucide-react";
 import {
   Sidebar,
@@ -27,6 +28,9 @@ import {
 import { Logo } from "@/components/logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/hooks/use-auth";
+import { auth } from "@/lib/firebase";
+import { Button } from "@/components/ui/button";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -43,11 +47,18 @@ function DashboardSidebar() {
   const pathname = usePathname();
   const { open, setOpen, isMobile, setOpenMobile } = useSidebar();
   const isCollapsed = !open;
+  const { user } = useAuth();
+  const router = useRouter();
 
   const handleLinkClick = () => {
     if (isMobile) {
       setOpenMobile(false);
     }
+  };
+
+  const handleSignOut = async () => {
+    await auth.signOut();
+    router.push("/signin");
   };
 
   return (
@@ -100,21 +111,35 @@ function DashboardSidebar() {
             <div className="flex items-center gap-3 w-full mt-4">
               <Avatar className="h-9 w-9">
                 <AvatarImage
-                  src="https://picsum.photos/100"
-                  alt="User"
+                  src={user?.photoURL || "https://picsum.photos/100"}
+                  alt={user?.displayName || "User"}
                   data-ai-hint="person avatar"
                 />
-                <AvatarFallback>U</AvatarFallback>
+                <AvatarFallback>
+                  {user?.email?.[0].toUpperCase() || "U"}
+                </AvatarFallback>
               </Avatar>
               {!isCollapsed && (
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold">User</span>
-                  <span className="text-xs text-muted-foreground">
-                    user@finpulse.com
+                <div className="flex flex-col truncate">
+                  <span className="text-sm font-semibold truncate">
+                    {user?.displayName || user?.email}
+                  </span>
+                  <span className="text-xs text-muted-foreground truncate">
+                    {user?.email}
                   </span>
                 </div>
               )}
             </div>
+          </SidebarMenuItem>
+           <SidebarMenuItem>
+            <Button
+              variant="ghost"
+              className="w-full justify-start mt-2"
+              onClick={handleSignOut}
+            >
+              <LogOut className="mr-2" />
+              {!isCollapsed && <span>Sign Out</span>}
+            </Button>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
@@ -127,6 +152,22 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    router.push("/signin");
+    return null;
+  }
+  
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
