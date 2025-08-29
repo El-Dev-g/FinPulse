@@ -41,7 +41,8 @@ export async function getPersonalizedFinancialAdvice(
   input: PersonalizedFinancialAdviceInput,
   model: string
 ): Promise<PersonalizedFinancialAdviceOutput> {
-  return personalizedFinancialAdviceFlow(input, model);
+  const flowInput = { ...input, model };
+  return personalizedFinancialAdviceFlow(flowInput);
 }
 
 const prompt = ai.definePrompt({
@@ -61,12 +62,12 @@ Generate the structured advice.`,
 const personalizedFinancialAdviceFlow = ai.defineFlow(
   {
     name: 'personalizedFinancialAdviceFlow',
-    inputSchema: PersonalizedFinancialAdviceInputSchema,
+    inputSchema: PersonalizedFinancialAdviceInputSchema.extend({ model: z.string() }),
     outputSchema: PersonalizedFinancialAdviceOutputSchema,
   },
-  async (input, model) => {
+  async (input) => {
     try {
-      const {output} = await prompt(input, {model});
+      const {output} = await prompt(input, { model: input.model as any });
       return output!;
     } catch (e) {
       console.error('AI model failed to generate a response.', e);
