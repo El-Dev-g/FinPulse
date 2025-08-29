@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
 import type { Goal } from "@/app/dashboard/goals/page";
+import { Textarea } from "../ui/textarea";
 
 interface AddGoalDialogProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export function AddGoalDialog({
 }: AddGoalDialogProps) {
   const [title, setTitle] = useState("");
   const [target, setTarget] = useState("");
+  const [advice, setAdvice] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,7 +39,7 @@ export function AddGoalDialog({
     setError(null);
 
     if (!title || !target) {
-      setError("Please fill out all fields.");
+      setError("Please fill out title and target.");
       return;
     }
 
@@ -51,11 +53,12 @@ export function AddGoalDialog({
 
     // Simulate API call
     setTimeout(() => {
-      onAddGoal({ title, target: targetAmount });
+      onAddGoal({ title, target: targetAmount, advice });
       setLoading(false);
       onOpenChange(false);
       setTitle("");
       setTarget("");
+      setAdvice("");
     }, 500);
   };
 
@@ -70,20 +73,19 @@ export function AddGoalDialog({
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="title" className="text-right">
+            <div className="space-y-2">
+              <Label htmlFor="title">
                 Goal Title
               </Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="col-span-3"
                 placeholder="e.g., Save for Vacation"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="target" className="text-right">
+            <div className="space-y-2">
+              <Label htmlFor="target">
                 Target Amount
               </Label>
               <Input
@@ -91,8 +93,18 @@ export function AddGoalDialog({
                 type="number"
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
-                className="col-span-3"
                 placeholder="e.g., 5000"
+              />
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="advice">
+                AI Advice (Optional)
+              </Label>
+              <Textarea
+                id="advice"
+                value={advice}
+                onChange={(e) => setAdvice(e.target.value)}
+                placeholder="e.g., Cut down on daily coffees to save $5 a day."
               />
             </div>
           </div>

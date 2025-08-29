@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
 import type { Goal } from "@/app/dashboard/goals/page";
+import { Textarea } from "../ui/textarea";
 
 interface EditGoalDialogProps {
   goal: Goal | null;
@@ -32,6 +33,7 @@ export function EditGoalDialog({
   const [title, setTitle] = useState("");
   const [current, setCurrent] = useState("");
   const [target, setTarget] = useState("");
+  const [advice, setAdvice] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,6 +42,7 @@ export function EditGoalDialog({
       setTitle(goal.title);
       setCurrent(goal.current.toString());
       setTarget(goal.target.toString());
+      setAdvice(goal.advice || "");
     }
   }, [goal]);
 
@@ -80,6 +83,7 @@ export function EditGoalDialog({
           title,
           current: currentAmount,
           target: targetAmount,
+          advice,
         });
       }
       setLoading(false);
@@ -98,20 +102,19 @@ export function EditGoalDialog({
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="title" className="text-right">
+            <div className="space-y-2">
+              <Label htmlFor="title">
                 Goal Title
               </Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="col-span-3"
                 placeholder="e.g., Save for Vacation"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="current" className="text-right">
+            <div className="space-y-2">
+              <Label htmlFor="current">
                 Current Amount
               </Label>
               <Input
@@ -119,12 +122,11 @@ export function EditGoalDialog({
                 type="number"
                 value={current}
                 onChange={(e) => setCurrent(e.target.value)}
-                className="col-span-3"
                 placeholder="e.g., 1500"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="target" className="text-right">
+            <div className="space-y-2">
+              <Label htmlFor="target">
                 Target Amount
               </Label>
               <Input
@@ -132,8 +134,18 @@ export function EditGoalDialog({
                 type="number"
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
-                className="col-span-3"
                 placeholder="e.g., 5000"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="advice">
+                AI Advice (Optional)
+              </Label>
+              <Textarea
+                id="advice"
+                value={advice}
+                onChange={(e) => setAdvice(e.target.value)}
+                placeholder="e.g., Cut down on daily coffees to save $5 a day."
               />
             </div>
           </div>

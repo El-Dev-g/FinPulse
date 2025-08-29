@@ -23,6 +23,7 @@ export interface Goal {
   title: string;
   current: number;
   target: number;
+  advice?: string;
 }
 
 export default function GoalsPage() {

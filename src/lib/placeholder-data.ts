@@ -1,4 +1,5 @@
 import type { ChartConfig } from "@/components/ui/chart";
+import type { Goal } from "@/app/dashboard/goals/page";
 import {
   ArrowRightLeft,
   Film,
@@ -124,12 +125,13 @@ export const transactionsData: Transaction[] = [
   },
 ];
 
-export const goalsData = [
+export const goalsData: Goal[] = [
   {
     id: "goal_1",
     title: "House Down Payment",
     current: 45250,
     target: 80000,
+    advice: "Consider automating a weekly transfer of $200 to your savings account. This 'out of sight, out of mind' approach can accelerate your progress without feeling like a major sacrifice."
   },
   {
     id: "goal_2",

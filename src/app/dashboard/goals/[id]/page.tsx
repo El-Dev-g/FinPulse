@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { goalsData } from "@/lib/placeholder-data";
-import { ArrowLeft, Calculator, Bot } from "lucide-react";
+import { ArrowLeft, Calculator, Bot, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 
@@ -64,7 +64,7 @@ export default function GoalDetailPage() {
         </div>
 
         <div className="grid gap-8 md:grid-cols-2">
-          <div>
+          <div className="space-y-8">
             <Card>
               <CardHeader>
                 <CardTitle className="text-3xl font-headline">
@@ -119,6 +119,19 @@ export default function GoalDetailPage() {
                 </Button>
               </CardFooter>
             </Card>
+            {goal.advice && (
+               <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-xl">
+                        <Sparkles className="h-5 w-5 text-primary" />
+                        AI Generated Advice
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground">{goal.advice}</p>
+                </CardContent>
+               </Card>
+            )}
           </div>
           <div>
             <RecentTransactions 
