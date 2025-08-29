@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { goalsData as initialGoalsData } from "@/lib/placeholder-data";
 import { Plus } from "lucide-react";
 import { AddGoalDialog } from "@/components/dashboard/add-goal-dialog";
+import { EditGoalDialog } from "@/components/dashboard/edit-goal-dialog";
 
 export interface Goal {
   id: string;
@@ -26,6 +27,7 @@ export interface Goal {
 export default function GoalsPage() {
   const [goals, setGoals] = useState<Goal[]>(initialGoalsData);
   const [isAddGoalDialogOpen, setIsAddGoalDialogOpen] = useState(false);
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -42,6 +44,10 @@ export default function GoalsPage() {
       current: 0,
     };
     setGoals([...goals, goalWithId]);
+  };
+
+  const handleEditGoal = (updatedGoal: Goal) => {
+    setGoals(goals.map((g) => (g.id === updatedGoal.id ? updatedGoal : g)));
   };
 
   return (
@@ -83,7 +89,12 @@ export default function GoalsPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex gap-2">
-                  <Button variant="outline" size="sm" className="w-full">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setEditingGoal(goal)}
+                  >
                     Edit
                   </Button>
                   <Button variant="ghost" size="sm" className="w-full">
@@ -99,6 +110,12 @@ export default function GoalsPage() {
         isOpen={isAddGoalDialogOpen}
         onOpenChange={setIsAddGoalDialogOpen}
         onAddGoal={handleAddGoal}
+      />
+      <EditGoalDialog
+        goal={editingGoal}
+        isOpen={!!editingGoal}
+        onOpenChange={(isOpen) => !isOpen && setEditingGoal(null)}
+        onEditGoal={handleEditGoal}
       />
     </main>
   );
