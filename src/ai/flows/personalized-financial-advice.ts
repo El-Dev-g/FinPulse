@@ -70,9 +70,8 @@ const personalizedFinancialAdviceFlow = ai.defineFlow(
       return output!;
     } catch (e) {
       console.error('AI model failed to generate a response.', e);
-      throw new Error('AI model failed to generate a response.', {
-        cause: e,
-      });
+      // Re-throw the original error to provide specific feedback to the user
+      throw e;
     }
   }
 );

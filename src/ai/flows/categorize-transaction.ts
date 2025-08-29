@@ -64,11 +64,12 @@ const categorizeTransactionFlow = ai.defineFlow(
     }
     
     try {
-      const {output} = await prompt(input, {model: 'googleai/gemini-pro'});
+      const {output} = await prompt(input, {model: 'gemini-1.5-flash'});
       return output!;
     } catch (e) {
       console.error(e);
-      throw new Error('The AI model failed to generate a response.', { cause: e });
+      // Re-throw the original error to provide specific feedback to the user
+      throw e;
     }
   }
 );
