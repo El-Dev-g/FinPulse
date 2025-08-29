@@ -38,9 +38,10 @@ export type PersonalizedFinancialAdviceOutput = z.infer<
 >;
 
 export async function getPersonalizedFinancialAdvice(
-  input: PersonalizedFinancialAdviceInput
+  input: PersonalizedFinancialAdviceInput,
+  model: string
 ): Promise<PersonalizedFinancialAdviceOutput> {
-  return personalizedFinancialAdviceFlow(input);
+  return personalizedFinancialAdviceFlow(input, model);
 }
 
 const prompt = ai.definePrompt({
@@ -63,13 +64,13 @@ const personalizedFinancialAdviceFlow = ai.defineFlow(
     inputSchema: PersonalizedFinancialAdviceInputSchema,
     outputSchema: PersonalizedFinancialAdviceOutputSchema,
   },
-  async input => {
+  async (input, model) => {
     try {
-      const {output} = await prompt(input, {model: 'googleai/gemini-pro'});
+      const {output} = await prompt(input, {model});
       return output!;
     } catch (e) {
-      console.error('All AI models failed to generate a response.', e);
-      throw new Error('All AI models failed to generate a response.', {
+      console.error('AI model failed to generate a response.', e);
+      throw new Error('AI model failed to generate a response.', {
         cause: e,
       });
     }

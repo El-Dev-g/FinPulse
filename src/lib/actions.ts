@@ -15,10 +15,11 @@ import type { Advice } from "./types";
 
 export async function generateAdviceAction(
   input: PersonalizedFinancialAdviceInput,
+  model: string,
   goalId?: string | null
 ) {
   try {
-    const advice : Advice = (await getPersonalizedFinancialAdvice(input)).advice;
+    const advice : Advice = (await getPersonalizedFinancialAdvice(input, model)).advice;
 
     if (!goalId) {
       // If no goalId is provided, create/find the general advice goal

@@ -13,6 +13,13 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -34,7 +41,14 @@ const formSchema = z.object({
   financialGoals: z
     .string()
     .min(20, "Please describe your financial goals in at least 20 characters."),
+  model: z.string().min(1, "Please select a model."),
 });
+
+const availableModels = [
+    { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash (Fast & Efficient)" },
+    { id: "gemini-pro", name: "Gemini Pro (Balanced)" },
+    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro (Powerful & Creative)" },
+];
 
 export function FinancialTips() {
   const [loading, setLoading] = useState(false);
@@ -48,6 +62,7 @@ export function FinancialTips() {
     defaultValues: {
       spendingHabits: "",
       financialGoals: "",
+      model: availableModels[0].id,
     },
   });
 
@@ -74,11 +89,18 @@ export function FinancialTips() {
     setAdvice(null);
 
     const goalId = searchParams.get("goalId");
-    const result = await generateAdviceAction(values, goalId);
+    const result = await generateAdviceAction(
+        {
+            spendingHabits: values.spendingHabits,
+            financialGoals: values.financialGoals,
+        },
+        values.model,
+        goalId
+    );
     
     setLoading(false);
     
-    if (result.success && result.advice && result.goalId) {
+    if (result && result.success && result.advice && result.goalId) {
       // Always redirect to the goal page with the new advice
       router.push(
         `/dashboard/goals?goalId=${result.goalId}&advice=${encodeURIComponent(
@@ -87,7 +109,7 @@ export function FinancialTips() {
       );
     } else {
       setAdvice(null);
-      setError(result.message || "An unexpected error occurred.");
+      setError(result?.message || "An unexpected error occurred.");
     }
   }
 
@@ -133,6 +155,28 @@ export function FinancialTips() {
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="model"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>AI Model</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select an AI model" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {availableModels.map(model => (
+                          <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
