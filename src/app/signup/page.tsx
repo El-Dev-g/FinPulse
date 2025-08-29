@@ -1,7 +1,7 @@
 // src/app/signup/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -10,6 +10,9 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   updateProfile,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  type ConfirmationResult,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
@@ -23,8 +26,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, UserPlus } from "lucide-react";
+import { Loader, UserPlus, Phone } from "lucide-react";
 import { Logo } from "@/components/logo";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const GoogleIcon = () => (
   <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -35,8 +39,7 @@ const GoogleIcon = () => (
   </svg>
 );
 
-
-export default function SignUpPage() {
+function EmailSignUpForm() {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -68,14 +71,70 @@ export default function SignUpPage() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
+  return (
+    <form onSubmit={handleSignUp}>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="displayName">Username</Label>
+          <Input
+            id="displayName"
+            type="text"
+            placeholder="John Doe"
+            required
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="m@example.com"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+      </CardContent>
+      <CardFooter className="flex flex-col gap-4">
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? <Loader className="animate-spin" /> : <UserPlus />}
+          Sign Up with Email
+        </Button>
+      </CardFooter>
+    </form>
+  );
+}
+
+function PhoneSignUpForm() {
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [confirmationResult, setConfirmationResult] =
+    useState<ConfirmationResult | null>(null);
+  const router = useRouter();
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
     setError(null);
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      // Google-signed-in users are considered verified
-      router.push("/welcome/onboarding");
+      const verifier = window.recaptchaVerifier;
+      const result = await signInWithPhoneNumber(auth, `+${phone}`, verifier);
+      setConfirmationResult(result);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -83,8 +142,99 @@ export default function SignUpPage() {
     }
   };
 
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!confirmationResult) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await confirmationResult.confirm(otp);
+      router.push("/welcome/onboarding");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+   return (
+    <form onSubmit={confirmationResult ? handleVerifyOtp : handleSendOtp}>
+        <CardContent className="space-y-4">
+          {!confirmationResult ? (
+            <div className="space-y-2">
+              <Label htmlFor="phone-signup">Phone Number</Label>
+              <Input
+                id="phone-signup"
+                type="tel"
+                placeholder="1234567890 (include country code)"
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="otp-signup">Verification Code</Label>
+              <Input
+                id="otp-signup"
+                type="text"
+                placeholder="Enter 6-digit code"
+                required
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+              />
+            </div>
+          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
+        </CardContent>
+        <CardFooter className="flex flex-col gap-4">
+            <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? (
+                <Loader className="animate-spin" />
+            ) : confirmationResult ? (
+                "Verify & Sign Up"
+            ) : (
+                "Send Code"
+            )}
+            </Button>
+        </CardFooter>
+    </form>
+  )
+}
+
+export default function SignUpPage() {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
+
+    useEffect(() => {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+        'size': 'invisible',
+        'callback': (response: any) => {
+            // reCAPTCHA solved, allow signInWithPhoneNumber.
+        }
+        });
+    }, []);
+
+    const handleGoogleSignIn = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+        // Google-signed-in users are considered verified
+        router.push("/welcome/onboarding");
+        } catch (err: any) {
+        setError(err.message);
+        } finally {
+        setLoading(false);
+        }
+    };
+
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div id="recaptcha-container"></div>
       <div className="w-full max-w-md space-y-6">
         <div className="flex justify-center">
           <Logo />
@@ -96,49 +246,29 @@ export default function SignUpPage() {
               Create an account to get started with FinPulse.
             </CardDescription>
           </CardHeader>
-          <form onSubmit={handleSignUp}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="displayName">Username</Label>
-                <Input
-                  id="displayName"
-                  type="text"
-                  placeholder="John Doe"
-                  required
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
-              )}
-            </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <Loader className="animate-spin" /> : <UserPlus />}
-                Sign Up
-              </Button>
+           <Tabs defaultValue="email" className="w-full">
+             <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="email"><UserPlus className="mr-2"/>Email</TabsTrigger>
+              <TabsTrigger value="phone"><Phone className="mr-2"/>Phone</TabsTrigger>
+            </TabsList>
+            <TabsContent value="email">
+                <EmailSignUpForm />
+            </TabsContent>
+            <TabsContent value="phone">
+                <PhoneSignUpForm />
+            </TabsContent>
+           </Tabs>
+            <CardContent className="pt-0">
+               <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Or continue with
+                    </span>
+                  </div>
+                </div>
               <Button
                 variant="outline"
                 className="w-full"
@@ -149,8 +279,8 @@ export default function SignUpPage() {
                 <GoogleIcon />
                 Sign Up with Google
               </Button>
-            </CardFooter>
-          </form>
+            </CardContent>
+          
           <p className="text-center text-sm text-muted-foreground pb-6">
             Already have an account?{" "}
             <Link

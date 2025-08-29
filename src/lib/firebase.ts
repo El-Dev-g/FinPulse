@@ -19,4 +19,10 @@ const auth = getAuth(app);
 const storage = getStorage(app);
 const db = getFirestore(app);
 
+// This is needed for phone auth
+if (typeof window !== 'undefined') {
+  (window as any).auth = auth;
+}
+
+
 export {app, auth, storage, db};
