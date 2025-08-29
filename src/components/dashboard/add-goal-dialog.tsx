@@ -105,6 +105,7 @@ export function AddGoalDialog({
                 value={advice}
                 onChange={(e) => setAdvice(e.target.value)}
                 placeholder="e.g., Cut down on daily coffees to save $5 a day."
+                rows={3}
               />
             </div>
           </div>

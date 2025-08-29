@@ -33,11 +33,11 @@ export default function GoalsPage() {
     const goalId = searchParams.get('goalId');
 
     if (advice && goalId) {
-      setGoals(prevGoals =>
-        prevGoals.map(goal =>
-          goal.id === goalId ? { ...goal, advice: decodeURIComponent(advice) } : goal
-        )
-      );
+      const goalIndex = goalsData.findIndex(g => g.id === goalId);
+      if (goalIndex !== -1) {
+        goalsData[goalIndex].advice = decodeURIComponent(advice);
+      }
+      setGoals([...goalsData]);
     }
   }, [searchParams]);
 

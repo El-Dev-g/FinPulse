@@ -16,7 +16,6 @@ import { Progress } from "@/components/ui/progress";
 import { goalsData, transactionsData, tasksData } from "@/lib/placeholder-data";
 import { ArrowLeft, Calculator, Bot, Sparkles, ClipboardList } from "lucide-react";
 import Link from "next/link";
-import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { ActivityList } from "@/components/dashboard/activity-list";
 
 export default function GoalDetailPage() {
