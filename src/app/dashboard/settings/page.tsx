@@ -5,7 +5,6 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { updateProfile, deleteUser } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -77,40 +76,40 @@ export default function SettingsPage() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && user) {
       const file = e.target.files[0];
-      setIsUploading(true);
-      try {
-        const filePath = `${user.uid}/${Date.now()}_${file.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(filePath, file);
-
-        if (uploadError) {
-          throw uploadError;
-        }
-
-        const { data } = supabase.storage
-          .from('avatars')
-          .getPublicUrl(filePath);
-        
-        const publicUrl = data.publicUrl;
-
-        await updateProfile(user, { photoURL: publicUrl });
-        setPhotoURL(publicUrl); // Update local state to re-render avatar
-        
-        toast({
-          title: "Success",
-          description: "Profile picture updated.",
-        });
-      } catch (error: any) {
+      const reader = new FileReader();
+      
+      reader.onloadstart = () => setIsUploading(true);
+      reader.onerror = () => {
+        setIsUploading(false);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to upload image. Please try again.",
+          description: "Failed to read the file.",
         });
-        console.error("Supabase upload error:", error);
-      } finally {
-        setIsUploading(false);
-      }
+      };
+      
+      reader.onload = async (event) => {
+        const dataUrl = event.target?.result as string;
+        
+        try {
+          await updateProfile(user, { photoURL: dataUrl });
+          setPhotoURL(dataUrl);
+          toast({
+            title: "Success",
+            description: "Profile picture updated.",
+          });
+        } catch (error: any) {
+           toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to update profile picture.",
+          });
+        } finally {
+          setIsUploading(false);
+        }
+      };
+
+      reader.readAsDataURL(file);
     }
   };
 
