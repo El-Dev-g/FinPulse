@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Download, Plus } from "lucide-react";
+import { ArrowRightLeft, Download, Plus } from "lucide-react";
 import { AddTransactionDialog } from "@/components/dashboard/add-transaction-dialog";
 import type { Transaction } from "@/lib/placeholder-data";
 
@@ -72,6 +72,33 @@ export default function TransactionsPage() {
     setTransactions([transactionWithId, ...transactions]);
   };
 
+  const handleExportCSV = () => {
+    const headers = ["ID", "Description", "Amount", "Date", "Category"];
+    const csvRows = [
+      headers.join(","),
+      ...filteredTransactions.map((t) =>
+        [
+          t.id,
+          `"${t.description.replace(/"/g, '""')}"`,
+          t.amount,
+          t.date,
+          t.category,
+        ].join(",")
+      ),
+    ];
+
+    const csvString = csvRows.join("\n");
+    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "transactions.csv");
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
       <div className="max-w-6xl mx-auto">
@@ -85,7 +112,7 @@ export default function TransactionsPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleExportCSV}>
               <Download className="mr-2" />
               Export CSV
             </Button>
