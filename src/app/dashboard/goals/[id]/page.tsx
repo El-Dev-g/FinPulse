@@ -7,13 +7,14 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { goalsData } from "@/lib/placeholder-data";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Calculator } from "lucide-react";
 import Link from "next/link";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 
@@ -103,6 +104,14 @@ export default function GoalDetailPage() {
                   </div>
                 </div>
               </CardContent>
+              <CardFooter>
+                 <Button asChild className="w-full">
+                  <Link href={`/dashboard/calculator?tab=goals&target=${goal.target}&current=${goal.current}`}>
+                    <Calculator className="mr-2" />
+                    Plan with Calculator
+                  </Link>
+                </Button>
+              </CardFooter>
             </Card>
           </div>
           <div>

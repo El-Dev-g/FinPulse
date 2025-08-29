@@ -1,7 +1,8 @@
 // src/app/dashboard/calculator/page.tsx
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -77,9 +78,17 @@ function InvestmentCalculator() {
 }
 
 function SavingsGoalCalculator() {
+    const searchParams = useSearchParams();
     const [target, setTarget] = useState("10000");
     const [current, setCurrent] = useState("1000");
     const [years, setYears] = useState("5");
+
+    useEffect(() => {
+        const targetParam = searchParams.get('target');
+        const currentParam = searchParams.get('current');
+        if (targetParam) setTarget(targetParam);
+        if (currentParam) setCurrent(currentParam);
+    }, [searchParams]);
 
     const monthlyContribution = useMemo(() => {
         const T = parseFloat(target);
@@ -131,8 +140,24 @@ function SavingsGoalCalculator() {
     );
 }
 
-
+// Wrap the main export in a Suspense boundary
 export default function CalculatorPage() {
+    return (
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <CalculatorPageContent />
+      </React.Suspense>
+    );
+}
+
+function CalculatorPageContent() {
+  const searchParams = useSearchParams();
+  const tab = searchParams.get('tab') || 'investment';
+  const [activeTab, setActiveTab] = useState(tab);
+
+  useEffect(() => {
+    setActiveTab(tab);
+  }, [tab]);
+
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8">
       <div className="max-w-2xl mx-auto">
@@ -147,7 +172,7 @@ export default function CalculatorPage() {
         </div>
         <Card>
           <CardContent className="p-6">
-            <Tabs defaultValue="investment">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="investment">
                     <TrendingUp className="mr-2"/>
