@@ -23,10 +23,10 @@ const GoalSchema = z.object({
 export const createGoalForAdviceFlow = ai.defineFlow(
   {
     name: 'createGoalForAdviceFlow',
-    inputSchema: z.any(),
+    inputSchema: z.any(), // The input is not directly used, so `any` is acceptable here.
     outputSchema: GoalSchema,
   },
-  async (input: PersonalizedFinancialAdviceInput) => {
+  async () => {
     // Check if the general advice goal already exists
     let goal = await getGoalByTitle(GENERAL_ADVICE_GOAL_TITLE);
 
@@ -47,6 +47,6 @@ export const createGoalForAdviceFlow = ai.defineFlow(
   }
 );
 
-export async function createGoalForAdvice(input: PersonalizedFinancialAdviceInput) {
-    return await createGoalForAdviceFlow(input);
+export async function createGoalForAdvice() {
+    return await createGoalForAdviceFlow();
 }

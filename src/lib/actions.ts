@@ -22,7 +22,7 @@ export async function generateAdviceAction(
 
     if (!goalId) {
       // If no goalId is provided, create/find the general advice goal
-      const generalGoal = await createGoalForAdvice(input);
+      const generalGoal = await createGoalForAdvice();
       return {
         success: true,
         advice: advice,
@@ -35,11 +35,11 @@ export async function generateAdviceAction(
       advice: advice,
       goalId: goalId,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     return {
       success: false,
-      message: "An error occurred while getting advice. Please try again.",
+      message: error.message || "An error occurred while getting advice. Please try again.",
     };
   }
 }
