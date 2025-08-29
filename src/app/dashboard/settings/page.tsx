@@ -4,8 +4,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { updateProfile, deleteUser } from "firebase/auth";
-import { auth, storage } from "@/lib/firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { auth } from "@/lib/firebase";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -79,12 +79,23 @@ export default function SettingsPage() {
       const file = e.target.files[0];
       setIsUploading(true);
       try {
-        const storageRef = ref(storage, `profile-pictures/${user.uid}`);
-        const snapshot = await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(snapshot.ref);
+        const filePath = `${user.uid}/${Date.now()}_${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, file);
 
-        await updateProfile(user, { photoURL: downloadURL });
-        setPhotoURL(downloadURL); // Update local state to re-render avatar
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const { data } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath);
+        
+        const publicUrl = data.publicUrl;
+
+        await updateProfile(user, { photoURL: publicUrl });
+        setPhotoURL(publicUrl); // Update local state to re-render avatar
         
         toast({
           title: "Success",
@@ -96,6 +107,7 @@ export default function SettingsPage() {
           title: "Error",
           description: "Failed to upload image. Please try again.",
         });
+        console.error("Supabase upload error:", error);
       } finally {
         setIsUploading(false);
       }

@@ -1,7 +1,6 @@
 // src/lib/firebase.ts
 import {initializeApp, getApps, getApp} from 'firebase/app';
 import {getAuth} from 'firebase/auth';
-import { getStorage } from "firebase/storage";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -16,7 +15,6 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
-const storage = getStorage(app);
 const db = getFirestore(app);
 
 // This is needed for phone auth
@@ -25,4 +23,4 @@ if (typeof window !== 'undefined') {
 }
 
 
-export {app, auth, storage, db};
+export {app, auth, db};
