@@ -55,6 +55,11 @@ export default function GoalDetailPage() {
   const relatedTransactions = transactionsData.filter(t => t.goalId === goal.id);
   const relatedTasks = tasksData.filter(t => t.goalId === goal.id);
 
+  const aiAdvisorLink = `/dashboard/ai-advisor?goal=${encodeURIComponent(
+    goal.title
+  )}&goalId=${goal.id}${
+    goal.advice ? `&advice=${encodeURIComponent(goal.advice)}` : ""
+  }`;
 
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
@@ -117,7 +122,7 @@ export default function GoalDetailPage() {
                   </Link>
                 </Button>
                 <Button asChild className="w-full" variant="outline">
-                  <Link href={`/dashboard/ai-advisor?goal=${encodeURIComponent(goal.title)}&goalId=${goal.id}`}>
+                  <Link href={aiAdvisorLink}>
                     <Bot className="mr-2" />
                     Get AI Savings Tips
                   </Link>

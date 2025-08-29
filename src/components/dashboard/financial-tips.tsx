@@ -52,8 +52,12 @@ export function FinancialTips() {
 
   useEffect(() => {
     const goal = searchParams.get("goal");
+    const existingAdvice = searchParams.get("advice");
     if (goal) {
       form.setValue("financialGoals", `My primary goal is to ${goal}.`);
+    }
+    if (existingAdvice) {
+      form.setValue("spendingHabits", `Based on my current plan: "${existingAdvice}". Please provide more detailed advice or alternative strategies.`);
     }
   }, [searchParams, form]);
 
@@ -99,7 +103,7 @@ export function FinancialTips() {
               name="spendingHabits"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Your Spending Habits</FormLabel>
+                  <FormLabel>Your Spending Habits & Current Plan</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="e.g., I spend a lot on dining out, online shopping for clothes..."
