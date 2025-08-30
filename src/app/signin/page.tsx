@@ -50,7 +50,7 @@ function EmailSignInForm() {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/dashboard");
+      // Let the useAuth hook handle redirection
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -64,7 +64,7 @@ function EmailSignInForm() {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-      router.push("/dashboard");
+      // Let the useAuth hook handle redirection
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -164,7 +164,7 @@ function PhoneSignInForm() {
     setError(null);
     try {
       await confirmationResult.confirm(otp);
-      router.push("/dashboard");
+      // Let the useAuth hook handle redirection
     } catch (err: any) {
       setError(err.message);
     } finally {

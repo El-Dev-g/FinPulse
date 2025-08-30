@@ -63,7 +63,7 @@ function EmailSignUpForm() {
         });
         await sendEmailVerification(userCredential.user);
       }
-      router.push("/verify-email");
+      // Let the useAuth hook handle redirection
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -149,7 +149,7 @@ function PhoneSignUpForm() {
     setError(null);
     try {
       await confirmationResult.confirm(otp);
-      router.push("/welcome/onboarding");
+      // Let the useAuth hook handle redirection
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -220,14 +220,13 @@ export default function SignUpPage() {
         setLoading(true);
         setError(null);
         try {
-        const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
-        // Google-signed-in users are considered verified
-        router.push("/welcome/onboarding");
+          const provider = new GoogleAuthProvider();
+          await signInWithPopup(auth, provider);
+          // Let the useAuth hook handle redirection
         } catch (err: any) {
-        setError(err.message);
+          setError(err.message);
         } finally {
-        setLoading(false);
+          setLoading(false);
         }
     };
 
