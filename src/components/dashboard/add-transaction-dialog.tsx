@@ -1,3 +1,4 @@
+
 // src/components/dashboard/add-transaction-dialog.tsx
 "use client";
 
@@ -24,7 +25,7 @@ import {
 } from "../ui/select";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { useAuth } from "@/hooks/use-auth";
-import { getCategories } from "@/lib/db";
+import { getCategories, addCategory } from "@/lib/db";
 import { useDebounce } from "@/hooks/use-debounce";
 import { getCategorySuggestion } from "@/lib/actions";
 
@@ -32,6 +33,11 @@ interface AddTransactionDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onAddTransaction: (newTransaction: Omit<Transaction, "id" | "Icon" | "createdAt">) => Promise<void>;
+}
+
+type Suggestion = {
+    category: string;
+    isNew: boolean;
 }
 
 export function AddTransactionDialog({
@@ -51,30 +57,29 @@ export function AddTransactionDialog({
   
   // AI Suggestion State
   const debouncedDescription = useDebounce(description, 500);
-  const [suggestion, setSuggestion] = useState<string | null>(null);
+  const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [isSuggestionLoading, setIsSuggestionLoading] = useState(false);
 
-
-  useEffect(() => {
-    async function fetchCategories() {
+  const fetchCategories = useCallback(async () => {
       if (user) {
         const allCategories = (await getCategories()) as Category[];
         setAvailableCategories(allCategories.filter(c => c.name !== 'Income'));
       }
-    }
-    fetchCategories();
   }, [user]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [user, fetchCategories]);
 
   useEffect(() => {
     async function fetchSuggestion() {
         if (user && debouncedDescription && debouncedDescription.length > 3 && type === 'expense') {
             setIsSuggestionLoading(true);
             try {
-                // Pass the category names from the client-side state to the action
                 const categoryNames = availableCategories.map(c => c.name);
                 const result = await getCategorySuggestion(debouncedDescription, categoryNames);
                 if (result) {
-                    setSuggestion(result.category);
+                    setSuggestion(result);
                 } else {
                     setSuggestion(null);
                 }
@@ -139,6 +144,26 @@ export function AddTransactionDialog({
     } finally {
         setLoading(false);
     }
+  };
+
+  const handleSuggestionClick = async () => {
+    if (!suggestion) return;
+
+    if (suggestion.isNew) {
+        // Add the new category to the database
+        try {
+            await addCategory({ name: suggestion.category });
+            // Refetch categories to include the new one
+            await fetchCategories();
+        } catch (e) {
+            console.error("Failed to add new category", e);
+            // Don't block the user, just log the error
+        }
+    }
+    // Set the category for the current transaction
+    setCategory(suggestion.category);
+    // Clear the suggestion
+    setSuggestion(null);
   };
 
   return (
@@ -208,19 +233,17 @@ export function AddTransactionDialog({
                         size="sm"
                         className="h-auto p-0 text-xs"
                         disabled={isSuggestionLoading || !suggestion}
-                        onClick={() => {
-                            if (suggestion) setCategory(suggestion);
-                        }}
+                        onClick={handleSuggestionClick}
                     >
                         {isSuggestionLoading ? (
                             <>
                                 <Loader className="mr-1 h-3 w-3 animate-spin" />
                                 Getting suggestion...
                             </>
-                        ) : (
+                        ) : suggestion && (
                             <>
                                 <Sparkles className="mr-1 h-3 w-3" />
-                                Suggest: {suggestion}
+                                Suggest: {suggestion.category} {suggestion.isNew && <span className="ml-1 font-bold">(new)</span>}
                             </>
                         )}
                      </Button>

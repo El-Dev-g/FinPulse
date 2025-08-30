@@ -3,7 +3,7 @@
 /**
  * @fileOverview An AI flow to suggest a spending category based on a transaction description.
  *
- * - suggestCategory - A function that suggests a financial category.
+ * - suggestCategory - A function that suggests a financial category, creating one if necessary.
  * - SuggestCategoryRequest - The input type for the suggestCategory function.
  * - SuggestCategoryResponse - The return type for the suggestCategory function.
  */
@@ -19,6 +19,7 @@ export type SuggestCategoryRequest = z.infer<typeof SuggestCategoryRequestSchema
 
 const SuggestCategoryResponseSchema = z.object({
   category: z.string().describe("The suggested category for the transaction."),
+  isNew: z.boolean().describe("Whether the suggested category is a new one that doesn't exist in the provided list.")
 });
 export type SuggestCategoryResponse = z.infer<typeof SuggestCategoryResponseSchema>;
 
@@ -33,16 +34,20 @@ const prompt = ai.definePrompt({
   input: { schema: SuggestCategoryRequestSchema },
   output: { schema: SuggestCategoryResponseSchema },
   prompt: `You are a helpful financial assistant. Your task is to suggest a spending category for a given transaction description.
-  You must choose one of the following available categories:
 
-  {{#each categories}}
-  - {{{this}}}
-  {{/each}}
+First, analyze the user's transaction description.
+Then, review the following list of existing categories:
 
-  Analyze the user's transaction description and choose the most appropriate category from the list above.
+{{#each categories}}
+- {{{this}}}
+{{/each}}
 
-  Transaction Description:
-  {{{description}}}`,
+If the description fits well into one of the existing categories, choose that one and set 'isNew' to false.
+
+If the description does NOT fit well into any of the existing categories, create a new, appropriate, and concise category name. For example, for "Monthly Netflix fee", a good new category would be "Subscriptions". For "Annual domain name renewal", a good new category would be "Digital Services". Set 'isNew' to true in this case.
+
+Transaction Description:
+{{{description}}}`,
 });
 
 const suggestCategoryFlow = ai.defineFlow(
