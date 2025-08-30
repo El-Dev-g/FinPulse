@@ -13,8 +13,6 @@ import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
   type ConfirmationResult,
-  isSignInWithEmailLink,
-  signInWithEmailLink,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
@@ -152,7 +150,7 @@ function PhoneSignUpForm() {
     setError(null);
     try {
       await confirmationResult.confirm(otp);
-      router.push('/welcome/onboarding');
+      // Let useAuth hook handle redirection
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -208,14 +206,7 @@ function PhoneSignUpForm() {
 export default function SignUpPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const router = useRouter();
     const { user, loading: authLoading } = useAuth();
-
-    useEffect(() => {
-        if (!authLoading && user) {
-            router.push('/dashboard');
-        }
-    }, [user, authLoading, router]);
 
     useEffect(() => {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
@@ -232,7 +223,7 @@ export default function SignUpPage() {
         try {
           const provider = new GoogleAuthProvider();
           await signInWithPopup(auth, provider);
-          router.push('/welcome/onboarding');
+          // Let useAuth hook handle redirection
         } catch (err: any) {
           setError(err.message);
         } finally {
