@@ -15,31 +15,36 @@ interface FinancialPlanProps {
 
 export function FinancialPlan({ plan }: FinancialPlanProps) {
   return (
-    <Card className="mt-8 border-primary/20 bg-primary/5">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-3 text-2xl font-headline text-primary">
-          <Sparkles className="h-6 w-6" />
+    <div className="mt-8 space-y-6">
+       <div className="text-center">
+         <div className="inline-block bg-primary/10 p-3 rounded-full">
+            <Sparkles className="h-8 w-8 text-primary" />
+         </div>
+        <h2 className="text-3xl font-bold tracking-tight font-headline mt-4 text-primary">
           {plan.title}
-        </CardTitle>
-        <CardDescription className="text-lg italic">
-            {plan.subtitle}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ol className="space-y-4">
-            {plan.steps.map((step, index) => (
-                <li key={index} className="flex items-start gap-4">
-                    <div className="flex-shrink-0">
-                        <CheckCircle2 className="h-6 w-6 text-green-500 mt-1" />
-                    </div>
-                    <div>
-                        <h4 className="font-semibold">Step {index + 1}</h4>
-                        <p className="text-muted-foreground">{step}</p>
-                    </div>
-                </li>
-            ))}
-        </ol>
-      </CardContent>
-    </Card>
+        </h2>
+        <p className="mt-2 text-lg text-muted-foreground italic">
+          {plan.subtitle}
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        {plan.steps.map((step, index) => (
+          <Card key={index}>
+            <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+               <CheckCircle2 className="h-6 w-6 text-green-500 flex-shrink-0" />
+               <CardTitle className="text-xl">
+                Step {index + 1}
+               </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-muted-foreground pl-10">
+                    {step}
+                </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   );
 }
