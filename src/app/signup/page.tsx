@@ -13,6 +13,8 @@ import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
   type ConfirmationResult,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
@@ -29,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Loader, UserPlus, Phone } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/hooks/use-auth";
 
 const GoogleIcon = () => (
   <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -63,7 +66,7 @@ function EmailSignUpForm() {
         });
         await sendEmailVerification(userCredential.user);
       }
-      // Let the useAuth hook handle redirection
+      router.push('/verify-email');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -149,7 +152,7 @@ function PhoneSignUpForm() {
     setError(null);
     try {
       await confirmationResult.confirm(otp);
-      // Let the useAuth hook handle redirection
+      router.push('/welcome/onboarding');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -206,6 +209,13 @@ export default function SignUpPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const { user, loading: authLoading } = useAuth();
+
+    useEffect(() => {
+        if (!authLoading && user) {
+            router.push('/dashboard');
+        }
+    }, [user, authLoading, router]);
 
     useEffect(() => {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
@@ -222,13 +232,21 @@ export default function SignUpPage() {
         try {
           const provider = new GoogleAuthProvider();
           await signInWithPopup(auth, provider);
-          // Let the useAuth hook handle redirection
+          router.push('/welcome/onboarding');
         } catch (err: any) {
           setError(err.message);
         } finally {
           setLoading(false);
         }
     };
+    
+    if (authLoading || user) {
+        return (
+          <div className="flex h-screen items-center justify-center">
+            <Loader className="h-12 w-12 animate-spin text-primary" />
+          </div>
+        );
+    }
 
 
   return (
