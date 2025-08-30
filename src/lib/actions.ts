@@ -5,7 +5,7 @@ import { getPersonalizedFinancialAdvice } from "@/ai/flows/personalized-financia
 import { suggestCategory } from "@/ai/flows/suggest-category";
 import { answerQuestion } from "@/ai/flows/chatbot";
 import { getCategories } from "./db";
-import type { Advice } from "./types";
+import type { Advice, Category } from "./types";
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -14,13 +14,11 @@ export async function getFinancialAdvice(prompt: string) {
   return advice;
 }
 
-export async function getCategorySuggestion(description: string) {
+export async function getCategorySuggestion(description: string, categories: string[]) {
   if (!description || description.trim().length < 3) {
     return null;
   }
-  const categories = await getCategories();
-  const categoryNames = categories.map((c) => c.name).filter(name => name !== 'Income'); // Exclude income from suggestions
-  const suggestion = await suggestCategory({ description, categories: categoryNames });
+  const suggestion = await suggestCategory({ description, categories });
   return suggestion;
 }
 

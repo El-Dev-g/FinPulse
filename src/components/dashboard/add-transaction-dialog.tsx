@@ -70,7 +70,9 @@ export function AddTransactionDialog({
         if (user && debouncedDescription && debouncedDescription.length > 3 && type === 'expense') {
             setIsSuggestionLoading(true);
             try {
-                const result = await getCategorySuggestion(debouncedDescription);
+                // Pass the category names from the client-side state to the action
+                const categoryNames = availableCategories.map(c => c.name);
+                const result = await getCategorySuggestion(debouncedDescription, categoryNames);
                 if (result) {
                     setSuggestion(result.category);
                 } else {
@@ -87,7 +89,7 @@ export function AddTransactionDialog({
         }
     }
     fetchSuggestion();
-  }, [debouncedDescription, type, user]);
+  }, [debouncedDescription, type, user, availableCategories]);
   
   const resetForm = useCallback(() => {
     setDescription("");
