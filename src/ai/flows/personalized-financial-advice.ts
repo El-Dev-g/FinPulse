@@ -55,7 +55,7 @@ const personalizedFinancialAdviceFlow = ai.defineFlow(
   async (input) => {
     const { output } = await prompt({
         ...input,
-    }, { model: 'gemini-1.5-flash' });
+    }, { model: 'gemini-pro' });
     
     if (!output) {
       throw new Error("AI model failed to generate a response.");
