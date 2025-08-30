@@ -34,11 +34,7 @@ export function Chatbot() {
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const chatWindowRef = useRef<HTMLDivElement>(null);
-
-  // Dragging state
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const dragInfo = useRef({ isDragging: false, startX: 0, startY: 0, lastX: 0, lastY: 0 });
 
   useEffect(() => {
     if (isOpen) {
@@ -47,7 +43,10 @@ export function Chatbot() {
             { sender: "bot", text: "Hello! I'm the FinPulse assistant. What's your name?" }
         ]);
         // Reset position when opening
-        setPosition({ x: 0, y: 0 });
+        if (chatWindowRef.current) {
+            chatWindowRef.current.style.transform = 'translate(0px, 0px)';
+        }
+        dragInfo.current = { isDragging: false, startX: 0, startY: 0, lastX: 0, lastY: 0 };
     } else {
         // Reset on close
         setMessages([]);
@@ -108,45 +107,42 @@ export function Chatbot() {
     scrollToBottom();
   }, [messages]);
   
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Only allow dragging from the header
+  const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if ((e.target as HTMLElement).closest('[data-drag-handle]')) {
-        setIsDragging(true);
-        setDragStart({
-            x: e.clientX - position.x,
-            y: e.clientY - position.y,
-        });
+      dragInfo.current.isDragging = true;
+      dragInfo.current.startX = e.clientX;
+      dragInfo.current.startY = e.clientY;
     }
   };
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-      if (!isDragging || !chatWindowRef.current) return;
-      
-      const newX = e.clientX - dragStart.x;
-      const newY = e.clientY - dragStart.y;
-      
-      setPosition({ x: newX, y: newY });
-  }, [isDragging, dragStart.x, dragStart.y]);
-
-
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-  
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    } else {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+  const onMouseMove = useCallback((e: MouseEvent) => {
+    if (dragInfo.current.isDragging && chatWindowRef.current) {
+      const deltaX = e.clientX - dragInfo.current.startX;
+      const deltaY = e.clientY - dragInfo.current.startY;
+      const newX = dragInfo.current.lastX + deltaX;
+      const newY = dragInfo.current.lastY + deltaY;
+      chatWindowRef.current.style.transform = `translate(${newX}px, ${newY}px)`;
     }
+  }, []);
 
+  const onMouseUp = useCallback((e: MouseEvent) => {
+    if (dragInfo.current.isDragging) {
+      dragInfo.current.isDragging = false;
+      const deltaX = e.clientX - dragInfo.current.startX;
+      const deltaY = e.clientY - dragInfo.current.startY;
+      dragInfo.current.lastX += deltaX;
+      dragInfo.current.lastY += deltaY;
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
     };
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+  }, [onMouseMove, onMouseUp]);
 
 
   const getPlaceholderText = () => {
@@ -180,12 +176,8 @@ export function Chatbot() {
         <div
             ref={chatWindowRef}
             className="fixed bottom-20 right-4 z-50 w-full max-w-sm"
-            style={{
-                transform: `translate(${position.x}px, ${position.y}px)`,
-            }}
-            onMouseDown={handleMouseDown}
         >
-          <Card className="shadow-2xl">
+          <Card className="shadow-2xl" onMouseDown={onMouseDown}>
             <CardHeader 
                 className="flex flex-row items-center justify-between cursor-grab active:cursor-grabbing"
                 data-drag-handle
