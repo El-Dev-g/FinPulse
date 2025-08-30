@@ -17,6 +17,7 @@ import { getUserProfile, updateUserProfile } from "@/lib/db";
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isAdmin: boolean;
   currency: string;
   setCurrency: (currency: string) => void;
   formatCurrency: (amount: number) => string;
@@ -25,6 +26,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  isAdmin: false,
   currency: "USD",
   setCurrency: () => {},
   formatCurrency: (amount: number) => String(amount),
@@ -43,10 +45,13 @@ const unprotectedRoutes = [
 ];
 
 const isOnboardingRoute = (pathname: string) => pathname.startsWith('/welcome/onboarding');
+const isStudioRoute = (pathname: string) => pathname.startsWith('/studio');
+
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [currency, setCurrencyState] = useState("USD");
   const auth = getAuth(app);
   const router = useRouter();
@@ -60,6 +65,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (profile?.currency) {
           setCurrencyState(profile.currency);
         }
+        if(profile?.isAdmin) {
+            setIsAdmin(profile.isAdmin);
+        }
+      } else {
+        setIsAdmin(false);
       }
       setLoading(false);
     });
@@ -70,12 +80,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (loading) return;
       
-    const isProtected = !unprotectedRoutes.includes(pathname) && !isOnboardingRoute(pathname);
+    const isProtectedRoute = !unprotectedRoutes.includes(pathname) && !isOnboardingRoute(pathname);
 
-    if (!user && isProtected) {
+    if (!user && isProtectedRoute) {
       router.push("/signin");
     }
-  }, [user, loading, pathname, router]);
+
+    if(user && isStudioRoute(pathname) && !isAdmin) {
+        router.push("/dashboard");
+    }
+
+  }, [user, loading, pathname, router, isAdmin]);
 
   
   const setCurrency = useCallback(async (newCurrency: string) => {
@@ -93,7 +108,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [currency]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, currency, setCurrency, formatCurrency }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin, currency, setCurrency, formatCurrency }}>
       {children}
     </AuthContext.Provider>
   );
