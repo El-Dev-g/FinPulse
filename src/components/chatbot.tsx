@@ -75,23 +75,24 @@ export function Chatbot() {
 
     const userMessage = { sender: "user" as const, text: input };
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
     setInput("");
     
     switch(chatState) {
         case ChatState.AskName:
-            setUserInfo(prev => ({...prev, name: input}));
+            setUserInfo(prev => ({...prev, name: currentInput}));
             setChatState(ChatState.AskEmail);
-            setMessages(prev => [...prev, { sender: "bot", text: `Nice to meet you, ${input}! What's your email address?` }]);
+            setMessages(prev => [...prev, { sender: "bot", text: `Nice to meet you, ${currentInput}! What's your email address?` }]);
             break;
         case ChatState.AskEmail:
-             setUserInfo(prev => ({...prev, email: input}));
+             setUserInfo(prev => ({...prev, email: currentInput}));
              setChatState(ChatState.Ready);
              setMessages(prev => [...prev, { sender: "bot", text: "Great! What can I help you with today? Feel free to ask me anything about FinPulse." }]);
              break;
         case ChatState.Ready:
             setChatState(ChatState.Loading);
             try {
-                const response = await getChatbotResponse(input);
+                const response = await getChatbotResponse(currentInput);
                 setMessages(prev => [...prev, { sender: "bot", text: response.answer }]);
             } catch (error) {
                 setMessages(prev => [...prev, { sender: "bot", text: "Sorry, I'm having trouble connecting. Please try again later." }]);
