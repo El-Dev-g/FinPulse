@@ -10,9 +10,7 @@ if (process.env.GENKIT_ENV === 'dev') {
 
 export const ai = genkit({
   plugins: [
-    googleAI({
-      apiVersion: 'v1beta',
-    }),
+    googleAI(),
     ...plugins,
   ],
   logLevel: 'debug',
