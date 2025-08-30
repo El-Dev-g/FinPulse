@@ -5,15 +5,26 @@ import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, g
 import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category, AIPlan, UserProfile, Advice } from './types';
 import { auth } from './firebase';
 
-const getUid = () => {
+const getUid = async (): Promise<string> => {
+    // Wait for the auth state to be initialized
+    await auth.authStateReady();
     const user = auth.currentUser;
-    if (!user) throw new Error("User not authenticated");
+
+    if (!user) {
+        // Add a small delay and retry once, as currentUser might not be immediately available
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const userAfterDelay = auth.currentUser;
+        if (!userAfterDelay) {
+            throw new Error("User not authenticated");
+        }
+        return userAfterDelay.uid;
+    }
     return user.uid;
-}
+};
 
 // Generic add function
 const addDataItem = async <T extends object>(collectionName: string, data: T): Promise<string> => {
-    const uid = getUid();
+    const uid = await getUid();
     const docRef = await addDoc(collection(db, `users/${uid}/${collectionName}`), {
         ...data,
         createdAt: new Date(),
@@ -23,7 +34,7 @@ const addDataItem = async <T extends object>(collectionName: string, data: T): P
 
 // Generic get function
 const getData = async <T>(collectionName: string): Promise<(T & { id: string })[]> => {
-    const uid = getUid();
+    const uid = await getUid();
     const q = query(collection(db, `users/${uid}/${collectionName}`), orderBy('createdAt', 'desc'));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T & { id: string }));
@@ -31,14 +42,14 @@ const getData = async <T>(collectionName: string): Promise<(T & { id: string })[
 
 // Generic update function
 const updateDataItem = async <T extends object>(collectionName: string, id: string, data: T): Promise<void> => {
-    const uid = getUid();
+    const uid = await getUid();
     const docRef = doc(db, `users/${uid}/${collectionName}`, id);
     await updateDoc(docRef, data);
 };
 
 // Generic delete function
 const deleteDataItem = async (collectionName: string, id: string): Promise<void> => {
-    const uid = getUid();
+    const uid = await getUid();
     const docRef = doc(db, `users/${uid}/${collectionName}`, id);
     await deleteDoc(docRef);
 };
@@ -46,13 +57,13 @@ const deleteDataItem = async (collectionName: string, id: string): Promise<void>
 
 // --- User Profile ---
 export const updateUserProfile = async (profileData: Partial<UserProfile>) => {
-    const uid = getUid();
+    const uid = await getUid();
     const profileRef = doc(db, `users/${uid}/profile`, 'settings');
     await setDoc(profileRef, profileData, { merge: true });
 }
 
 export const getUserProfile = async (): Promise<UserProfile | null> => {
-    const uid = getUid();
+    const uid = await getUid();
     const profileRef = doc(db, `users/${uid}/profile`, 'settings');
     const docSnap = await getDoc(profileRef);
     if(docSnap.exists()){
@@ -78,7 +89,7 @@ export const getGoals = () => getData<Goal>('goals');
 export const updateGoal = (id: string, goal: Partial<Goal>) => updateDataItem('goals', id, goal);
 export const deleteGoal = (id: string) => deleteDataItem('goals', id);
 export const getGoal = async (id: string): Promise<(Goal & {id: string}) | null> => {
-    const uid = getUid();
+    const uid = await getUid();
     const docRef = doc(db, `users/${uid}/goals`, id);
     const docSnap = await getDoc(docRef);
     if(docSnap.exists()){
@@ -87,7 +98,7 @@ export const getGoal = async (id: string): Promise<(Goal & {id: string}) | null>
     return null;
 }
 export const getGoalByTitle = async (title: string): Promise<(Goal & {id: string}) | null> => {
-    const uid = getUid();
+    const uid = await getUid();
     const q = query(collection(db, `users/${uid}/goals`), where("title", "==", title));
     const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
@@ -120,7 +131,7 @@ export const getRecurringTransactions = () => getData<RecurringTransaction>('rec
 
 // --- Categories ---
 export const addCategory = async (category: Omit<Category, 'id' | 'createdAt'>): Promise<string> => {
-    const uid = getUid();
+    const uid = await getUid();
     // Check if category already exists
     const q = query(collection(db, `users/${uid}/categories`), where("name", "==", category.name));
     const querySnapshot = await getDocs(q);
