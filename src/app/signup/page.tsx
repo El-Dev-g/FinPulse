@@ -185,7 +185,7 @@ function PhoneSignUpForm() {
               />
             </div>
           )}
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {error && <p className="text-sm text-destructive mb-4">{error}</p>}
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full" disabled={loading}>

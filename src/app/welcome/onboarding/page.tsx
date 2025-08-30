@@ -46,7 +46,7 @@ export default function OnboardingPage() {
     });
   }, [api]);
   
-  const handleAddGoal = async (newGoal: Omit<Goal, "id" | "createdAt">) => {
+  const handleAddGoal = async (newGoal: Omit<Goal, "id" | "current" | "createdAt">) => {
     await addGoal({ ...newGoal, current: 0 });
     api?.scrollNext();
   };
@@ -162,6 +162,7 @@ export default function OnboardingPage() {
         isOpen={isAddGoalDialogOpen}
         onOpenChange={setIsAddGoalDialogOpen}
         onAddGoal={handleAddGoal}
+        aiPlans={[]}
       />
       <AddBudgetDialog
         isOpen={isAddBudgetDialogOpen}

@@ -45,8 +45,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (loading) return;
 
-    const isPublicPage = PUBLIC_PAGES.includes(pathname);
+    const isPublicPage = PUBLIC_PAGES.some(p => pathname.startsWith(p));
     const isAuthPage = AUTH_PAGES.includes(pathname);
+    const isOnboardingPage = ONBOARDING_PAGES.includes(pathname);
 
     if (!user && !isPublicPage) {
       router.push("/signin");
@@ -55,18 +56,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (user) {
       const isEmailVerified = user.emailVerified || user.providerData.some(p => p.providerId !== 'password');
+      const isNewUser = user.metadata.creationTime === user.metadata.lastSignInTime;
+
       if (!isEmailVerified && pathname !== '/verify-email') {
         router.push('/verify-email');
         return;
       }
       
-      if (isEmailVerified && (isAuthPage || pathname === "/")) {
-         router.push("/dashboard");
-         return;
+      if (isEmailVerified) {
+        if (isNewUser && !isOnboardingPage) {
+          router.push('/welcome/onboarding');
+          return;
+        }
+        if (!isNewUser && (isAuthPage || isOnboardingPage || pathname === "/")) {
+          router.push("/dashboard");
+          return;
+        }
       }
     }
-
-
   }, [user, loading, pathname, router]);
 
   return (

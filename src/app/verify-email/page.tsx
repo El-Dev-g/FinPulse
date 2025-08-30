@@ -17,22 +17,54 @@ import {
 import { Loader, MailCheck, MailWarning } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 export default function VerifyEmailPage() {
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
       router.push('/signin');
-    } else if (user.emailVerified) {
-      router.push('/dashboard');
+      return;
     }
-  }, [user, authLoading, router]);
+    
+    // Check if user is already verified
+    if (user.emailVerified) {
+        if (!isVerified) { // Prevent multiple toasts
+             toast({
+                title: "Email Verified!",
+                description: "Redirecting you to get started...",
+            });
+            setIsVerified(true);
+            setTimeout(() => router.push('/welcome/onboarding'), 2000);
+        }
+    }
+    
+    const interval = setInterval(async () => {
+      await user.reload();
+      if (user.emailVerified) {
+        clearInterval(interval);
+        if (!isVerified) { // Prevent multiple toasts
+            toast({
+                title: "Email Verified!",
+                description: "Redirecting you to get started...",
+            });
+            setIsVerified(true);
+            setTimeout(() => router.push('/welcome/onboarding'), 2000);
+        }
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+
+  }, [user, authLoading, router, toast, isVerified]);
 
 
   const handleResendVerification = async () => {
@@ -54,13 +86,22 @@ export default function VerifyEmailPage() {
     }
   };
   
-  if (authLoading || !user || user.emailVerified) {
+  if (authLoading || !user) {
       return (
           <div className="flex h-screen items-center justify-center">
             <Loader className="h-12 w-12 animate-spin text-primary" />
           </div>
       )
   }
+  
+  if (isVerified) {
+       return (
+          <div className="flex h-screen items-center justify-center">
+            <Loader className="h-12 w-12 animate-spin text-primary" />
+          </div>
+      )
+  }
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -76,13 +117,10 @@ export default function VerifyEmailPage() {
               We've sent a verification link to{" "}
               <span className="font-semibold text-foreground">{user.email}</span>.
               Please check your inbox and follow the link to activate your
-              account.
+              account. This page will update automatically.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground">
-              Once your email is verified, you will be able to access your dashboard.
-            </p>
              {message && <p className="mt-4 text-sm text-green-600">{message}</p>}
              {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
           </CardContent>

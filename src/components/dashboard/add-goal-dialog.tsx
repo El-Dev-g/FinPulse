@@ -28,14 +28,14 @@ interface AddGoalDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onAddGoal: (newGoal: Omit<Goal, "id" | "current" | "createdAt">) => Promise<void>;
-  aiPlans: AIPlan[];
+  aiPlans?: AIPlan[];
 }
 
 export function AddGoalDialog({
   isOpen,
   onOpenChange,
   onAddGoal,
-  aiPlans,
+  aiPlans = [],
 }: AddGoalDialogProps) {
   const [title, setTitle] = useState("");
   const [target, setTarget] = useState("");
@@ -121,22 +121,24 @@ export function AddGoalDialog({
                 placeholder="e.g., 5000"
               />
             </div>
-            <div className="space-y-2">
-               <Label htmlFor="advice">Link an AI Plan (Optional)</Label>
-                <Select value={adviceId} onValueChange={setAdviceId}>
-                    <SelectTrigger id="advice">
-                        <SelectValue placeholder="Select a pre-generated plan" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        {aiPlans.map((plan) => (
-                            <SelectItem key={plan.id} value={plan.id}>
-                                {plan.advice.title}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
+            {aiPlans.length > 0 && (
+                <div className="space-y-2">
+                <Label htmlFor="advice">Link an AI Plan (Optional)</Label>
+                    <Select value={adviceId} onValueChange={setAdviceId}>
+                        <SelectTrigger id="advice">
+                            <SelectValue placeholder="Select a pre-generated plan" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            {aiPlans.map((plan) => (
+                                <SelectItem key={plan.id} value={plan.id}>
+                                    {plan.advice.title}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
           </div>
           {error && <p className="text-sm text-destructive mb-4">{error}</p>}
           <DialogFooter>
