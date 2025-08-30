@@ -10,6 +10,7 @@ if (process.env.GEMINI_API_KEY) {
 
 export const ai = genkit({
   plugins,
+  model: 'gemini-1.5-flash',
   logLevel: process.env.GENKIT_ENV === "dev" ? "debug" : "info",
   enableTracingAndMetrics: true,
 });
