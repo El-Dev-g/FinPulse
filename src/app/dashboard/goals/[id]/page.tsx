@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -25,6 +25,7 @@ export default function GoalDetailPage() {
   const params = useParams();
   const { id } = params;
   const { user } = useAuth();
+  const router = useRouter();
   
   const [goal, setGoal] = useState<ClientGoal | null>(null);
   const [relatedTransactions, setRelatedTransactions] = useState<ClientTransaction[]>([]);
@@ -100,6 +101,10 @@ export default function GoalDetailPage() {
   };
 
   const progress = (goal.current / goal.target) * 100;
+  
+  const handleGetAdvice = () => {
+      router.push(`/dashboard/ai-advisor?goal=${encodeURIComponent(goal.title)}&goalId=${goal.id}`);
+  }
 
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
@@ -160,6 +165,10 @@ export default function GoalDetailPage() {
                     <Calculator className="mr-2" />
                     Plan with Calculator
                   </Link>
+                </Button>
+                <Button onClick={handleGetAdvice} variant="outline" className="w-full">
+                    <Bot className="mr-2"/>
+                    Get AI Advice
                 </Button>
               </CardFooter>
             </Card>

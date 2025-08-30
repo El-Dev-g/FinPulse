@@ -17,6 +17,7 @@ import {
   ClipboardList,
   Repeat,
   ListTree,
+  Bot,
 } from "lucide-react";
 import {
   Sidebar,
@@ -52,6 +53,7 @@ const navItems = [
   { href: "/dashboard/organizer", icon: ClipboardList, label: "Organizer" },
   { href: "/dashboard/catalog", icon: ListTree, label: "Categories" },
   { href: "/dashboard/calculator", icon: Calculator, label: "Calculator" },
+  { href: "/dashboard/ai-advisor", icon: Bot, label: "AI Advisor" },
 ];
 
 function DashboardSidebar() {

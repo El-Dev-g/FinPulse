@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader } from "lucide-react";
+import { Loader, Sparkles } from "lucide-react";
 import type { Transaction, Category } from "@/lib/types";
 import {
   Select,
@@ -25,6 +25,8 @@ import {
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { useAuth } from "@/hooks/use-auth";
 import { getCategories } from "@/lib/db";
+import { useDebounce } from "@/hooks/use-debounce";
+import { suggestCategoryAction } from "@/lib/actions";
 
 interface AddTransactionDialogProps {
   isOpen: boolean;
@@ -46,6 +48,9 @@ export function AddTransactionDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  
+  const debouncedDescription = useDebounce(description, 500);
 
   useEffect(() => {
     async function fetchCategories() {
@@ -73,6 +78,20 @@ export function AddTransactionDialog({
       resetForm();
     }
   }, [isOpen, resetForm]);
+
+  useEffect(() => {
+    if (debouncedDescription && type === 'expense' && availableCategories.length > 0) {
+      setIsSuggesting(true);
+      suggestCategoryAction(debouncedDescription)
+        .then(suggested => {
+          if (suggested && availableCategories.some(c => c.name === suggested)) {
+            setCategory(suggested);
+          }
+        })
+        .finally(() => setIsSuggesting(false));
+    }
+  }, [debouncedDescription, type, availableCategories]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,6 +185,12 @@ export function AddTransactionDialog({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="category">Category</Label>
+                   {isSuggesting && (
+                    <span className="text-xs text-primary flex items-center gap-1">
+                      <Sparkles className="h-3 w-3 animate-pulse" />
+                      AI Suggesting...
+                    </span>
+                  )}
                 </div>
                 <Select value={category} onValueChange={setCategory}>
                   <SelectTrigger>

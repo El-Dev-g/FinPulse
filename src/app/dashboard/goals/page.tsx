@@ -85,8 +85,8 @@ function GoalsPageContent() {
   };
 
   const handleAddGoal = async (newGoal: Omit<Goal, "id" | "current" | "createdAt">) => {
-    await addGoal({ ...newGoal, current: 0 });
-    fetchGoals();
+    const goalId = await addGoal({ ...newGoal, current: 0 });
+    router.push(`/dashboard/ai-advisor?goal=${encodeURIComponent(newGoal.title)}&goalId=${goalId}`);
   };
 
   const handleEditGoal = async (updatedGoal: Goal) => {
