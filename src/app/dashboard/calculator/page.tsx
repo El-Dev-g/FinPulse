@@ -1,7 +1,7 @@
 // src/app/dashboard/calculator/page.tsx
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Card,
@@ -14,8 +14,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calculator, Target, TrendingUp, CreditCard, Coins, Send } from "lucide-react";
+import { Calculator, Target, TrendingUp, CreditCard, Coins, Send, Loader } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { convertCurrency } from "@/lib/currency-actions";
+import { useDebounce } from "@/hooks/use-debounce";
 
 // Helper to format currency
 const formatCurrency = (amount: number, currency = "USD") => {
@@ -204,30 +206,52 @@ function DebtPayoffCalculator({ values, setValues, onUsePayment }: any) {
 
 function CurrencyConverter({ values, setValues, onUseConversion }: any) {
   const { amount, fromCurrency, toCurrency } = values;
-  const currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD"];
-  
-  const exchangeRates: { [key: string]: { [key: string]: number } } = {
-    USD: { EUR: 0.93, GBP: 0.79, JPY: 157.2, CAD: 1.37, AUD: 1.5 },
-    EUR: { USD: 1.08, GBP: 0.85, JPY: 169.5, CAD: 1.48, AUD: 1.62 },
-    GBP: { USD: 1.27, EUR: 1.18, JPY: 199.5, CAD: 1.74, AUD: 1.9 },
-    JPY: { USD: 0.0064, EUR: 0.0059, GBP: 0.005, CAD: 0.0087, AUD: 0.0095 },
-    CAD: { USD: 0.73, EUR: 0.68, GBP: 0.57, JPY: 114.7, AUD: 1.1 },
-    AUD: { USD: 0.67, EUR: 0.62, GBP: 0.53, JPY: 104.8, CAD: 0.91 },
-  };
+  const currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "INR", "BRL"];
+  const [convertedAmount, setConvertedAmount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const convertedAmount = useMemo(() => {
-    const numAmount = parseFloat(amount);
-    if (isNaN(numAmount) || !fromCurrency || !toCurrency) return 0;
-    if (fromCurrency === toCurrency) return numAmount;
-    const rate = exchangeRates[fromCurrency]?.[toCurrency] || 0;
-    return numAmount * rate;
-  }, [amount, fromCurrency, toCurrency, exchangeRates]);
+  const debouncedAmount = useDebounce(amount, 500);
+
+  const handleConversion = useCallback(async () => {
+    const numAmount = parseFloat(debouncedAmount);
+    if (isNaN(numAmount) || numAmount <= 0 || !fromCurrency || !toCurrency) {
+      setConvertedAmount(0);
+      return;
+    }
+    
+    if (fromCurrency === toCurrency) {
+        setConvertedAmount(numAmount);
+        return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await convertCurrency({
+        from: fromCurrency,
+        to: toCurrency,
+        amount: numAmount,
+      });
+      setConvertedAmount(result.convertedAmount);
+    } catch (e: any) {
+      setError(e.message || "Failed to fetch exchange rate.");
+      setConvertedAmount(0);
+    } finally {
+      setLoading(false);
+    }
+  }, [debouncedAmount, fromCurrency, toCurrency]);
+
+  useEffect(() => {
+    handleConversion();
+  }, [handleConversion]);
+
 
   return (
     <div className="space-y-6">
        <div>
         <h3 className="text-xl font-semibold">Currency Converter</h3>
-        <p className="text-muted-foreground text-sm">Convert between major currencies.*</p>
+        <p className="text-muted-foreground text-sm">Convert between major currencies using live rates.</p>
       </div>
       <div className="space-y-4">
         <div className="space-y-2">
@@ -255,16 +279,27 @@ function CurrencyConverter({ values, setValues, onUseConversion }: any) {
           </div>
         </div>
       </div>
-      <div className="p-6 bg-muted rounded-lg text-center space-y-3">
-        <p className="text-muted-foreground">Converted Amount</p>
-        <p className="text-4xl font-bold text-primary">{formatCurrency(convertedAmount, toCurrency)}</p>
-         <div className="flex justify-center gap-2 pt-2">
-            <Button size="sm" variant="outline" onClick={() => onUseConversion(convertedAmount)}>
-                <Send className="mr-2" /> Use Value
-            </Button>
-        </div>
+       <div className="p-6 bg-muted rounded-lg text-center space-y-3 min-h-[148px] flex flex-col justify-center">
+        {loading ? (
+            <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                <Loader className="animate-spin" />
+                <span>Converting...</span>
+            </div>
+        ) : error ? (
+            <p className="text-destructive text-sm">{error}</p>
+        ) : (
+          <>
+            <p className="text-muted-foreground">Converted Amount</p>
+            <p className="text-4xl font-bold text-primary">{formatCurrency(convertedAmount, toCurrency)}</p>
+            <div className="flex justify-center gap-2 pt-2">
+                <Button size="sm" variant="outline" onClick={() => onUseConversion(convertedAmount)}>
+                    <Send className="mr-2" /> Use Value
+                </Button>
+            </div>
+          </>
+        )}
       </div>
-       <p className="text-xs text-muted-foreground text-center">*Rates are for illustrative purposes only and may not be current.</p>
+       <p className="text-xs text-muted-foreground text-center">Rates provided by Open Exchange Rates.</p>
     </div>
   );
 }
@@ -287,7 +322,7 @@ function CalculatorPageContent() {
   const [investmentValues, setInvestmentValues] = useState({ initial: "", contribution: "", rate: "", years: "" });
   const [savingsValues, setSavingsValues] = useState({ target: "", current: "", years: "" });
   const [debtValues, setDebtValues] = useState({ debtAmount: "", interestRate: "", monthlyPayment: "" });
-  const [currencyValues, setCurrencyValues] = useState({ amount: "", fromCurrency: "USD", toCurrency: "EUR" });
+  const [currencyValues, setCurrencyValues] = useState({ amount: "1", fromCurrency: "USD", toCurrency: "EUR" });
 
   const setPartialState = (setter: Function) => (newValues: object) => {
       setter((prev: object) => ({...prev, ...newValues}));
