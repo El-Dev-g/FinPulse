@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader } from "lucide-react";
+import { Loader, Plus } from "lucide-react";
 import type { Budget, Category } from "@/lib/types";
 import {
   Select,
@@ -22,8 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { getCategories } from "@/lib/db";
+import { getCategories, addCategory } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
+import { AddCategoryDialog } from "./add-category-dialog";
 
 interface AddBudgetDialogProps {
   isOpen: boolean;
@@ -44,17 +45,19 @@ export function AddBudgetDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+
+  const fetchCategories = async () => {
+    if (user && isOpen) {
+      const allCategories = (await getCategories()) as Category[];
+      const filtered = allCategories.filter(
+        (c) => !existingCategories.includes(c.name) && c.name !== "Income"
+      );
+      setAvailableCategories(filtered);
+    }
+  };
 
   useEffect(() => {
-    async function fetchCategories() {
-      if (user && isOpen) {
-        const allCategories = (await getCategories()) as Category[];
-        const filtered = allCategories.filter(
-          (c) => !existingCategories.includes(c.name) && c.name !== "Income"
-        );
-        setAvailableCategories(filtered);
-      }
-    }
     fetchCategories();
   }, [user, isOpen, existingCategories]);
 
@@ -87,8 +90,15 @@ export function AddBudgetDialog({
         setLoading(false);
     }
   };
+  
+  const handleAddCategory = async (name: string) => {
+    await addCategory({ name });
+    await fetchCategories(); // Refetch categories
+    setCategory(name); // Select the newly added category
+  };
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) {
         setCategory("");
@@ -110,6 +120,7 @@ export function AddBudgetDialog({
               <Label htmlFor="category">
                 Category
               </Label>
+              <div className="flex gap-2">
                <Select value={category} onValueChange={setCategory}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
@@ -122,6 +133,10 @@ export function AddBudgetDialog({
                     ))}
                   </SelectContent>
                 </Select>
+                <Button type="button" variant="outline" size="icon" onClick={() => setIsAddCategoryOpen(true)}>
+                    <Plus className="h-4 w-4" />
+                </Button>
+               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="limit">
@@ -146,5 +161,11 @@ export function AddBudgetDialog({
         </form>
       </DialogContent>
     </Dialog>
+    <AddCategoryDialog 
+        isOpen={isAddCategoryOpen}
+        onOpenChange={setIsAddCategoryOpen}
+        onAddCategory={handleAddCategory}
+    />
+    </>
   );
 }
