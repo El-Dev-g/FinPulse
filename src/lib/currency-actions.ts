@@ -26,7 +26,7 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
     throw new Error("Exchange rate API key not configured.");
   }
   
-  const url = `https://api.exchangerate.host/live?access_key=${apiKey}&source=${from}&currencies=${to}`;
+  const url = `http://api.exchangerate.host/convert?access_key=${apiKey}&from=${from}&to=${to}&amount=${amount}`;
 
   try {
     const response = await fetch(url);
@@ -39,16 +39,11 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
         throw new Error(`API Error: ${data.error?.info || 'Unknown error'}`);
     }
     
-    const rateKey = `${from}${to}`;
-    const rate = data.quotes[rateKey];
-    
-    if (!rate) {
-        throw new Error("Could not retrieve exchange rate for the selected currencies.");
+    if (typeof data.result !== 'number') {
+        throw new Error("Could not retrieve converted amount from API response.");
     }
     
-    const convertedAmount = amount * rate;
-
-    return { convertedAmount };
+    return { convertedAmount: data.result };
   } catch (error: any) {
     console.error("Currency conversion error:", error);
     throw new Error(error.message || "Failed to convert currency.");
