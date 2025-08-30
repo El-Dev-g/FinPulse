@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader } from "lucide-react";
+import { Loader, Sparkles } from "lucide-react";
 import type { Transaction, Category } from "@/lib/types";
 import {
   Select,
@@ -25,6 +25,8 @@ import {
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { useAuth } from "@/hooks/use-auth";
 import { getCategories } from "@/lib/db";
+import { useDebounce } from "@/hooks/use-debounce";
+import { getCategorySuggestion } from "@/lib/actions";
 
 interface AddTransactionDialogProps {
   isOpen: boolean;
@@ -47,6 +49,12 @@ export function AddTransactionDialog({
   const [error, setError] = useState<string | null>(null);
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
   
+  // AI Suggestion State
+  const debouncedDescription = useDebounce(description, 500);
+  const [suggestion, setSuggestion] = useState<string | null>(null);
+  const [isSuggestionLoading, setIsSuggestionLoading] = useState(false);
+
+
   useEffect(() => {
     async function fetchCategories() {
       if (user) {
@@ -57,6 +65,29 @@ export function AddTransactionDialog({
     fetchCategories();
   }, [user]);
 
+  useEffect(() => {
+    async function fetchSuggestion() {
+        if (debouncedDescription && debouncedDescription.length > 3 && type === 'expense') {
+            setIsSuggestionLoading(true);
+            try {
+                const result = await getCategorySuggestion(debouncedDescription);
+                if (result) {
+                    setSuggestion(result.category);
+                } else {
+                    setSuggestion(null);
+                }
+            } catch (e) {
+                console.error("Failed to fetch category suggestion:", e);
+                setSuggestion(null);
+            } finally {
+                setIsSuggestionLoading(false);
+            }
+        } else {
+            setSuggestion(null);
+        }
+    }
+    fetchSuggestion();
+  }, [debouncedDescription, type]);
   
   const resetForm = useCallback(() => {
     setDescription("");
@@ -66,6 +97,7 @@ export function AddTransactionDialog({
     setType("expense");
     setError(null);
     setLoading(false);
+    setSuggestion(null);
   }, []);
 
   useEffect(() => {
@@ -167,6 +199,30 @@ export function AddTransactionDialog({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="category">Category</Label>
+                   {(isSuggestionLoading || suggestion) && (
+                     <Button
+                        type="button"
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-xs"
+                        disabled={isSuggestionLoading || !suggestion}
+                        onClick={() => {
+                            if (suggestion) setCategory(suggestion);
+                        }}
+                    >
+                        {isSuggestionLoading ? (
+                            <>
+                                <Loader className="mr-1 h-3 w-3 animate-spin" />
+                                Getting suggestion...
+                            </>
+                        ) : (
+                            <>
+                                <Sparkles className="mr-1 h-3 w-3" />
+                                Suggest: {suggestion}
+                            </>
+                        )}
+                     </Button>
+                   )}
                 </div>
                 <Select value={category} onValueChange={setCategory}>
                   <SelectTrigger>

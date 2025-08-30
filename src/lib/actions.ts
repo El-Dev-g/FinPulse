@@ -2,7 +2,8 @@
 "use server";
 
 import { getPersonalizedFinancialAdvice } from "@/ai/flows/personalized-financial-advice";
-import { updateGoal } from "./db";
+import { suggestCategory } from "@/ai/flows/suggest-category";
+import { getCategories, updateGoal } from "./db";
 import { redirect } from "next/navigation";
 
 export async function getFinancialAdvice(prompt: string, goalId: string | null) {
@@ -17,4 +18,14 @@ export async function getFinancialAdvice(prompt: string, goalId: string | null) 
 
   // Otherwise, just return the advice for display on the advisor page
   return advice;
+}
+
+export async function getCategorySuggestion(description: string) {
+  if (!description || description.trim().length < 3) {
+    return null;
+  }
+  const categories = await getCategories();
+  const categoryNames = categories.map((c) => c.name).filter(name => name !== 'Income'); // Exclude income from suggestions
+  const suggestion = await suggestCategory({ description, categories: categoryNames });
+  return suggestion;
 }
