@@ -108,6 +108,7 @@ export function Chatbot() {
   }, [messages]);
   
   const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (window.innerWidth < 768) return; // Disable drag on mobile
     if ((e.target as HTMLElement).closest('[data-drag-handle]')) {
       dragInfo.current.isDragging = true;
       dragInfo.current.startX = e.clientX;
@@ -162,7 +163,7 @@ export function Chatbot() {
 
   return (
     <>
-      <div className="fixed top-1/2 right-4 -translate-y-1/2 z-50">
+      <div className="fixed bottom-4 right-4 md:top-1/2 md:right-4 md:-translate-y-1/2 md:bottom-auto z-50">
         <Button
           size="icon"
           className="rounded-full w-14 h-14 shadow-lg"
@@ -175,7 +176,7 @@ export function Chatbot() {
       {isOpen && (
         <div
             ref={chatWindowRef}
-            className="fixed top-1/2 -translate-y-1/2 right-20 z-50 w-full max-w-sm"
+            className="fixed bottom-20 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm md:w-full md:top-1/2 md:-translate-y-1/2 md:right-20 md:bottom-auto"
         >
           <Card className="shadow-2xl" onMouseDown={onMouseDown}>
             <CardHeader 
@@ -183,7 +184,7 @@ export function Chatbot() {
                 data-drag-handle
             >
               <CardTitle>FinPulse Assistant</CardTitle>
-              <GripVertical className="text-muted-foreground" />
+              <GripVertical className="text-muted-foreground hidden md:block" />
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[400px] pr-4" ref={scrollAreaRef}>

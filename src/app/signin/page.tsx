@@ -8,9 +8,6 @@ import {
   signInWithEmailAndPassword,
   signInWithRedirect,
   GoogleAuthProvider,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  type ConfirmationResult,
   signInWithPopup,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -25,9 +22,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, LogIn, Phone } from "lucide-react";
+import { Loader, LogIn } from "lucide-react";
 import { Logo } from "@/components/logo";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 
 
@@ -78,155 +74,76 @@ function EmailSignInForm() {
   };
   
   return (
-    <form onSubmit={handleSignIn}>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="m@example.com"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
-            <Link
-              href="/forgot-password"
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              Forgot Password?
-            </Link>
-          </div>
-          <Input
-            id="password"
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-      </CardContent>
-      <CardFooter className="flex flex-col gap-4">
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? <Loader className="animate-spin" /> : <LogIn />}
-          Sign In
-        </Button>
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={handleGoogleSignIn}
-          type="button"
-          disabled={loading}
-        >
-          <GoogleIcon />
-          Sign In with Google
-        </Button>
-      </CardFooter>
-    </form>
-  )
-}
-
-function PhoneSignInForm() {
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [confirmationResult, setConfirmationResult] =
-    useState<ConfirmationResult | null>(null);
-  const router = useRouter();
-  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
-  const recaptchaContainerRef = useRef<HTMLDivElement | null>(null);
-
-
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    try {
-       if (!recaptchaVerifierRef.current && recaptchaContainerRef.current) {
-        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
-          size: "invisible",
-        });
-      }
-      const verifier = recaptchaVerifierRef.current;
-      if (!verifier) throw new Error("Could not create reCAPTCHA verifier");
-      const result = await signInWithPhoneNumber(auth, `+${phone}`, verifier);
-      setConfirmationResult(result);
-    } catch (err: any) {
-      setError(err.message);
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!confirmationResult) return;
-    setLoading(true);
-    setError(null);
-    try {
-      await confirmationResult.confirm(otp);
-      router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <>
-      <div ref={recaptchaContainerRef} id="recaptcha-container"></div>
-      <form onSubmit={confirmationResult ? handleVerifyOtp : handleSendOtp}>
-          <CardContent className="space-y-4">
-            {!confirmationResult ? (
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="1234567890 (include country code)"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label htmlFor="otp">Verification Code</Label>
-                <Input
-                  id="otp"
-                  type="text"
-                  placeholder="Enter 6-digit code"
-                  required
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                />
-              </div>
-            )}
+    <Card>
+        <CardHeader>
+        <CardTitle>Sign In</CardTitle>
+        <CardDescription>
+            Enter your credentials to access your dashboard.
+        </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSignIn}>
+        <CardContent className="space-y-4">
+            <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+            />
+            </div>
+            <div className="space-y-2">
+            <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                href="/forgot-password"
+                className="text-sm font-medium text-primary hover:underline"
+                >
+                Forgot Password?
+                </Link>
+            </div>
+            <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+            />
+            </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                  <Loader className="animate-spin" />
-              ) : confirmationResult ? (
-                  "Verify Code"
-              ) : (
-                  "Send Code"
-              )}
-              </Button>
-          </CardFooter>
-      </form>
-    </>
+        </CardContent>
+        <CardFooter className="flex flex-col gap-4">
+            <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? <Loader className="animate-spin" /> : <LogIn />}
+            Sign In
+            </Button>
+            <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleGoogleSignIn}
+            type="button"
+            disabled={loading}
+            >
+            <GoogleIcon />
+            Sign In with Google
+            </Button>
+        </CardFooter>
+        </form>
+         <p className="text-center text-sm text-muted-foreground pb-6">
+            Don't have an account?{" "}
+            <Link
+              href="/signup"
+              className="font-semibold text-primary hover:underline"
+            >
+              Sign Up
+            </Link>
+          </p>
+    </Card>
   )
 }
+
 
 export default function SignInPage() {
   const { user, loading } = useAuth();
@@ -252,36 +169,7 @@ export default function SignInPage() {
         <div className="flex justify-center">
           <Logo />
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>
-              Choose your sign-in method to access your dashboard.
-            </CardDescription>
-          </CardHeader>
-          <Tabs defaultValue="email" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="email"><LogIn className="mr-2"/>Email</TabsTrigger>
-              <TabsTrigger value="phone"><Phone className="mr-2"/>Phone</TabsTrigger>
-            </TabsList>
-            <TabsContent value="email">
-                <EmailSignInForm />
-            </TabsContent>
-            <TabsContent value="phone">
-                <PhoneSignInForm />
-            </TabsContent>
-          </Tabs>
-
-          <p className="text-center text-sm text-muted-foreground pb-6">
-            Don't have an account?{" "}
-            <Link
-              href="/signup"
-              className="font-semibold text-primary hover:underline"
-            >
-              Sign Up
-            </Link>
-          </p>
-        </Card>
+        <EmailSignInForm />
       </div>
     </div>
   );

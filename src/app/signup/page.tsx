@@ -10,9 +10,6 @@ import {
   signInWithRedirect,
   GoogleAuthProvider,
   updateProfile,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  type ConfirmationResult,
   signInWithPopup,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -27,9 +24,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, UserPlus, Phone } from "lucide-react";
+import { Loader, UserPlus } from "lucide-react";
 import { Logo } from "@/components/logo";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 
 const GoogleIcon = () => (
@@ -120,101 +116,6 @@ function EmailSignUpForm() {
   );
 }
 
-function PhoneSignUpForm() {
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [confirmationResult, setConfirmationResult] =
-    useState<ConfirmationResult | null>(null);
-  const router = useRouter();
-  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
-  const recaptchaContainerRef = useRef<HTMLDivElement | null>(null);
-
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    try {
-      if (!recaptchaVerifierRef.current && recaptchaContainerRef.current) {
-        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
-          size: "invisible",
-        });
-      }
-      const verifier = recaptchaVerifierRef.current;
-      if (!verifier) throw new Error("Could not create reCAPTCHA verifier");
-      const result = await signInWithPhoneNumber(auth, `+${phone}`, verifier);
-      setConfirmationResult(result);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!confirmationResult) return;
-    setLoading(true);
-    setError(null);
-    try {
-      await confirmationResult.confirm(otp);
-      router.push("/welcome/onboarding");
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-   return (
-    <>
-      <div ref={recaptchaContainerRef}></div>
-      <form onSubmit={confirmationResult ? handleVerifyOtp : handleSendOtp}>
-          <CardContent className="space-y-4">
-            {!confirmationResult ? (
-              <div className="space-y-2">
-                <Label htmlFor="phone-signup">Phone Number</Label>
-                <Input
-                  id="phone-signup"
-                  type="tel"
-                  placeholder="1234567890 (include country code)"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label htmlFor="otp-signup">Verification Code</Label>
-                <Input
-                  id="otp-signup"
-                  type="text"
-                  placeholder="Enter 6-digit code"
-                  required
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                />
-              </div>
-            )}
-            {error && <p className="text-sm text-destructive mb-4">{error}</p>}
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                  <Loader className="animate-spin" />
-              ) : confirmationResult ? (
-                  "Verify & Sign Up"
-              ) : (
-                  "Send Code"
-              )}
-              </Button>
-          </CardFooter>
-      </form>
-    </>
-  )
-}
-
 export default function SignUpPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -270,18 +171,7 @@ export default function SignUpPage() {
               Create an account to get started with FinPulse.
             </CardDescription>
           </CardHeader>
-           <Tabs defaultValue="email" className="w-full">
-             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="email"><UserPlus className="mr-2"/>Email</TabsTrigger>
-              <TabsTrigger value="phone"><Phone className="mr-2"/>Phone</TabsTrigger>
-            </TabsList>
-            <TabsContent value="email">
-                <EmailSignUpForm />
-            </TabsContent>
-            <TabsContent value="phone">
-                <PhoneSignUpForm />
-            </TabsContent>
-           </Tabs>
+          <EmailSignUpForm />
             <CardContent className="pt-0">
                <div className="relative my-4">
                   <div className="absolute inset-0 flex items-center">
