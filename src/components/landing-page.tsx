@@ -145,8 +145,12 @@ export default function LandingPage() {
         </section>
       </main>
       <footer className="bg-card/50">
-        <div className="container mx-auto px-4 py-6 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <Logo />
+           <div className="flex gap-4 items-center text-sm text-muted-foreground">
+             <Link href="/policy/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
+             <Link href="/policy/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+          </div>
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} FinPulse. All rights reserved.
           </p>
