@@ -3,8 +3,11 @@
 
 import { getPersonalizedFinancialAdvice } from "@/ai/flows/personalized-financial-advice";
 import { suggestCategory } from "@/ai/flows/suggest-category";
+import { answerQuestion } from "@/ai/flows/chatbot";
 import { getCategories } from "./db";
 import type { Advice } from "./types";
+import fs from 'fs/promises';
+import path from 'path';
 
 export async function getFinancialAdvice(prompt: string) {
   const advice = await getPersonalizedFinancialAdvice({ prompt });
@@ -19,4 +22,17 @@ export async function getCategorySuggestion(description: string) {
   const categoryNames = categories.map((c) => c.name).filter(name => name !== 'Income'); // Exclude income from suggestions
   const suggestion = await suggestCategory({ description, categories: categoryNames });
   return suggestion;
+}
+
+export async function getChatbotResponse(query: string) {
+    if (!query || query.trim().length < 3) {
+        return { answer: "Please ask a more specific question." };
+    }
+    
+    // Read the user guide documentation
+    const guidePath = path.join(process.cwd(), 'USER_GUIDE.md');
+    const context = await fs.readFile(guidePath, 'utf-8');
+    
+    const response = await answerQuestion({ query, context });
+    return response;
 }

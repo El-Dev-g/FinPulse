@@ -11,6 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
+import { Chatbot } from "./chatbot";
+
 
 const features = [
   {
@@ -156,6 +158,7 @@ export default function LandingPage() {
           </p>
         </div>
       </footer>
+      <Chatbot />
     </div>
   );
 }
