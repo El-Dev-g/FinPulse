@@ -119,6 +119,7 @@ function EmailSignInForm() {
             {loading ? <Loader className="animate-spin" /> : <LogIn />}
             Sign In
             </Button>
+            {/*
             <Button
             variant="outline"
             className="w-full"
@@ -129,6 +130,7 @@ function EmailSignInForm() {
             <GoogleIcon />
             Sign In with Google
             </Button>
+            */}
         </CardFooter>
         </form>
          <p className="text-center text-sm text-muted-foreground pb-6">

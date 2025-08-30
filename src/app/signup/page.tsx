@@ -172,6 +172,7 @@ export default function SignUpPage() {
             </CardDescription>
           </CardHeader>
           <EmailSignUpForm />
+            {/*
             <CardContent className="pt-0">
                <div className="relative my-4">
                   <div className="absolute inset-0 flex items-center">
@@ -195,6 +196,7 @@ export default function SignUpPage() {
                 Sign Up with Google
               </Button>
             </CardContent>
+            */}
           
           <p className="text-center text-sm text-muted-foreground pb-6">
             Already have an account?{" "}
