@@ -1,10 +1,10 @@
-// src/app/policy/layout.tsx
+// src/app/(info)/layout.tsx
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import React from "react";
 
-export default function PolicyLayout({
+export default function InfoPageLayout({
   children,
 }: {
   children: React.ReactNode;

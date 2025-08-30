@@ -7,6 +7,9 @@ import {
   Target,
   Bot,
   PieChart,
+  Twitter,
+  Github,
+  Linkedin
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -147,15 +150,41 @@ export default function LandingPage() {
         </section>
       </main>
       <footer className="bg-card/50">
-        <div className="container mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <Logo />
-           <div className="flex gap-4 items-center text-sm text-muted-foreground">
-             <Link href="/policy/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
-             <Link href="/policy/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} FinPulse. All rights reserved.
-          </p>
+        <div className="container mx-auto px-4 py-8">
+            <div className="grid md:grid-cols-3 gap-8">
+                <div className="space-y-4">
+                    <Logo />
+                    <p className="text-sm text-muted-foreground max-w-xs">Your all-in-one financial companion to help you achieve financial wellness.</p>
+                     <p className="text-sm text-muted-foreground">
+                        © {new Date().getFullYear()} FinPulse. All rights reserved.
+                    </p>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:col-span-2">
+                    <div>
+                        <h4 className="font-semibold mb-3">Company</h4>
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                            <li><Link href="/about" className="hover:text-primary">About Us</Link></li>
+                            <li><Link href="/contact" className="hover:text-primary">Contact</Link></li>
+                            <li><Link href="#features" className="hover:text-primary">Features</Link></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold mb-3">Legal</h4>
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                            <li><Link href="/policy/privacy" className="hover:text-primary">Privacy Policy</Link></li>
+                            <li><Link href="/policy/terms" className="hover:text-primary">Terms of Service</Link></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold mb-3">Follow Us</h4>
+                        <div className="flex space-x-4 text-muted-foreground">
+                            <Link href="#" className="hover:text-primary"><Twitter /></Link>
+                            <Link href="#" className="hover:text-primary"><Github /></Link>
+                            <Link href="#" className="hover:text-primary"><Linkedin /></Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
       </footer>
       <Chatbot />
