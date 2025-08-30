@@ -1,4 +1,4 @@
-// src/app/dashboard/transactions/page.tsx
+// src/app/dashboard/expenses/page.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -33,7 +33,7 @@ import { addTransaction, getTransactions } from "@/lib/db";
 import { processTransactions, getIconForCategory } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 
-export default function TransactionsPage() {
+export default function ExpensesPage() {
   const [transactions, setTransactions] = useState<ClientTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -114,7 +114,7 @@ export default function TransactionsPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-3xl font-bold tracking-tight font-headline">
-              Transactions
+              Expenses
             </h2>
             <p className="text-muted-foreground">
               View and manage all your financial activities.

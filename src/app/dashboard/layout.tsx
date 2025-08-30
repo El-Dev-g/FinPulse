@@ -42,9 +42,9 @@ import { Button } from "@/components/ui/button";
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   {
-    href: "/dashboard/transactions",
+    href: "/dashboard/expenses",
     icon: ArrowRightLeft,
-    label: "Transactions",
+    label: "Expenses",
   },
   { href: "/dashboard/recurring", icon: Repeat, label: "Recurring" },
   { href: "/dashboard/goals", icon: Target, label: "Goals" },
