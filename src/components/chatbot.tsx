@@ -162,7 +162,7 @@ export function Chatbot() {
 
   return (
     <>
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed top-1/2 right-4 -translate-y-1/2 z-50">
         <Button
           size="icon"
           className="rounded-full w-14 h-14 shadow-lg"
@@ -175,7 +175,7 @@ export function Chatbot() {
       {isOpen && (
         <div
             ref={chatWindowRef}
-            className="fixed bottom-20 right-4 z-50 w-full max-w-sm"
+            className="fixed top-1/2 -translate-y-1/2 right-20 z-50 w-full max-w-sm"
         >
           <Card className="shadow-2xl" onMouseDown={onMouseDown}>
             <CardHeader 
