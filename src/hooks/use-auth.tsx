@@ -36,6 +36,10 @@ const unprotectedRoutes = [
     "/forgot-password",
     "/verify-email",
     "/",
+    "/about",
+    "/contact",
+    "/policy/privacy",
+    "/policy/terms",
 ];
 
 const isOnboardingRoute = (pathname: string) => pathname.startsWith('/welcome/onboarding');
