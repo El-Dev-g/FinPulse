@@ -86,6 +86,15 @@ function AdvisorPageContent() {
       setLoading(false);
     }
   };
+  
+  const handleSelectPlan = (selectedAdvice: Advice) => {
+    // If the same plan is clicked again, hide it. Otherwise, show the new one.
+    if (plan && JSON.stringify(plan) === JSON.stringify(selectedAdvice)) {
+      setPlan(null);
+    } else {
+      setPlan(selectedAdvice);
+    }
+  };
 
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
@@ -109,7 +118,11 @@ function AdvisorPageContent() {
             />
           </div>
           <div>
-            <PastPlansList plans={pastPlans} onSelectPlan={setPlan} />
+            <PastPlansList
+              plans={pastPlans}
+              onSelectPlan={handleSelectPlan}
+              activePlan={plan}
+            />
           </div>
         </div>
 

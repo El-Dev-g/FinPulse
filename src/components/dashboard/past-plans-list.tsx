@@ -8,14 +8,20 @@ import {
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Advice, ClientAIPlan } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { History } from "lucide-react";
 
 interface PastPlansListProps {
   plans: ClientAIPlan[];
   onSelectPlan: (plan: Advice) => void;
+  activePlan: Advice | null;
 }
 
-export function PastPlansList({ plans, onSelectPlan }: PastPlansListProps) {
+export function PastPlansList({
+  plans,
+  onSelectPlan,
+  activePlan,
+}: PastPlansListProps) {
   return (
     <Card>
       <CardHeader>
@@ -31,20 +37,28 @@ export function PastPlansList({ plans, onSelectPlan }: PastPlansListProps) {
         {plans.length > 0 ? (
           <ScrollArea className="h-[300px]">
             <div className="space-y-3">
-              {plans.map((plan) => (
-                <button
-                  key={plan.id}
-                  onClick={() => onSelectPlan(plan.advice)}
-                  className="w-full text-left p-3 rounded-md border bg-muted/20 hover:bg-muted/50 transition-colors"
-                >
-                  <p className="font-semibold text-sm truncate">
-                    {plan.advice.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {plan.createdAt.toLocaleDateString()}
-                  </p>
-                </button>
-              ))}
+              {plans.map((plan) => {
+                const isActive =
+                  activePlan &&
+                  JSON.stringify(activePlan) === JSON.stringify(plan.advice);
+                return (
+                  <button
+                    key={plan.id}
+                    onClick={() => onSelectPlan(plan.advice)}
+                    className={cn(
+                      "w-full text-left p-3 rounded-md border bg-muted/20 hover:bg-muted/50 transition-colors",
+                      isActive && "bg-primary/10 border-primary/50"
+                    )}
+                  >
+                    <p className="font-semibold text-sm truncate">
+                      {plan.advice.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {plan.createdAt.toLocaleDateString()}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
           </ScrollArea>
         ) : (
