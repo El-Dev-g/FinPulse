@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { getGoal, getTasks, getTransactions } from "@/lib/db";
-import { ArrowLeft, Calculator, Sparkles, ClipboardList, Loader } from "lucide-react";
+import { ArrowLeft, Calculator, Sparkles, ClipboardList, Loader, Lightbulb } from "lucide-react";
 import Link from "next/link";
 import { ActivityList } from "@/components/dashboard/activity-list";
 import type { ClientGoal, ClientFinancialTask, ClientTransaction, Goal, Transaction, FinancialTask, Advice } from "@/lib/types";
@@ -161,6 +161,12 @@ export default function GoalDetailPage() {
                   <Link href={`/dashboard/calculator?tab=goals&target=${goal.target}&current=${goal.current}`}>
                     <Calculator className="mr-2" />
                     Plan with Calculator
+                  </Link>
+                </Button>
+                 <Button asChild variant="outline" className="w-full">
+                  <Link href={`/dashboard/advisor?goalId=${goal.id}`}>
+                    <Lightbulb className="mr-2" />
+                    Get AI Advice
                   </Link>
                 </Button>
               </CardFooter>
