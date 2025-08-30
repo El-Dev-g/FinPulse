@@ -52,7 +52,7 @@ function EmailSignInForm() {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // Let useAuth hook handle redirection
+      router.push('/dashboard');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -66,7 +66,7 @@ function EmailSignInForm() {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-      // Let useAuth hook handle redirection
+      router.push("/dashboard");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -166,7 +166,7 @@ function PhoneSignInForm() {
     setError(null);
     try {
       await confirmationResult.confirm(otp);
-      // Let useAuth hook handle redirection
+      router.push("/dashboard");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -221,6 +221,13 @@ function PhoneSignInForm() {
 
 export default function SignInPage() {
   const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push("/dashboard");
+    }
+  }, [user, loading, router]);
   
   if (loading || user) {
     return (

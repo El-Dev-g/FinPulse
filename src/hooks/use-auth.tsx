@@ -49,13 +49,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setUser(user);
       if (user) {
         const profile = await getUserProfile();
         if (profile?.currency) {
           setCurrencyState(profile.currency);
         }
       }
-      setUser(user);
       setLoading(false);
     });
 
@@ -69,34 +69,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (!user && isProtected) {
       router.push("/signin");
-      return;
     }
-
-    if (user) {
-      // Check for new user after any sign-in/sign-up method
-      const { creationTime, lastSignInTime } = user.metadata;
-      const isNewUser = creationTime === lastSignInTime;
-      const onboardingComplete = localStorage.getItem('onboardingComplete') === 'true';
-
-      if (user.emailVerified && isNewUser && !onboardingComplete) {
-        if (pathname !== "/welcome/onboarding") {
-          router.push("/welcome/onboarding");
-        }
-      } else if (!user.emailVerified && !unprotectedRoutes.includes(pathname)) {
-         // This condition handles password-based signups that need verification
-        if (pathname !== '/verify-email') {
-          router.push('/verify-email');
-        }
-      } else if (unprotectedRoutes.includes(pathname) && pathname !== '/dashboard') {
-         // If user is on a public page but is logged in and verified/onboarded, redirect to dashboard
-         if ((pathname === '/' || pathname === '/signin' || pathname === '/signup' || pathname === '/welcome/onboarding') && onboardingComplete) {
-             router.push('/dashboard');
-         } else if (pathname === '/verify-email' && user.emailVerified) {
-             router.push('/dashboard');
-         }
-      }
-    }
-  }, [user, loading, router, pathname]);
+  }, [user, loading, pathname, router]);
 
   
   const setCurrency = useCallback(async (newCurrency: string) => {

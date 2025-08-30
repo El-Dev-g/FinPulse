@@ -150,8 +150,9 @@ function PhoneSignUpForm() {
     setError(null);
     try {
       await confirmationResult.confirm(otp);
-      // Let useAuth hook handle redirection
-    } catch (err: any) {
+      router.push("/welcome/onboarding");
+    } catch (err: any)
+       {
       setError(err.message);
     } finally {
       setLoading(false);
@@ -207,6 +208,7 @@ export default function SignUpPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const { user, loading: authLoading } = useAuth();
+    const router = useRouter();
 
     useEffect(() => {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
@@ -216,6 +218,12 @@ export default function SignUpPage() {
         }
         });
     }, []);
+    
+    useEffect(() => {
+      if (!authLoading && user) {
+        router.push("/dashboard");
+      }
+    }, [user, authLoading, router]);
 
     const handleGoogleSignIn = async () => {
         setLoading(true);
@@ -223,7 +231,7 @@ export default function SignUpPage() {
         try {
           const provider = new GoogleAuthProvider();
           await signInWithPopup(auth, provider);
-          // Let useAuth hook handle redirection
+          router.push("/welcome/onboarding");
         } catch (err: any) {
           setError(err.message);
         } finally {
@@ -284,6 +292,7 @@ export default function SignUpPage() {
                 type="button"
                 disabled={loading}
               >
+                {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
                 <GoogleIcon />
                 Sign Up with Google
               </Button>
