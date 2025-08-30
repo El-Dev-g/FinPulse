@@ -1,4 +1,3 @@
-
 // src/app/dashboard/calculator/page.tsx
 "use client";
 
@@ -84,12 +83,18 @@ function SavingsGoalCalculator({ values, setValues, onUseContribution }: any) {
     const { target, current, years } = values;
     const searchParams = useSearchParams();
 
+    const targetParam = searchParams.get('target');
+    const currentParam = searchParams.get('current');
+
     useEffect(() => {
-        const targetParam = searchParams.get('target');
-        const currentParam = searchParams.get('current');
-        if (targetParam) setValues({ target: targetParam });
-        if (currentParam) setValues({ current: currentParam });
-    }, [searchParams, setValues]);
+        if (targetParam) {
+            setValues({ target: targetParam });
+        }
+        if (currentParam) {
+            setValues({ current: currentParam });
+        }
+    }, [targetParam, currentParam, setValues]);
+
 
     const monthlyContribution = useMemo(() => {
         const T = parseFloat(target);
