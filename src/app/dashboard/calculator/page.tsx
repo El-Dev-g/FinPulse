@@ -17,10 +17,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calculator, Target, TrendingUp, CreditCard } from "lucide-react";
 
 function InvestmentCalculator() {
-  const [initial, setInitial] = useState("1000");
-  const [contribution, setContribution] = useState("100");
-  const [rate, setRate] = useState("7");
-  const [years, setYears] = useState("10");
+  const [initial, setInitial] = useState("");
+  const [contribution, setContribution] = useState("");
+  const [rate, setRate] = useState("");
+  const [years, setYears] = useState("");
 
   const futureValue = useMemo(() => {
     const P = parseFloat(initial);
@@ -51,21 +51,21 @@ function InvestmentCalculator() {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="initial">Initial Investment ($)</Label>
-            <Input id="initial" type="number" value={initial} onChange={(e) => setInitial(e.target.value)} />
+            <Input id="initial" type="number" value={initial} onChange={(e) => setInitial(e.target.value)} placeholder="0"/>
           </div>
           <div className="space-y-2">
             <Label htmlFor="contribution">Monthly Contribution ($)</Label>
-            <Input id="contribution" type="number" value={contribution} onChange={(e) => setContribution(e.target.value)} />
+            <Input id="contribution" type="number" value={contribution} onChange={(e) => setContribution(e.target.value)} placeholder="0"/>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="rate">Annual Return Rate (%)</Label>
-            <Input id="rate" type="number" value={rate} onChange={(e) => setRate(e.target.value)} />
+            <Input id="rate" type="number" value={rate} onChange={(e) => setRate(e.target.value)} placeholder="0"/>
           </div>
           <div className="space-y-2">
             <Label htmlFor="years">Years to Grow</Label>
-            <Input id="years" type="number" value={years} onChange={(e) => setYears(e.target.value)} />
+            <Input id="years" type="number" value={years} onChange={(e) => setYears(e.target.value)} placeholder="0"/>
           </div>
         </div>
       </div>
@@ -79,9 +79,9 @@ function InvestmentCalculator() {
 
 function SavingsGoalCalculator() {
     const searchParams = useSearchParams();
-    const [target, setTarget] = useState("10000");
-    const [current, setCurrent] = useState("1000");
-    const [years, setYears] = useState("5");
+    const [target, setTarget] = useState("");
+    const [current, setCurrent] = useState("");
+    const [years, setYears] = useState("");
 
     useEffect(() => {
         const targetParam = searchParams.get('target');
@@ -120,16 +120,16 @@ function SavingsGoalCalculator() {
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="target">Goal Amount ($)</Label>
-                        <Input id="target" type="number" value={target} onChange={(e) => setTarget(e.target.value)} />
+                        <Input id="target" type="number" value={target} onChange={(e) => setTarget(e.target.value)} placeholder="0"/>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="current">Current Savings ($)</Label>
-                        <Input id="current" type="number" value={current} onChange={(e) => setCurrent(e.target.value)} />
+                        <Input id="current" type="number" value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="0"/>
                     </div>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="years-savings">Years to Save</Label>
-                    <Input id="years-savings" type="number" value={years} onChange={(e) => setYears(e.target.value)} />
+                    <Input id="years-savings" type="number" value={years} onChange={(e) => setYears(e.target.value)} placeholder="0"/>
                 </div>
             </div>
             <div className="p-6 bg-muted rounded-lg text-center">
@@ -141,9 +141,9 @@ function SavingsGoalCalculator() {
 }
 
 function DebtPayoffCalculator() {
-  const [debtAmount, setDebtAmount] = useState("10000");
-  const [interestRate, setInterestRate] = useState("18");
-  const [monthlyPayment, setMonthlyPayment] = useState("250");
+  const [debtAmount, setDebtAmount] = useState("");
+  const [interestRate, setInterestRate] = useState("");
+  const [monthlyPayment, setMonthlyPayment] = useState("");
 
   const { payoffTime, totalInterest } = useMemo(() => {
     const P = parseFloat(debtAmount);
@@ -190,16 +190,16 @@ function DebtPayoffCalculator() {
         <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
                 <Label htmlFor="debtAmount">Total Debt ($)</Label>
-                <Input id="debtAmount" type="number" value={debtAmount} onChange={(e) => setDebtAmount(e.target.value)} />
+                <Input id="debtAmount" type="number" value={debtAmount} onChange={(e) => setDebtAmount(e.target.value)} placeholder="0"/>
             </div>
              <div className="space-y-2">
                 <Label htmlFor="interestRate">Annual Rate (%)</Label>
-                <Input id="interestRate" type="number" value={interestRate} onChange={(e) => setInterestRate(e.target.value)} />
+                <Input id="interestRate" type="number" value={interestRate} onChange={(e) => setInterestRate(e.target.value)} placeholder="0"/>
             </div>
         </div>
         <div className="space-y-2">
             <Label htmlFor="monthlyPayment">Monthly Payment ($)</Label>
-            <Input id="monthlyPayment" type="number" value={monthlyPayment} onChange={(e) => setMonthlyPayment(e.target.value)} />
+            <Input id="monthlyPayment" type="number" value={monthlyPayment} onChange={(e) => setMonthlyPayment(e.target.value)} placeholder="0"/>
         </div>
       </div>
        <div className="grid grid-cols-2 gap-4">
