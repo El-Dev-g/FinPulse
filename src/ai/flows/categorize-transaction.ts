@@ -38,7 +38,7 @@ const categorizeTransactionFlow = ai.defineFlow(
         Suggest only one category from the list. Do not add any extra text or explanation.`,
     });
 
-    const { output } = await prompt(input, { model: 'gemini-pro' });
+    const { output } = await prompt(input);
     
     if (!output) {
         return "Other";
