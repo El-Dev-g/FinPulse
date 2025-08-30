@@ -75,7 +75,7 @@ export function AddGoalDialog({
           <DialogHeader>
             <DialogTitle>Add New Financial Goal</DialogTitle>
             <DialogDescription>
-              What's your next financial milestone? You can ask our AI for advice after creating a goal.
+              What's your next financial milestone?
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">

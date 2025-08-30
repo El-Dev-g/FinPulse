@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { getGoal, getTasks, getTransactions } from "@/lib/db";
-import { ArrowLeft, Calculator, Bot, Sparkles, ClipboardList, Loader } from "lucide-react";
+import { ArrowLeft, Calculator, Sparkles, ClipboardList, Loader } from "lucide-react";
 import Link from "next/link";
 import { ActivityList } from "@/components/dashboard/activity-list";
 import type { ClientGoal, ClientFinancialTask, ClientTransaction, Goal, Transaction, FinancialTask, Advice } from "@/lib/types";
@@ -102,9 +102,6 @@ export default function GoalDetailPage() {
 
   const progress = (goal.current / goal.target) * 100;
   
-  const handleGetAdvice = () => {
-      router.push(`/dashboard/ai-advisor?goal=${encodeURIComponent(goal.title)}&goalId=${goal.id}`);
-  }
 
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
@@ -165,10 +162,6 @@ export default function GoalDetailPage() {
                     <Calculator className="mr-2" />
                     Plan with Calculator
                   </Link>
-                </Button>
-                <Button onClick={handleGetAdvice} variant="outline" className="w-full">
-                    <Bot className="mr-2"/>
-                    Get AI Advice
                 </Button>
               </CardFooter>
             </Card>
