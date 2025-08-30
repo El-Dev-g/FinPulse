@@ -206,7 +206,7 @@ function DebtPayoffCalculator({ values, setValues, onUsePayment }: any) {
 
 function CurrencyConverter({ values, setValues, onUseConversion }: any) {
   const { amount, fromCurrency, toCurrency } = values;
-  const currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "INR", "BRL"];
+  const currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "INR", "BRL", "NGN", "GHS"];
   const [convertedAmount, setConvertedAmount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
