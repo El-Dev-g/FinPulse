@@ -309,9 +309,11 @@ function CalculatorPageContent() {
       setActiveTab('investment');
   }
 
-  const handleUsePayment = (value: number) => {
+  const handleUsePayment = (value: string) => {
+      const numericValue = parseFloat(value);
+      if (isNaN(numericValue)) return;
       setSavingsValues(prev => ({...prev, years: '5' })); // Default to 5 years
-      handleUseContribution(value);
+      handleUseContribution(numericValue);
       setActiveTab('goals');
   }
 
