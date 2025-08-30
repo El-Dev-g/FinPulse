@@ -8,8 +8,8 @@ import React, {
   useState,
   ReactNode,
 } from "react";
-import { User, onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { User, onAuthStateChanged, getAuth } from "firebase/auth";
+import { app } from "@/lib/firebase";
 import { useRouter, usePathname } from "next/navigation";
 
 interface AuthContextType {
@@ -32,6 +32,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const auth = getAuth(app);
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -40,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [auth]);
 
   useEffect(() => {
     if (loading) return;
@@ -57,7 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (user) {
       const isEmailVerified = user.emailVerified || user.providerData.some(p => p.providerId !== 'password');
       const isNewUser = user.metadata.creationTime === user.metadata.lastSignInTime;
-
+      
       if (!isEmailVerified && pathname !== '/verify-email') {
         router.push('/verify-email');
         return;
