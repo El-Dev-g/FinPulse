@@ -14,21 +14,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
-import type { Goal } from "@/lib/types";
+import type { Goal, AIPlan } from "@/lib/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 
 interface AddGoalDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddGoal: (newGoal: Omit<Goal, "id" | "current" | "createdAt" | "advice">) => Promise<void>;
+  onAddGoal: (newGoal: Omit<Goal, "id" | "current" | "createdAt">) => Promise<void>;
+  aiPlans: AIPlan[];
 }
 
 export function AddGoalDialog({
   isOpen,
   onOpenChange,
   onAddGoal,
+  aiPlans,
 }: AddGoalDialogProps) {
   const [title, setTitle] = useState("");
   const [target, setTarget] = useState("");
+  const [adviceId, setAdviceId] = useState<string>("none");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,11 +60,18 @@ export function AddGoalDialog({
 
     setLoading(true);
 
+    const selectedPlan = aiPlans.find(p => p.id === adviceId);
+
     try {
-      await onAddGoal({ title, target: targetAmount });
+      await onAddGoal({ 
+        title, 
+        target: targetAmount,
+        advice: selectedPlan ? selectedPlan.advice : undefined,
+      });
       onOpenChange(false);
       setTitle("");
       setTarget("");
+      setAdviceId("none");
     } catch (err) {
        setError("Failed to add goal. Please try again.");
     } finally {
@@ -66,6 +84,7 @@ export function AddGoalDialog({
       if (!open) {
         setTitle("");
         setTarget("");
+        setAdviceId("none");
         setError(null);
       }
       onOpenChange(open);
@@ -101,6 +120,22 @@ export function AddGoalDialog({
                 onChange={(e) => setTarget(e.target.value)}
                 placeholder="e.g., 5000"
               />
+            </div>
+            <div className="space-y-2">
+               <Label htmlFor="advice">Link an AI Plan (Optional)</Label>
+                <Select value={adviceId} onValueChange={setAdviceId}>
+                    <SelectTrigger id="advice">
+                        <SelectValue placeholder="Select a pre-generated plan" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {aiPlans.map((plan) => (
+                            <SelectItem key={plan.id} value={plan.id}>
+                                {plan.advice.title}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
           </div>
           {error && <p className="text-sm text-destructive mb-4">{error}</p>}

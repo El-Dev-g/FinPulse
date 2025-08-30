@@ -18,12 +18,13 @@ import { Plus, Sparkles, Loader } from "lucide-react";
 import { AddGoalDialog } from "@/components/dashboard/add-goal-dialog";
 import { EditGoalDialog } from "@/components/dashboard/edit-goal-dialog";
 import { useAuth } from "@/hooks/use-auth";
-import type { Goal, Advice } from "@/lib/types";
-import { addGoal, deleteGoal, getGoals, updateGoal } from "@/lib/db";
+import type { Goal, Advice, AIPlan } from "@/lib/types";
+import { addGoal, deleteGoal, getGoals, updateGoal, getAIPlans } from "@/lib/db";
 import { processGoals } from "@/lib/utils";
 
 function GoalsPageContent() {
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [aiPlans, setAiPlans] = useState<AIPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddGoalDialogOpen, setIsAddGoalDialogOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
@@ -32,40 +33,44 @@ function GoalsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const fetchGoals = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const dbGoals = await getGoals();
-      
-      const adviceParam = searchParams.get('advice');
-      const goalId = searchParams.get('goalId');
-      
-      // The advice is already saved in the advisor page,
-      // we just need to make sure the UI updates with the new advice
-      // without needing a full re-fetch if the data is already fresh.
+      const [dbGoals, dbAIPlans] = await Promise.all([
+        getGoals(),
+        getAIPlans(),
+      ]);
+
+      const adviceParam = searchParams.get("advice");
+      const goalId = searchParams.get("goalId");
+
       if (adviceParam && goalId) {
-          try {
-            const parsedAdvice: Advice = JSON.parse(decodeURIComponent(adviceParam));
-            const goalIndex = dbGoals.findIndex(g => g.id === goalId);
-            if (goalIndex !== -1) {
-              dbGoals[goalIndex].advice = parsedAdvice;
-            }
-          } catch (e) {
-            console.error("Failed to parse advice from URL:", e);
+        try {
+          const parsedAdvice: Advice = JSON.parse(
+            decodeURIComponent(adviceParam)
+          );
+          const goalIndex = dbGoals.findIndex((g) => g.id === goalId);
+          if (goalIndex !== -1) {
+            dbGoals[goalIndex].advice = parsedAdvice;
           }
-        
-        // Remove query params after processing to avoid issues on refresh
+        } catch (e) {
+          console.error("Failed to parse advice from URL:", e);
+        }
+
         const newParams = new URLSearchParams(searchParams.toString());
-        newParams.delete('advice');
-        newParams.delete('goalId');
-        router.replace(`/dashboard/goals?${newParams.toString()}`, {scroll: false});
+        newParams.delete("advice");
+        newParams.delete("goalId");
+        router.replace(`/dashboard/goals?${newParams.toString()}`, {
+          scroll: false,
+        });
       }
-      
+
       const processed = processGoals(dbGoals as any[]);
       setGoals(processed);
+      setAiPlans(dbAIPlans as any[]);
     } catch (error) {
-      console.error("Error fetching goals: ", error);
+      console.error("Error fetching data: ", error);
     } finally {
       setLoading(false);
     }
@@ -73,8 +78,8 @@ function GoalsPageContent() {
 
 
   useEffect(() => {
-    fetchGoals();
-  }, [fetchGoals]);
+    fetchData();
+  }, [fetchData]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -86,17 +91,17 @@ function GoalsPageContent() {
 
   const handleAddGoal = async (newGoal: Omit<Goal, "id" | "current" | "createdAt">) => {
     await addGoal({ ...newGoal, current: 0 });
-    fetchGoals();
+    fetchData();
   };
 
   const handleEditGoal = async (updatedGoal: Goal) => {
     await updateGoal(updatedGoal.id, updatedGoal);
-    fetchGoals();
+    fetchData();
   };
 
   const handleDeleteGoal = async (goalId: string) => {
     await deleteGoal(goalId);
-    fetchGoals();
+    fetchData();
   };
 
   if(loading){
@@ -180,6 +185,7 @@ function GoalsPageContent() {
         isOpen={isAddGoalDialogOpen}
         onOpenChange={setIsAddGoalDialogOpen}
         onAddGoal={handleAddGoal}
+        aiPlans={aiPlans}
       />
       <EditGoalDialog
         goal={editingGoal}
