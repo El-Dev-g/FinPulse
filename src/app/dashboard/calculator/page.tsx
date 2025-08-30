@@ -93,7 +93,7 @@ function SavingsGoalCalculator({ values, setValues, onUseContribution }: any) {
         if (currentParam) {
             setValues({ current: currentParam });
         }
-    }, [targetParam, currentParam, setValues]);
+    }, [targetParam, currentParam]);
 
 
     const monthlyContribution = useMemo(() => {
