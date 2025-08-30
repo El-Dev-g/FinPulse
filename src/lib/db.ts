@@ -1,7 +1,7 @@
 // src/lib/db.ts
 import { db } from './firebase';
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy } from 'firebase/firestore';
-import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category, AIPlan } from './types';
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy, setDoc } from 'firebase/firestore';
+import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category, AIPlan, UserProfile } from './types';
 import { auth } from './firebase';
 
 const getUid = () => {
@@ -41,6 +41,25 @@ const deleteDataItem = async (collectionName: string, id: string): Promise<void>
     const docRef = doc(db, `users/${uid}/${collectionName}`, id);
     await deleteDoc(docRef);
 };
+
+
+// --- User Profile ---
+export const updateUserProfile = async (profileData: Partial<UserProfile>) => {
+    const uid = getUid();
+    const profileRef = doc(db, `users/${uid}/profile`, 'settings');
+    await setDoc(profileRef, profileData, { merge: true });
+}
+
+export const getUserProfile = async (): Promise<UserProfile | null> => {
+    const uid = getUid();
+    const profileRef = doc(db, `users/${uid}/profile`, 'settings');
+    const docSnap = await getDoc(profileRef);
+    if(docSnap.exists()){
+        return docSnap.data() as UserProfile;
+    }
+    return null;
+}
+
 
 // --- Goals ---
 export const addGoal = (goal: Omit<Goal, 'id'>) => addDataItem<Omit<Goal, 'id'>>('goals', goal);

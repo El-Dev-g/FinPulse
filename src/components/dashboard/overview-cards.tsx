@@ -15,7 +15,7 @@ import type { Transaction, Goal } from '@/lib/types';
 import { subDays, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
 
 export function OverviewCards() {
-  const { user } = useAuth();
+  const { user, formatCurrency } = useAuth();
   const [overviewData, setOverviewData] = useState({
     income: 0,
     expenses: 0,
@@ -82,14 +82,6 @@ export function OverviewCards() {
     calculateOverview();
   }, [user]);
 
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
-  
   const formatPercentage = (value: number) => {
       const sign = value > 0 ? '+' : '';
       return `${sign}${value.toFixed(1)}%`;

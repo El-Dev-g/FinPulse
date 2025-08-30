@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, Settings, Trash, Upload, User } from "lucide-react";
+import { Loader, Settings, Trash, Upload, User, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
@@ -31,9 +31,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "INR", "BRL", "NGN", "GHS"];
 
 export default function SettingsPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, currency, setCurrency } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [displayName, setDisplayName] = useState("");
@@ -229,6 +232,24 @@ export default function SettingsPage() {
                 <Label htmlFor="theme">Theme</Label>
                 <ThemeToggle />
               </div>
+            </CardContent>
+          </Card>
+           <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><DollarSign/> Currency</CardTitle>
+              <CardDescription>
+                Select your preferred currency for the application.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Select value={currency} onValueChange={setCurrency}>
+                  <SelectTrigger className="w-full md:w-[240px]">
+                      <SelectValue placeholder="Select a currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      {currencies.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+              </Select>
             </CardContent>
           </Card>
           <Card>

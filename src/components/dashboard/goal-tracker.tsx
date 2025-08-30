@@ -17,7 +17,7 @@ import { Loader } from "lucide-react";
 import { processGoals } from "@/lib/utils";
 
 export function GoalTracker() {
-  const { user } = useAuth();
+  const { user, formatCurrency } = useAuth();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,14 +36,6 @@ export function GoalTracker() {
     };
     fetchGoals();
   }, [user]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   return (
     <Card>

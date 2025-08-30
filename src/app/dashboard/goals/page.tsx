@@ -29,7 +29,7 @@ function GoalsPageContent() {
   const [isAddGoalDialogOpen, setIsAddGoalDialogOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
 
-  const { user } = useAuth();
+  const { user, formatCurrency } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -80,14 +80,6 @@ function GoalsPageContent() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   const handleAddGoal = async (newGoal: Omit<Goal, "id" | "current" | "createdAt">) => {
     await addGoal({ ...newGoal, current: 0 });

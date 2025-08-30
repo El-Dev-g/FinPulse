@@ -40,7 +40,7 @@ export default function TransactionsPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isAddTransactionDialogOpen, setIsAddTransactionDialogOpen] =
     useState(false);
-  const { user } = useAuth();
+  const { user, formatCurrency } = useAuth();
   
   const fetchTransactions = React.useCallback(async () => {
     if (!user) return;
@@ -59,13 +59,6 @@ export default function TransactionsPage() {
   useEffect(() => {
     fetchTransactions();
   }, [fetchTransactions]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
 
   const categories = [
     "all",

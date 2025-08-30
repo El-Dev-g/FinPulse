@@ -28,7 +28,7 @@ import { addRecurringTransaction, getRecurringTransactions } from "@/lib/db";
 import { processRecurringTransactions, getIconForCategory } from "@/lib/utils";
 
 export default function RecurringPage() {
-  const { user } = useAuth();
+  const { user, formatCurrency } = useAuth();
   const [recurring, setRecurring] = useState<ClientRecurringTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -51,13 +51,6 @@ export default function RecurringPage() {
     fetchData();
   }, [fetchData]);
 
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
   
   const handleAddTransaction = async (
     newTransaction: Omit<RecurringTransaction, "id" | "Icon" | "createdAt">

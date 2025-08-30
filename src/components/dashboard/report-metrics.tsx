@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useAuth } from "@/hooks/use-auth";
 import { DollarSign, TrendingDown, TrendingUp } from "lucide-react";
 
 interface ReportMetricsProps {
@@ -17,13 +18,7 @@ interface ReportMetricsProps {
 }
 
 export function ReportMetrics({ metrics }: ReportMetricsProps) {
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        maximumFractionDigits: 2,
-        }).format(amount);
-    };
+    const { formatCurrency } = useAuth();
 
     return (
         <div className="grid gap-6 md:grid-cols-3">

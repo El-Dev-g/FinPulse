@@ -34,7 +34,7 @@ export function RecentTransactions({
   title = "Recent Transactions",
   description = "Here are your latest financial activities.",
 }: RecentTransactionsProps) {
-    const { user } = useAuth();
+    const { user, formatCurrency } = useAuth();
     const [transactions, setTransactions] = useState<ClientTransaction[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -54,15 +54,6 @@ export function RecentTransactions({
         };
         fetchRecentTransactions();
     }, [user]);
-
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
-
 
   return (
     <Card>

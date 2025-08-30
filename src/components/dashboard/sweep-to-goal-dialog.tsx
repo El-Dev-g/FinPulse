@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Card, CardContent } from "../ui/card";
+import { useAuth } from "@/hooks/use-auth";
 
 interface SweepToGoalDialogProps {
   budget: ClientBudget | null;
@@ -38,6 +39,7 @@ export function SweepToGoalDialog({
   onOpenChange,
   onSweep,
 }: SweepToGoalDialogProps) {
+  const { formatCurrency } = useAuth();
   const [selectedGoalId, setSelectedGoalId] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,13 +77,6 @@ export function SweepToGoalDialog({
     } finally {
         setLoading(false);
     }
-  };
-  
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
   };
   
   const remainingAmount = budget ? budget.limit - budget.spent : 0;

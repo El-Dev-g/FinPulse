@@ -24,7 +24,7 @@ import { processGoal, processTasks, processTransactions } from "@/lib/utils";
 export default function GoalDetailPage() {
   const params = useParams();
   const { id } = params;
-  const { user } = useAuth();
+  const { user, formatCurrency } = useAuth();
   const router = useRouter();
   
   const [goal, setGoal] = useState<ClientGoal | null>(null);
@@ -91,14 +91,6 @@ export default function GoalDetailPage() {
       </main>
     );
   }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   const progress = (goal.current / goal.target) * 100;
   

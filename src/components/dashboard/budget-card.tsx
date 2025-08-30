@@ -12,6 +12,8 @@ import type { ClientBudget } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { MoveUpRight } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+
 
 interface BudgetCardProps {
   budget: ClientBudget;
@@ -19,14 +21,8 @@ interface BudgetCardProps {
 }
 
 export function BudgetCard({ budget, onSweep }: BudgetCardProps) {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
+  const { formatCurrency } = useAuth();
+  
   const progress = (budget.spent / budget.limit) * 100;
   const remaining = budget.limit - budget.spent;
   const isOverBudget = progress > 100;

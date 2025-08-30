@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import type { ClientTransaction, ClientFinancialTask } from "@/lib/types";
 import { cn, getIconForCategory } from "@/lib/utils";
 import { ArrowRightLeft, LucideIcon } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ActivityListProps {
   transactions?: ClientTransaction[];
@@ -34,12 +35,7 @@ export function ActivityList({
   description,
   Icon = ArrowRightLeft,
 }: ActivityListProps) {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
+  const { formatCurrency } = useAuth();
 
   const hasContent = (transactions && transactions.length > 0) || (tasks && tasks.length > 0);
 

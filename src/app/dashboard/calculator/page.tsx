@@ -18,16 +18,10 @@ import { Calculator, Target, TrendingUp, CreditCard, Coins, Send, Loader } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { convertCurrency } from "@/lib/currency-actions";
 import { useDebounce } from "@/hooks/use-debounce";
-
-// Helper to format currency
-const formatCurrency = (amount: number, currency = "USD") => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currency,
-  }).format(amount);
-};
+import { useAuth } from "@/hooks/use-auth";
 
 function InvestmentCalculator({ values, setValues, onUseFutureValue }: any) {
+  const { formatCurrency } = useAuth();
   const { initial, contribution, rate, years } = values;
 
   const futureValue = useMemo(() => {
@@ -85,6 +79,7 @@ function InvestmentCalculator({ values, setValues, onUseFutureValue }: any) {
 }
 
 function SavingsGoalCalculator({ values, setValues, onUseContribution }: any) {
+    const { formatCurrency } = useAuth();
     const { target, current, years } = values;
     const searchParams = useSearchParams();
 
@@ -141,6 +136,7 @@ function SavingsGoalCalculator({ values, setValues, onUseContribution }: any) {
 }
 
 function DebtPayoffCalculator({ values, setValues, onUsePayment }: any) {
+  const { formatCurrency } = useAuth();
   const { debtAmount, interestRate, monthlyPayment } = values;
 
   const { payoffTime, totalInterest } = useMemo(() => {
@@ -247,6 +243,14 @@ function CurrencyConverter({ values, setValues, onUseConversion }: any) {
   }, [handleConversion]);
 
 
+  const formatLocalCurrency = (amount: number, currency: string) => {
+    return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: currency,
+    }).format(amount);
+  };
+
+
   return (
     <div className="space-y-6">
        <div>
@@ -290,7 +294,7 @@ function CurrencyConverter({ values, setValues, onUseConversion }: any) {
         ) : (
           <>
             <p className="text-muted-foreground">Converted Amount</p>
-            <p className="text-4xl font-bold text-primary">{formatCurrency(convertedAmount, toCurrency)}</p>
+            <p className="text-4xl font-bold text-primary">{formatLocalCurrency(convertedAmount, toCurrency)}</p>
             <div className="flex justify-center gap-2 pt-2">
                 <Button size="sm" variant="outline" onClick={() => onUseConversion(convertedAmount)}>
                     <Send className="mr-2" /> Use Value

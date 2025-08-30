@@ -41,7 +41,7 @@ const COLORS = [
 ];
 
 export default function ReportsPage() {
-    const { user } = useAuth();
+    const { user, formatCurrency } = useAuth();
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
     const today = startOfDay(new Date());
@@ -137,14 +137,6 @@ export default function ReportsPage() {
         };
 
     }, [dateRange, transactions]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">

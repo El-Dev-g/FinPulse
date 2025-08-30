@@ -2,6 +2,10 @@
 import type { ChartConfig } from "@/components/ui/chart";
 import type { LucideIcon } from "lucide-react";
 
+export interface UserProfile {
+  currency?: string;
+}
+
 export interface Transaction {
   id: string;
   description: string;
