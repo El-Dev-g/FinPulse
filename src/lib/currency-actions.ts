@@ -16,15 +16,12 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
   }
 
   const { from, to, amount } = parsedRequest.data;
-  const apiKey = process.env.OPENEXCHANGERATES_API_KEY;
-
-  if (!apiKey) {
-    console.error("Open Exchange Rates API key not found.");
-    // Return a mock response or throw an error if the API key is missing
-    throw new Error("Currency conversion service is unavailable.");
+  
+  if (amount === 0) {
+    return { convertedAmount: 0 };
   }
 
-  const url = `https://v6.exchangerate-api.com/v6/${apiKey}/pair/${from}/${to}/${amount}`;
+  const url = `https://api.exchangerate.host/convert?from=${from}&to=${to}&amount=${amount}`;
 
   try {
     const response = await fetch(url);
@@ -32,10 +29,10 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
       throw new Error(`API call failed with status: ${response.status}`);
     }
     const data = await response.json();
-    if (data.result === "error") {
-        throw new Error(`API Error: ${data['error-type']}`);
+    if (!data.success) {
+        throw new Error(`API Error: ${data.error?.info || 'Unknown error'}`);
     }
-    return { convertedAmount: data.conversion_result };
+    return { convertedAmount: data.result };
   } catch (error) {
     console.error("Currency conversion error:", error);
     throw new Error("Failed to convert currency.");

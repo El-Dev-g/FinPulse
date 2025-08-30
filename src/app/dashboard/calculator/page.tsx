@@ -299,7 +299,7 @@ function CurrencyConverter({ values, setValues, onUseConversion }: any) {
           </>
         )}
       </div>
-       <p className="text-xs text-muted-foreground text-center">Rates provided by Open Exchange Rates.</p>
+       <p className="text-xs text-muted-foreground text-center">Rates provided by exchangerate.host.</p>
     </div>
   );
 }
