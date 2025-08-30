@@ -21,14 +21,12 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
     return { convertedAmount: 0 };
   }
 
-  // Note: This API's free plan only supports EUR as the base currency.
-  // We will fetch all rates against EUR and then perform the conversion manually.
   const apiKey = process.env.EXCHANGE_RATE_API_KEY;
   if (!apiKey) {
     throw new Error("Exchange rate API key not configured.");
   }
   
-  const url = `https://api.exchangeratesapi.io/v1/latest?access_key=${apiKey}&symbols=${from},${to}`;
+  const url = `https://api.exchangerate.host/live?access_key=${apiKey}&source=${from}&currencies=${to}`;
 
   try {
     const response = await fetch(url);
@@ -36,20 +34,19 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
       throw new Error(`API call failed with status: ${response.status}`);
     }
     const data = await response.json();
+
     if (!data.success) {
         throw new Error(`API Error: ${data.error?.info || 'Unknown error'}`);
     }
-
-    const fromRate = data.rates[from];
-    const toRate = data.rates[to];
     
-    if (!fromRate || !toRate) {
-        throw new Error("Could not retrieve exchange rates for the selected currencies.");
+    const rateKey = `${from}${to}`;
+    const rate = data.quotes[rateKey];
+    
+    if (!rate) {
+        throw new Error("Could not retrieve exchange rate for the selected currencies.");
     }
     
-    // Convert from 'from' currency to EUR, then from EUR to 'to' currency
-    const amountInEur = amount / fromRate;
-    const convertedAmount = amountInEur * toRate;
+    const convertedAmount = amount * rate;
 
     return { convertedAmount };
   } catch (error: any) {
