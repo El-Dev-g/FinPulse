@@ -328,9 +328,9 @@ function CalculatorPageContent() {
   const [debtValues, setDebtValues] = useState({ debtAmount: "", interestRate: "", monthlyPayment: "" });
   const [currencyValues, setCurrencyValues] = useState({ amount: "1", fromCurrency: "USD", toCurrency: "EUR" });
 
-  const setPartialState = (setter: Function) => (newValues: object) => {
+  const setPartialState = useCallback((setter: Function) => (newValues: object) => {
       setter((prev: object) => ({...prev, ...newValues}));
-  }
+  }, []);
 
   // Handlers to connect calculators
   const handleUseFutureValue = (value: number, destination: 'savings' | 'debt') => {
