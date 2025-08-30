@@ -1,11 +1,11 @@
 // src/components/chatbot.tsx
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
-import { Loader, MessageSquare, Send, User, X } from "lucide-react";
+import { Loader, MessageSquare, Send, User, X, GripVertical } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { getChatbotResponse } from "@/lib/actions";
@@ -33,6 +33,12 @@ export function Chatbot() {
   const [userInfo, setUserInfo] = useState({ name: "", email: ""});
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const chatWindowRef = useRef<HTMLDivElement>(null);
+
+  // Dragging state
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     if (isOpen) {
@@ -40,6 +46,8 @@ export function Chatbot() {
         setMessages([
             { sender: "bot", text: "Hello! I'm the FinPulse assistant. What's your name?" }
         ]);
+        // Reset position when opening
+        setPosition({ x: 0, y: 0 });
     } else {
         // Reset on close
         setMessages([]);
@@ -99,6 +107,46 @@ export function Chatbot() {
     scrollToBottom();
   }, [messages]);
   
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only allow dragging from the header
+    if ((e.target as HTMLElement).closest('[data-drag-handle]')) {
+        setIsDragging(true);
+        setDragStart({
+            x: e.clientX - position.x,
+            y: e.clientY - position.y,
+        });
+    }
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+      if (!isDragging || !chatWindowRef.current) return;
+      
+      const newX = e.clientX - dragStart.x;
+      const newY = e.clientY - dragStart.y;
+      
+      setPosition({ x: newX, y: newY });
+  }, [isDragging, dragStart.x, dragStart.y]);
+
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+  
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    } else {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
 
   const getPlaceholderText = () => {
     switch (chatState) {
@@ -128,10 +176,21 @@ export function Chatbot() {
       </div>
 
       {isOpen && (
-        <div className="fixed bottom-20 right-4 z-50 w-full max-w-sm">
+        <div
+            ref={chatWindowRef}
+            className="fixed bottom-20 right-4 z-50 w-full max-w-sm"
+            style={{
+                transform: `translate(${position.x}px, ${position.y}px)`,
+            }}
+            onMouseDown={handleMouseDown}
+        >
           <Card className="shadow-2xl">
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader 
+                className="flex flex-row items-center justify-between cursor-grab active:cursor-grabbing"
+                data-drag-handle
+            >
               <CardTitle>FinPulse Assistant</CardTitle>
+              <GripVertical className="text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[400px] pr-4" ref={scrollAreaRef}>
