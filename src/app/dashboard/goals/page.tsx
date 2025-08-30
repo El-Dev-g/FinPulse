@@ -41,21 +41,21 @@ function GoalsPageContent() {
       const adviceParam = searchParams.get('advice');
       const goalId = searchParams.get('goalId');
       
+      // The advice is already saved in the advisor page,
+      // we just need to make sure the UI updates with the new advice
+      // without needing a full re-fetch if the data is already fresh.
       if (adviceParam && goalId) {
-        const goalExists = dbGoals.some(g => g.id === goalId);
-        if (goalExists) {
           try {
             const parsedAdvice: Advice = JSON.parse(decodeURIComponent(adviceParam));
-            await updateGoal(goalId, { advice: parsedAdvice });
             const goalIndex = dbGoals.findIndex(g => g.id === goalId);
             if (goalIndex !== -1) {
               dbGoals[goalIndex].advice = parsedAdvice;
             }
           } catch (e) {
-            console.error("Failed to parse or save advice:", e);
+            console.error("Failed to parse advice from URL:", e);
           }
-        }
-        // Remove query params after processing to avoid re-saving on refresh
+        
+        // Remove query params after processing to avoid issues on refresh
         const newParams = new URLSearchParams(searchParams.toString());
         newParams.delete('advice');
         newParams.delete('goalId');

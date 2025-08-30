@@ -3,21 +3,11 @@
 
 import { getPersonalizedFinancialAdvice } from "@/ai/flows/personalized-financial-advice";
 import { suggestCategory } from "@/ai/flows/suggest-category";
-import { getCategories, updateGoal } from "./db";
-import { redirect } from "next/navigation";
+import { getCategories } from "./db";
 
-export async function getFinancialAdvice(prompt: string, goalId: string | null) {
+export async function getFinancialAdvice(prompt: string) {
   const advice = await getPersonalizedFinancialAdvice({ prompt });
-
-  if (goalId) {
-    // If a goalId was provided, save the advice to that goal
-    // and then redirect to the goals page to see it.
-    await updateGoal(goalId, { advice });
-    redirect(`/dashboard/goals?goalId=${goalId}&advice=${encodeURIComponent(JSON.stringify(advice))}`);
-  }
-
-  // Otherwise, just return the advice for display on the advisor page
-  return advice;
+  return { advice };
 }
 
 export async function getCategorySuggestion(description: string) {

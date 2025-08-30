@@ -7,7 +7,8 @@ import { FinancialPlan } from "@/components/dashboard/financial-plan";
 import type { Advice } from "@/lib/types";
 import { getFinancialAdvice } from "@/lib/actions";
 import { Lightbulb, Loader } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { updateGoal } from "@/lib/db";
 
 export default function AdvisorPage() {
   return (
@@ -22,15 +23,29 @@ function AdvisorPageContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
-  const goalId = searchParams.get("goalId");
+  const initialGoalId = searchParams.get("goalId");
+  const router = useRouter();
+
 
   const handleGetAdvice = async (prompt: string, goalId: string | null) => {
     setLoading(true);
     setError(null);
     setPlan(null);
     try {
-      const advice = await getFinancialAdvice(prompt, goalId);
-      setPlan(advice);
+      const result = await getFinancialAdvice(prompt);
+      
+      if (goalId && result.advice) {
+        // If a goalId was provided, save the advice to that goal
+        // and then redirect to the goals page to see it.
+        await updateGoal(goalId, { advice: result.advice });
+        router.push(`/dashboard/goals?goalId=${goalId}&advice=${encodeURIComponent(JSON.stringify(result.advice))}`);
+      } else if (result.advice) {
+        // Otherwise, just display the plan on this page
+        setPlan(result.advice);
+      } else {
+        throw new Error("No advice was generated.");
+      }
+
     } catch (e: any) {
       setError("Sorry, we couldn't generate advice at this time. Please try again.");
       console.error(e);
@@ -52,7 +67,7 @@ function AdvisorPageContent() {
             </p>
         </div>
 
-        <AdvisorForm onGetAdvice={handleGetAdvice} loading={loading} initialGoalId={goalId} />
+        <AdvisorForm onGetAdvice={handleGetAdvice} loading={loading} initialGoalId={initialGoalId} />
         
         {loading && (
             <div className="flex justify-center items-center h-64">
