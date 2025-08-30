@@ -22,8 +22,10 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
 });
 
-const AUTH_PAGES = ["/signin", "/signup", "/forgot-password", "/welcome/onboarding", "/verify-email"];
-const PUBLIC_PAGES = ["/", ...AUTH_PAGES];
+const AUTH_PAGES = ["/signin", "/signup", "/forgot-password", "/verify-email"];
+const ONBOARDING_PAGES = ["/welcome/onboarding"];
+const PUBLIC_PAGES = ["/", ...AUTH_PAGES, ...ONBOARDING_PAGES];
+
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -44,6 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (loading) return;
 
     const isPublicPage = PUBLIC_PAGES.includes(pathname);
+    const isAuthPage = AUTH_PAGES.includes(pathname);
 
     if (!user && !isPublicPage) {
       router.push("/signin");
@@ -57,7 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       
-      if (isEmailVerified && (pathname === '/verify-email' || pathname === '/welcome/onboarding' || pathname === '/signin' || pathname === '/signup' || pathname === '/forgot-password' || pathname === '/')) {
+      if (isEmailVerified && (isAuthPage || pathname === "/")) {
          router.push("/dashboard");
          return;
       }

@@ -1,7 +1,7 @@
 // src/app/verify-email/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { sendEmailVerification } from "firebase/auth";
@@ -25,6 +25,16 @@ export default function VerifyEmailPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      router.push('/signin');
+    } else if (user.emailVerified) {
+      router.push('/dashboard');
+    }
+  }, [user, authLoading, router]);
+
+
   const handleResendVerification = async () => {
     if (!user) {
       setError("You are not logged in.");
@@ -44,22 +54,12 @@ export default function VerifyEmailPage() {
     }
   };
   
-  if (authLoading) {
+  if (authLoading || !user || user.emailVerified) {
       return (
           <div className="flex h-screen items-center justify-center">
             <Loader className="h-12 w-12 animate-spin text-primary" />
           </div>
       )
-  }
-  
-  if (!user) {
-    router.push('/signin');
-    return null;
-  }
-  
-  if (user.emailVerified) {
-    router.push('/dashboard');
-    return null;
   }
 
   return (
