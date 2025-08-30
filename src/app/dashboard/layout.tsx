@@ -42,7 +42,7 @@ import { Button } from "@/components/ui/button";
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   {
-    href: "/dashboard/expenses",
+    href: "/dashboard/transactions",
     icon: ArrowRightLeft,
     label: "Expenses",
   },
