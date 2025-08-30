@@ -34,7 +34,7 @@ function AdvisorPageContent() {
     try {
       const result = await getFinancialAdvice(prompt);
       
-      if (goalId && result.advice) {
+      if (goalId && goalId !== 'none' && result.advice) {
         // If a goalId was provided, save the advice to that goal
         // and then redirect to the goals page to see it.
         await updateGoal(goalId, { advice: result.advice });
