@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calculator, Target, TrendingUp, CreditCard } from "lucide-react";
+import { Calculator, Target, TrendingUp, CreditCard, Coins } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function InvestmentCalculator() {
   const [initial, setInitial] = useState("");
@@ -187,7 +188,7 @@ function DebtPayoffCalculator() {
         <p className="text-muted-foreground text-sm">See how fast you can become debt-free.</p>
       </div>
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap_4">
             <div className="space-y-2">
                 <Label htmlFor="debtAmount">Total Debt ($)</Label>
                 <Input id="debtAmount" type="number" value={debtAmount} onChange={(e) => setDebtAmount(e.target.value)} placeholder="0"/>
@@ -212,6 +213,82 @@ function DebtPayoffCalculator() {
                 <p className="text-3xl font-bold text-primary">{formatCurrency(totalInterest)}</p>
             </div>
        </div>
+    </div>
+  );
+}
+
+function CurrencyConverter() {
+  const [amount, setAmount] = useState("");
+  const [fromCurrency, setFromCurrency] = useState("USD");
+  const [toCurrency, setToCurrency] = useState("EUR");
+
+  const currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD"];
+  
+  // Note: Using fixed rates as we can't fetch live data.
+  const exchangeRates: { [key: string]: { [key: string]: number } } = {
+    USD: { EUR: 0.93, GBP: 0.79, JPY: 157.2, CAD: 1.37, AUD: 1.5 },
+    EUR: { USD: 1.08, GBP: 0.85, JPY: 169.5, CAD: 1.48, AUD: 1.62 },
+    GBP: { USD: 1.27, EUR: 1.18, JPY: 199.5, CAD: 1.74, AUD: 1.9 },
+    JPY: { USD: 0.0064, EUR: 0.0059, GBP: 0.005, CAD: 0.0087, AUD: 0.0095 },
+    CAD: { USD: 0.73, EUR: 0.68, GBP: 0.57, JPY: 114.7, AUD: 1.1 },
+    AUD: { USD: 0.67, EUR: 0.62, GBP: 0.53, JPY: 104.8, CAD: 0.91 },
+  };
+
+  const convertedAmount = useMemo(() => {
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || !fromCurrency || !toCurrency) return 0;
+    if (fromCurrency === toCurrency) return numAmount;
+    
+    const rate = exchangeRates[fromCurrency]?.[toCurrency] || 0;
+    return numAmount * rate;
+  }, [amount, fromCurrency, toCurrency, exchangeRates]);
+
+  const formatCurrency = (value: number, currency: string) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+
+  return (
+    <div className="space-y-6">
+       <div>
+        <h3 className="text-xl font-semibold">Currency Converter</h3>
+        <p className="text-muted-foreground text-sm">Convert between major currencies.*</p>
+      </div>
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="amount-converter">Amount</Label>
+          <Input id="amount-converter" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00"/>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="from-currency">From</Label>
+            <Select value={fromCurrency} onValueChange={setFromCurrency}>
+                <SelectTrigger id="from-currency"><SelectValue/></SelectTrigger>
+                <SelectContent>
+                    {currencies.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="to-currency">To</Label>
+            <Select value={toCurrency} onValueChange={setToCurrency}>
+                <SelectTrigger id="to-currency"><SelectValue/></SelectTrigger>
+                <SelectContent>
+                    {currencies.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+      <div className="p-6 bg-muted rounded-lg text-center">
+        <p className="text-muted-foreground">Converted Amount</p>
+        <p className="text-4xl font-bold text-primary">{formatCurrency(convertedAmount, toCurrency)}</p>
+      </div>
+       <p className="text-xs text-muted-foreground text-center">*Rates are for illustrative purposes only and may not be current.</p>
     </div>
   );
 }
@@ -250,7 +327,7 @@ function CalculatorPageContent() {
         <Card>
           <CardContent className="p-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="investment">
                     <TrendingUp className="mr-2"/>
                     Investment
@@ -263,6 +340,10 @@ function CalculatorPageContent() {
                     <CreditCard className="mr-2"/>
                     Debt Payoff
                 </TabsTrigger>
+                 <TabsTrigger value="currency">
+                    <Coins className="mr-2"/>
+                    Currency
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="investment" className="pt-6">
                 <InvestmentCalculator />
@@ -272,6 +353,9 @@ function CalculatorPageContent() {
               </TabsContent>
                <TabsContent value="debt" className="pt-6">
                 <DebtPayoffCalculator />
+              </TabsContent>
+               <TabsContent value="currency" className="pt-6">
+                <CurrencyConverter />
               </TabsContent>
             </Tabs>
           </CardContent>
