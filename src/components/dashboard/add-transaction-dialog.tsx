@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, Sparkles } from "lucide-react";
+import { Loader } from "lucide-react";
 import type { Transaction, Category } from "@/lib/types";
 import {
   Select,
@@ -23,8 +23,6 @@ import {
   SelectValue,
 } from "../ui/select";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-import { categorizeTransactionAction } from "@/lib/actions";
-import { useDebounce } from "@/hooks/use-debounce";
 import { useAuth } from "@/hooks/use-auth";
 import { getCategories } from "@/lib/db";
 
@@ -47,10 +45,7 @@ export function AddTransactionDialog({
   const [type, setType] = useState<"expense" | "income">("expense");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isCategorizing, setIsCategorizing] = useState(false);
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
-
-  const debouncedDescription = useDebounce(description, 500);
 
   useEffect(() => {
     async function fetchCategories() {
@@ -62,28 +57,6 @@ export function AddTransactionDialog({
     fetchCategories();
   }, [user]);
 
-  const getCategorySuggestion = useCallback(async (description: string) => {
-    const categoryNames = availableCategories.map(c => c.name);
-    if (description.length < 5 || type !== 'expense' || categoryNames.length === 0) return;
-
-    setIsCategorizing(true);
-    try {
-      const result = await categorizeTransactionAction({ description, categories: categoryNames });
-      if (result.success && result.category && categoryNames.includes(result.category)) {
-        setCategory(result.category);
-      }
-    } catch (error) {
-      console.error("Failed to get category suggestion:", error);
-    } finally {
-      setIsCategorizing(false);
-    }
-  }, [availableCategories, type]);
-
-  useEffect(() => {
-    if (debouncedDescription) {
-      getCategorySuggestion(debouncedDescription);
-    }
-  }, [debouncedDescription, getCategorySuggestion]);
   
   const resetForm = useCallback(() => {
     setDescription("");
@@ -93,7 +66,6 @@ export function AddTransactionDialog({
     setType("expense");
     setError(null);
     setLoading(false);
-    setIsCategorizing(false);
   }, []);
 
   useEffect(() => {
@@ -194,11 +166,6 @@ export function AddTransactionDialog({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="category">Category</Label>
-                   {isCategorizing && (
-                     <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Sparkles className="h-3 w-3 animate-pulse" /> AI Suggesting...
-                     </span>
-                   )}
                 </div>
                 <Select value={category} onValueChange={setCategory}>
                   <SelectTrigger>

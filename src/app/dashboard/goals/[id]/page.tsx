@@ -101,12 +101,6 @@ export default function GoalDetailPage() {
 
   const progress = (goal.current / goal.target) * 100;
 
-  const aiAdvisorLink = `/dashboard/ai-advisor?goal=${encodeURIComponent(
-    goal.title
-  )}&goalId=${goal.id}${
-    goal.advice ? `&advice=${encodeURIComponent(JSON.stringify(goal.advice))}` : ""
-  }`;
-
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
       <div className="max-w-6xl mx-auto">
@@ -165,12 +159,6 @@ export default function GoalDetailPage() {
                   <Link href={`/dashboard/calculator?tab=goals&target=${goal.target}&current=${goal.current}`}>
                     <Calculator className="mr-2" />
                     Plan with Calculator
-                  </Link>
-                </Button>
-                <Button asChild className="w-full" variant="outline">
-                  <Link href={aiAdvisorLink}>
-                    <Bot className="mr-2" />
-                    Get AI Savings Tips
                   </Link>
                 </Button>
               </CardFooter>

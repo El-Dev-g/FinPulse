@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowRightLeft,
-  Bot,
   LayoutDashboard,
   Settings,
   Target,
@@ -52,7 +51,6 @@ const navItems = [
   { href: "/dashboard/reports", icon: PieChart, label: "Reports" },
   { href: "/dashboard/organizer", icon: ClipboardList, label: "Organizer" },
   { href: "/dashboard/catalog", icon: ListTree, label: "Categories" },
-  { href: "/dashboard/ai-advisor", icon: Bot, label: "AI Advisor" },
   { href: "/dashboard/calculator", icon: Calculator, label: "Calculator" },
 ];
 
