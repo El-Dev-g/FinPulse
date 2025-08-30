@@ -1,11 +1,11 @@
+
 'use server';
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
-import {GENKIT_ENV} from 'genkit/environment';
 
 const plugins = [];
-if (GENKIT_ENV === 'dev') {
-  const {firebase} = require('genkitx-firebase');
+if (process.env.GENKIT_ENV === 'dev') {
+  const {firebase} = require('@genkit-ai/firebase');
   plugins.push(firebase());
 }
 
