@@ -1,3 +1,4 @@
+
 // src/app/policy/privacy/page.tsx
 export default function PrivacyPolicyPage() {
   return (

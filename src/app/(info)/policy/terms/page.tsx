@@ -1,3 +1,4 @@
+
 // src/app/policy/terms/page.tsx
 export default function TermsOfServicePage() {
   return (
