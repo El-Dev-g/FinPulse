@@ -160,13 +160,13 @@ export default function GoalDetailPage() {
                  <Button asChild className="w-full">
                   <Link href={`/dashboard/calculator?tab=goals&target=${goal.target}&current=${goal.current}`}>
                     <Calculator className="mr-2" />
-                    Plan with Calculator
+                    Use Calculator
                   </Link>
                 </Button>
                  <Button asChild variant="outline" className="w-full">
                   <Link href={`/dashboard/advisor?goalId=${goal.id}`}>
                     <Lightbulb className="mr-2" />
-                    Get AI Advice
+                    AI Advisor
                   </Link>
                 </Button>
               </CardFooter>
