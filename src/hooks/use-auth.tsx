@@ -45,6 +45,7 @@ const isOnboardingRoute = (pathname: string) => pathname.startsWith('/welcome/on
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialAuthChecked, setInitialAuthChecked] = useState(false);
   const [currency, setCurrencyState] = useState("USD");
   const auth = getAuth(app);
   const router = useRouter();
@@ -60,17 +61,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       setLoading(false);
+      setInitialAuthChecked(true); // Mark that initial auth check is complete
     });
 
     return () => unsubscribe();
   }, [auth]);
 
   useEffect(() => {
-    if (loading) return;
+    if (!initialAuthChecked) return;
 
     // Handle redirect result from Google Sign-In
     getRedirectResult(auth)
-      .then(async (result) => {
+      .then((result) => {
         if (result && result.user) {
           const user = result.user;
           const creationTime = user.metadata.creationTime;
@@ -86,15 +88,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }).catch((error) => {
         console.error("Error during getRedirectResult: ", error);
       });
-
+      
     const isProtected = !unprotectedRoutes.includes(pathname) && !isOnboardingRoute(pathname);
 
     if (!user && isProtected) {
       router.push("/signin");
-    } else if (user && (pathname === '/signin' || pathname === '/signup')) {
+    } else if (user && (pathname === '/signin' || pathname === '/signup' || pathname === '/')) {
         router.push('/dashboard');
     }
-  }, [user, loading, pathname, router, auth]);
+  // We only want this effect to run when the loading state changes from true to false,
+  // or when the user navigates to a new page.
+  }, [initialAuthChecked, user, pathname, router, auth]);
 
   
   const setCurrency = useCallback(async (newCurrency: string) => {
