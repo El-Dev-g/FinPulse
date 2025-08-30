@@ -52,6 +52,18 @@ export interface Advice {
   steps: string[];
 }
 
+export interface AIPlan {
+    id: string;
+    advice: Advice;
+    prompt: string;
+    goalId?: string;
+    createdAt: any; // Firestore timestamp
+}
+
+export interface ClientAIPlan extends Omit<AIPlan, 'createdAt'>{
+    createdAt: Date;
+}
+
 export interface Goal {
   id: string;
   title: string;

@@ -1,7 +1,7 @@
 // src/lib/db.ts
 import { db } from './firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy } from 'firebase/firestore';
-import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category } from './types';
+import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category, AIPlan } from './types';
 import { auth } from './firebase';
 
 const getUid = () => {
@@ -101,3 +101,7 @@ export const addCategory = async (category: Omit<Category, 'id' | 'createdAt'>):
 };
 export const getCategories = () => getData<Category>('categories');
 export const deleteCategory = (id: string) => deleteDataItem('categories', id);
+
+// --- AI Plans ---
+export const addAIPlan = (plan: Omit<AIPlan, 'id'>) => addDataItem<Omit<AIPlan, 'id'>>('ai_plans', plan);
+export const getAIPlans = () => getData<AIPlan>('ai_plans');
