@@ -6,6 +6,7 @@ import { AdvisorForm } from "@/components/dashboard/advisor-form";
 import { FinancialPlan } from "@/components/dashboard/financial-plan";
 import type { Advice, ClientAIPlan } from "@/lib/types";
 import { getFinancialAdvice } from "@/lib/actions";
+import { addAIPlan, updateGoal } from "@/lib/db";
 import { Lightbulb, Loader } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getAIPlans } from "@/lib/db";
@@ -57,19 +58,28 @@ function AdvisorPageContent() {
     setError(null);
     setPlan(null); // Clear current plan while generating new one
     try {
-      const result = await getFinancialAdvice(prompt, goalId);
+      const advice = await getFinancialAdvice(prompt);
+      
+      // Save all generated plans
+      await addAIPlan({
+        prompt,
+        advice,
+        goalId: goalId || undefined,
+      });
 
-      if (result.goalId) {
-        // If a goalId was provided, redirect to the goals page to see it.
-        // The advice is already saved to the goal in the server action.
+      // If a goalId was provided, also save the advice to that goal
+      if (goalId && goalId !== 'none') {
+        await updateGoal(goalId, { advice });
+        
+        // Redirect to the goals page to see the new advice attached
         router.push(
-          `/dashboard/goals?goalId=${result.goalId}&advice=${encodeURIComponent(
-            JSON.stringify(result.advice)
+          `/dashboard/goals?goalId=${goalId}&advice=${encodeURIComponent(
+            JSON.stringify(advice)
           )}`
         );
       } else {
         // Otherwise, display the plan on this page and refresh the past plans list
-        setPlan(result.advice);
+        setPlan(advice);
         fetchPastPlans();
       }
     } catch (e: any) {

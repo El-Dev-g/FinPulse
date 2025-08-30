@@ -3,25 +3,12 @@
 
 import { getPersonalizedFinancialAdvice } from "@/ai/flows/personalized-financial-advice";
 import { suggestCategory } from "@/ai/flows/suggest-category";
-import { getCategories, addAIPlan, updateGoal } from "./db";
+import { getCategories } from "./db";
 import type { Advice } from "./types";
 
-export async function getFinancialAdvice(prompt: string, goalId: string | null) {
+export async function getFinancialAdvice(prompt: string) {
   const advice = await getPersonalizedFinancialAdvice({ prompt });
-  
-  // Save all generated plans
-  const planId = await addAIPlan({
-    prompt,
-    advice,
-    goalId: goalId || undefined,
-  });
-  
-  // If a goalId was provided, also save the advice to that goal
-  if (goalId && goalId !== 'none') {
-    await updateGoal(goalId, { advice });
-  }
-
-  return { advice, goalId };
+  return advice;
 }
 
 export async function getCategorySuggestion(description: string) {
