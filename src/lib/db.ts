@@ -1,3 +1,4 @@
+
 // src/lib/db.ts
 import { db } from './firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy, setDoc } from 'firebase/firestore';
@@ -62,7 +63,7 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
 
 
 // --- Goals ---
-export const addGoal = (goal: Omit<Goal, 'id'>) => addDataItem<Omit<Goal, 'id'>>('goals', goal);
+export const addGoal = (goal: Omit<Goal, 'id' | 'current' | 'createdAt'>) => addDataItem('goals', { ...goal, current: 0 });
 export const getGoals = () => getData<Goal>('goals');
 export const updateGoal = (id: string, goal: Partial<Goal>) => updateDataItem('goals', id, goal);
 export const deleteGoal = (id: string) => deleteDataItem('goals', id);
