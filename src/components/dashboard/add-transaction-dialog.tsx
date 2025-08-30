@@ -67,7 +67,7 @@ export function AddTransactionDialog({
 
   useEffect(() => {
     async function fetchSuggestion() {
-        if (debouncedDescription && debouncedDescription.length > 3 && type === 'expense') {
+        if (user && debouncedDescription && debouncedDescription.length > 3 && type === 'expense') {
             setIsSuggestionLoading(true);
             try {
                 const result = await getCategorySuggestion(debouncedDescription);
@@ -87,7 +87,7 @@ export function AddTransactionDialog({
         }
     }
     fetchSuggestion();
-  }, [debouncedDescription, type]);
+  }, [debouncedDescription, type, user]);
   
   const resetForm = useCallback(() => {
     setDescription("");
