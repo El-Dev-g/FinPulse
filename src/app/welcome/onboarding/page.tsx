@@ -55,6 +55,15 @@ export default function OnboardingPage() {
     await addBudget(newBudget);
     api?.scrollNext();
   };
+  
+  const handleFinishOnboarding = () => {
+    try {
+        localStorage.setItem('onboardingComplete', 'true');
+    } catch (error) {
+        console.error("Could not save onboarding status to localStorage", error);
+    }
+    router.push('/dashboard');
+  }
 
 
   if (!user) {
@@ -145,7 +154,7 @@ export default function OnboardingPage() {
                   <p className="text-muted-foreground max-w-md">
                     You've taken the first important steps. You can always add more goals and budgets later. Ready to see your new financial dashboard?
                   </p>
-                   <Button onClick={() => router.push('/dashboard')}>
+                   <Button onClick={handleFinishOnboarding}>
                     Go to Dashboard
                   </Button>
                 </CardContent>

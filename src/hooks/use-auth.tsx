@@ -58,7 +58,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (user) {
       const isEmailVerified = user.emailVerified || user.providerData.some(p => p.providerId !== 'password');
-      const isNewUser = user.metadata.creationTime === user.metadata.lastSignInTime;
+      
+      // Check if onboarding is complete from localStorage
+      const onboardingComplete = typeof window !== 'undefined' ? localStorage.getItem('onboardingComplete') === 'true' : false;
+      
+      const isNewUser = user.metadata.creationTime === user.metadata.lastSignInTime && !onboardingComplete;
       
       if (!isEmailVerified && pathname !== '/verify-email') {
         router.push('/verify-email');
