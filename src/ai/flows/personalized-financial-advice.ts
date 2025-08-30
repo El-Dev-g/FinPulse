@@ -50,7 +50,7 @@ const getPersonalizedFinancialAdviceFlow = ai.defineFlow(
   async (input) => {
     const { output } = await prompt({
         prompt: input.prompt,
-    }, {model: 'gemini-1.5-flash'});
+    }, {model: 'googleai/gemini-1.5-flash'});
     return output!;
   }
 );

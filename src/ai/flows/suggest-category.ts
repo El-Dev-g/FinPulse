@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to suggest a spending category based on a transaction description.
@@ -51,7 +52,7 @@ const suggestCategoryFlow = ai.defineFlow(
     outputSchema: SuggestCategoryResponseSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const { output } = await prompt(input, { model: 'googleai/gemini-1.5-flash' });
     return output!;
   }
 );
