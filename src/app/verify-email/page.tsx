@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
-import { sendEmailVerification } from "firebase/auth";
+import { sendEmailVerification, getAuth } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,6 +18,7 @@ import { Loader, MailCheck, MailWarning } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { app } from "@/lib/firebase";
 
 export default function VerifyEmailPage() {
   const { user, loading: authLoading } = useAuth();
@@ -45,8 +46,10 @@ export default function VerifyEmailPage() {
             setIsVerified(true);
             setTimeout(() => router.push('/welcome/onboarding'), 2000);
         }
+        return;
     }
     
+    const auth = getAuth(app);
     const interval = setInterval(async () => {
       if (auth.currentUser) {
         await auth.currentUser.reload();
