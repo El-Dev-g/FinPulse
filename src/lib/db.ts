@@ -2,7 +2,7 @@
 // src/lib/db.ts
 import { db } from './firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy, setDoc } from 'firebase/firestore';
-import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category, AIPlan, UserProfile } from './types';
+import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category, AIPlan, UserProfile, Advice } from './types';
 import { auth } from './firebase';
 
 const getUid = () => {
@@ -63,7 +63,17 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
 
 
 // --- Goals ---
-export const addGoal = (goal: Omit<Goal, 'id' | 'current' | 'createdAt'>) => addDataItem('goals', { ...goal, current: 0 });
+export const addGoal = (goal: Omit<Goal, 'id' | 'current' | 'createdAt'>) => {
+    const goalData: { title: string; target: number; current: number; advice?: Advice } = {
+        title: goal.title,
+        target: goal.target,
+        current: 0,
+    };
+    if (goal.advice) {
+        goalData.advice = goal.advice;
+    }
+    return addDataItem('goals', goalData);
+};
 export const getGoals = () => getData<Goal>('goals');
 export const updateGoal = (id: string, goal: Partial<Goal>) => updateDataItem('goals', id, goal);
 export const deleteGoal = (id: string) => deleteDataItem('goals', id);
