@@ -1,7 +1,7 @@
 // src/app/signin/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -134,19 +134,19 @@ function PhoneSignInForm() {
   const [confirmationResult, setConfirmationResult] =
     useState<ConfirmationResult | null>(null);
   const router = useRouter();
-
-  useEffect(() => {
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-      size: "invisible",
-    });
-  }, []);
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
-      const verifier = window.recaptchaVerifier;
+       if (!recaptchaVerifierRef.current) {
+        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
+          size: "invisible",
+        });
+      }
+      const verifier = recaptchaVerifierRef.current;
       const result = await signInWithPhoneNumber(auth, `+${phone}`, verifier);
       setConfirmationResult(result);
     } catch (err: any) {
