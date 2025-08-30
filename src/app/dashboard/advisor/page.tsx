@@ -39,14 +39,10 @@ function AdvisorPageContent() {
       // The process function for dates is missing, so we do it manually
       const processedPlans = plans.map(p => ({...p, createdAt: p.createdAt.toDate()}));
       setPastPlans(processedPlans);
-      // Set the most recent plan as the active plan
-      if (processedPlans.length > 0 && !plan) {
-        setPlan(processedPlans[0].advice);
-      }
     } catch(e) {
       console.error("Could not fetch past plans", e);
     }
-  }, [user, plan]);
+  }, [user]);
 
   useEffect(() => {
     fetchPastPlans();
@@ -78,8 +74,7 @@ function AdvisorPageContent() {
           )}`
         );
       } else {
-        // Otherwise, display the plan on this page and refresh the past plans list
-        setPlan(advice);
+        // Otherwise, just refresh the past plans list. The plan will not be displayed until clicked.
         fetchPastPlans();
       }
     } catch (e: any) {
