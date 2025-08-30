@@ -28,6 +28,7 @@ interface AddGoalDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onAddGoal: (newGoal: Omit<Goal, "id" | "current" | "createdAt">) => Promise<void>;
+  isSubmitting?: boolean;
   aiPlans?: AIPlan[];
 }
 
@@ -35,6 +36,7 @@ export function AddGoalDialog({
   isOpen,
   onOpenChange,
   onAddGoal,
+  isSubmitting = false,
   aiPlans = [],
 }: AddGoalDialogProps) {
   const [title, setTitle] = useState("");
@@ -142,8 +144,8 @@ export function AddGoalDialog({
           </div>
           {error && <p className="text-sm text-destructive mb-4">{error}</p>}
           <DialogFooter>
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" disabled={loading || isSubmitting}>
+              {(loading || isSubmitting) && <Loader className="mr-2 h-4 w-4 animate-spin" />}
               Add Goal
             </Button>
           </DialogFooter>

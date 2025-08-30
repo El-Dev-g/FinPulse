@@ -10,8 +10,6 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,37 +30,62 @@ export default function OnboardingPage() {
 
   const [isAddGoalDialogOpen, setIsAddGoalDialogOpen] = useState(false);
   const [isAddBudgetDialogOpen, setIsAddBudgetDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!api) return;
 
     setCount(api.scrollSnapList().length);
     setCurrent(api.selectedScrollSnap());
-    setProgress((api.selectedScrollSnap() / (api.scrollSnapList().length -1)) * 100);
+    setProgress(0); // Start progress at 0
 
     api.on("select", () => {
-      setCurrent(api.selectedScrollSnap());
-      setProgress((api.selectedScrollSnap() / (api.scrollSnapList().length-1)) * 100);
+      const selectedSnap = api.selectedScrollSnap();
+      const totalSnaps = api.scrollSnapList().length;
+      setCurrent(selectedSnap);
+      setProgress((selectedSnap / (totalSnaps - 1)) * 100);
     });
   }, [api]);
   
   const handleAddGoal = async (newGoal: Omit<Goal, "id" | "current" | "createdAt">) => {
-    await addGoal({ ...newGoal, current: 0 });
-    api?.scrollNext();
+    setIsSubmitting(true);
+    try {
+      await addGoal({ ...newGoal, current: 0 });
+      api?.scrollNext();
+    } catch(e) {
+      console.error("Failed to add goal", e);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const handleAddBudget = async (newBudget: Omit<Budget, "id" | "createdAt">) => {
-    await addBudget(newBudget);
-    api?.scrollNext();
+    setIsSubmitting(true);
+    try {
+      await addBudget(newBudget);
+      api?.scrollNext();
+    } catch(e) {
+      console.error("Failed to add budget", e);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-  
-  const handleFinishOnboarding = () => {
+
+  const completeOnboarding = () => {
     try {
         localStorage.setItem('onboardingComplete', 'true');
     } catch (error) {
         console.error("Could not save onboarding status to localStorage", error);
     }
     router.push('/dashboard');
+  }
+
+  const handleFinishOnboarding = () => {
+    completeOnboarding();
+  }
+  
+  const handleSkipOnboarding = () => {
+    completeOnboarding();
   }
 
 
@@ -74,11 +97,13 @@ export default function OnboardingPage() {
     );
   }
   
-
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="absolute top-6 left-6">
         <Logo />
+      </div>
+      <div className="absolute top-6 right-6">
+        <Button variant="ghost" onClick={handleSkipOnboarding}>Skip Onboarding</Button>
       </div>
       <div className="w-full max-w-2xl mx-auto space-y-8">
         <div className="text-center">
@@ -87,7 +112,9 @@ export default function OnboardingPage() {
             Step {current + 1} of {count}
           </p>
         </div>
-        <Carousel setApi={setApi} className="w-full">
+        <Carousel setApi={setApi} className="w-full" opts={{
+          watchDrag: false, // Disables manual sliding
+        }}>
           <CarouselContent>
             {/* Step 1: Welcome */}
             <CarouselItem>
@@ -101,6 +128,7 @@ export default function OnboardingPage() {
                     You're about to take a giant leap towards financial clarity.
                     Let's get you set up in just a few quick steps.
                   </p>
+                   <Button onClick={() => api?.scrollNext()}>Let's Go!</Button>
                 </CardContent>
               </Card>
             </CarouselItem>
@@ -117,9 +145,14 @@ export default function OnboardingPage() {
                     What's a major financial milestone you're aiming for?
                     Saving for a vacation, a new car, or a house down payment?
                   </p>
-                  <Button onClick={() => setIsAddGoalDialogOpen(true)}>
-                    Create a Goal
-                  </Button>
+                  <div className="flex gap-4">
+                    <Button onClick={() => setIsAddGoalDialogOpen(true)}>
+                      Create a Goal
+                    </Button>
+                     <Button variant="outline" onClick={() => api?.scrollNext()}>
+                      Skip for now
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </CarouselItem>
@@ -136,9 +169,14 @@ export default function OnboardingPage() {
                     Tracking your spending is key. Let's create a budget for a
                     common category like "Groceries" or "Dining Out".
                   </p>
-                   <Button onClick={() => setIsAddBudgetDialogOpen(true)}>
-                    Create a Budget
-                  </Button>
+                   <div className="flex gap-4">
+                    <Button onClick={() => setIsAddBudgetDialogOpen(true)}>
+                      Create a Budget
+                    </Button>
+                     <Button variant="outline" onClick={() => api?.scrollNext()}>
+                      Skip for now
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </CarouselItem>
@@ -155,15 +193,13 @@ export default function OnboardingPage() {
                     You've taken the first important steps. You can always add more goals and budgets later. Ready to see your new financial dashboard?
                   </p>
                    <Button onClick={handleFinishOnboarding}>
-                    Go to Dashboard
+                    Good Luck!
                   </Button>
                 </CardContent>
               </Card>
             </CarouselItem>
 
           </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
         </Carousel>
       </div>
       
@@ -171,12 +207,14 @@ export default function OnboardingPage() {
         isOpen={isAddGoalDialogOpen}
         onOpenChange={setIsAddGoalDialogOpen}
         onAddGoal={handleAddGoal}
+        isSubmitting={isSubmitting}
         aiPlans={[]}
       />
       <AddBudgetDialog
         isOpen={isAddBudgetDialogOpen}
         onOpenChange={setIsAddBudgetDialogOpen}
         onAddBudget={handleAddBudget}
+        isSubmitting={isSubmitting}
         existingCategories={[]}
       />
     </div>

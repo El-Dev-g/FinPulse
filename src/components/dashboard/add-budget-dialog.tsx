@@ -30,6 +30,7 @@ interface AddBudgetDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onAddBudget: (newBudget: Omit<Budget, "id" | "createdAt">) => Promise<void>;
+  isSubmitting?: boolean;
   existingCategories: string[];
 }
 
@@ -37,6 +38,7 @@ export function AddBudgetDialog({
   isOpen,
   onOpenChange,
   onAddBudget,
+  isSubmitting = false,
   existingCategories,
 }: AddBudgetDialogProps) {
   const { user } = useAuth();
@@ -153,8 +155,8 @@ export function AddBudgetDialog({
           </div>
           {error && <p className="text-sm text-destructive mb-4">{error}</p>}
           <DialogFooter>
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" disabled={loading || isSubmitting}>
+              {(loading || isSubmitting) && <Loader className="mr-2 h-4 w-4 animate-spin" />}
               Add Budget
             </Button>
           </DialogFooter>
