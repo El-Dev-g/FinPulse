@@ -1,3 +1,4 @@
+
 // src/app/dashboard/calculator/page.tsx
 "use client";
 
@@ -328,7 +329,7 @@ function CalculatorPageContent() {
   const [debtValues, setDebtValues] = useState({ debtAmount: "", interestRate: "", monthlyPayment: "" });
   const [currencyValues, setCurrencyValues] = useState({ amount: "1", fromCurrency: "USD", toCurrency: "EUR" });
 
-  const setPartialState = useCallback((setter: Function) => (newValues: object) => {
+  const setPartialState = useCallback((setter: React.Dispatch<React.SetStateAction<any>>) => (newValues: object) => {
       setter((prev: object) => ({...prev, ...newValues}));
   }, []);
 
