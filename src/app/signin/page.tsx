@@ -1,4 +1,3 @@
-
 // src/app/signin/page.tsx
 "use client";
 
@@ -12,6 +11,7 @@ import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
   type ConfirmationResult,
+  signInWithPopup,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
@@ -66,9 +66,13 @@ function EmailSignInForm() {
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithRedirect(auth, provider);
+      await signInWithPopup(auth, provider);
+      // Let the useAuth hook handle redirection
     } catch (err: any) {
-      setError(err.message);
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setError(err.message);
+      }
+    } finally {
       setLoading(false);
     }
   };
@@ -136,18 +140,21 @@ function PhoneSignInForm() {
     useState<ConfirmationResult | null>(null);
   const router = useRouter();
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+  const recaptchaContainerRef = useRef<HTMLDivElement | null>(null);
+
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
-       if (!recaptchaVerifierRef.current) {
-        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
+       if (!recaptchaVerifierRef.current && recaptchaContainerRef.current) {
+        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
           size: "invisible",
         });
       }
       const verifier = recaptchaVerifierRef.current;
+      if (!verifier) throw new Error("Could not create reCAPTCHA verifier");
       const result = await signInWithPhoneNumber(auth, `+${phone}`, verifier);
       setConfirmationResult(result);
     } catch (err: any) {
@@ -174,47 +181,50 @@ function PhoneSignInForm() {
   };
 
   return (
-    <form onSubmit={confirmationResult ? handleVerifyOtp : handleSendOtp}>
-        <CardContent className="space-y-4">
-          {!confirmationResult ? (
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="1234567890 (include country code)"
-                required
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Label htmlFor="otp">Verification Code</Label>
-              <Input
-                id="otp"
-                type="text"
-                placeholder="Enter 6-digit code"
-                required
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-              />
-            </div>
-          )}
-          {error && <p className="text-sm text-destructive">{error}</p>}
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? (
-                <Loader className="animate-spin" />
-            ) : confirmationResult ? (
-                "Verify Code"
+    <>
+      <div ref={recaptchaContainerRef} id="recaptcha-container"></div>
+      <form onSubmit={confirmationResult ? handleVerifyOtp : handleSendOtp}>
+          <CardContent className="space-y-4">
+            {!confirmationResult ? (
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="1234567890 (include country code)"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
             ) : (
-                "Send Code"
+              <div className="space-y-2">
+                <Label htmlFor="otp">Verification Code</Label>
+                <Input
+                  id="otp"
+                  type="text"
+                  placeholder="Enter 6-digit code"
+                  required
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                />
+              </div>
             )}
-            </Button>
-        </CardFooter>
-    </form>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </CardContent>
+          <CardFooter className="flex flex-col gap-4">
+              <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? (
+                  <Loader className="animate-spin" />
+              ) : confirmationResult ? (
+                  "Verify Code"
+              ) : (
+                  "Send Code"
+              )}
+              </Button>
+          </CardFooter>
+      </form>
+    </>
   )
 }
 
@@ -238,7 +248,6 @@ export default function SignInPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div id="recaptcha-container"></div>
       <div className="w-full max-w-md space-y-6">
         <div className="flex justify-center">
           <Logo />
