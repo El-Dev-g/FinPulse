@@ -195,7 +195,7 @@ function DebtPayoffCalculator({ values, setValues, onUsePayment }: any) {
        </div>
        <div className="text-center">
         <Button size="sm" variant="outline" onClick={() => onUsePayment(monthlyPayment)}>
-            <Send className="mr-2" /> Use Monthly Payment for Savings
+            <Send className="mr-2" /> Use for Savings
         </Button>
        </div>
     </div>
@@ -260,7 +260,7 @@ function CurrencyConverter({ values, setValues, onUseConversion }: any) {
         <p className="text-4xl font-bold text-primary">{formatCurrency(convertedAmount, toCurrency)}</p>
          <div className="flex justify-center gap-2 pt-2">
             <Button size="sm" variant="outline" onClick={() => onUseConversion(convertedAmount)}>
-                <Send className="mr-2" /> Use for Any Calculator
+                <Send className="mr-2" /> Use Value
             </Button>
         </div>
       </div>
