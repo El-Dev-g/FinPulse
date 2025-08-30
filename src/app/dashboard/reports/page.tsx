@@ -174,7 +174,7 @@ export default function ReportsPage() {
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="date" />
                                 <YAxis tickFormatter={(value) => formatCurrency(value as number)} />
-                                <Tooltip formatter={(value) => formatCurrency(value as number)}/>
+                                <Tooltip formatter={(value, name) => [formatCurrency(value as number), name]}/>
                                 <Legend />
                                 <Line type="monotone" dataKey="income" stroke="hsl(var(--chart-1))" activeDot={{ r: 8 }} name="Income" />
                                 <Line type="monotone" dataKey="expenses" stroke="hsl(var(--chart-2))" name="Expenses" />
