@@ -9,13 +9,17 @@ import {
   PieChart,
   Twitter,
   Github,
-  Linkedin
+  Linkedin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Logo } from "@/components/logo";
 import { Chatbot } from "./chatbot";
-
 
 const features = [
   {
