@@ -1,3 +1,4 @@
+
 // src/hooks/use-auth.tsx
 "use client";
 
@@ -9,7 +10,7 @@ import React, {
   ReactNode,
   useCallback,
 } from "react";
-import { User, onAuthStateChanged, getAuth, getRedirectResult, GoogleAuthProvider } from "firebase/auth";
+import { User, onAuthStateChanged, getAuth, getRedirectResult } from "firebase/auth";
 import { app } from "@/lib/firebase";
 import { useRouter, usePathname } from "next/navigation";
 import { getUserProfile, updateUserProfile } from "@/lib/db";
@@ -35,9 +36,11 @@ const unprotectedRoutes = [
     "/signup",
     "/forgot-password",
     "/verify-email",
-    "/welcome/onboarding",
     "/",
 ];
+
+const isOnboardingRoute = (pathname: string) => pathname.startsWith('/welcome/onboarding');
+
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -69,16 +72,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     getRedirectResult(auth)
       .then(async (result) => {
         if (result && result.user) {
-          // This is a sign-in or sign-up event.
           const user = result.user;
           const creationTime = user.metadata.creationTime;
           const lastSignInTime = user.metadata.lastSignInTime;
+          const isNewUser = !lastSignInTime || (creationTime === lastSignInTime);
 
-          if (creationTime === lastSignInTime) {
-            // New user
+          if (isNewUser) {
             router.push('/welcome/onboarding');
           } else {
-            // Existing user
             router.push('/dashboard');
           }
         }
@@ -86,10 +87,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error("Error during getRedirectResult: ", error);
       });
 
-    const isProtected = !unprotectedRoutes.includes(pathname);
+    const isProtected = !unprotectedRoutes.includes(pathname) && !isOnboardingRoute(pathname);
 
     if (!user && isProtected) {
       router.push("/signin");
+    } else if (user && (pathname === '/signin' || pathname === '/signup')) {
+        router.push('/dashboard');
     }
   }, [user, loading, pathname, router, auth]);
 
