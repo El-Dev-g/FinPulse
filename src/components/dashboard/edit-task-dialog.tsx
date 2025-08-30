@@ -52,6 +52,7 @@ export function EditTaskDialog({
 }: EditTaskDialogProps) {
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [dueTime, setDueTime] = useState("");
   const [goalId, setGoalId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,6 +62,7 @@ export function EditTaskDialog({
     if (task) {
       setTitle(task.title);
       setDueDate(task.dueDate || "");
+      setDueTime(task.dueTime || "");
       setGoalId(task.goalId);
     }
   }, [task]);
@@ -82,6 +84,7 @@ export function EditTaskDialog({
           ...task,
           title,
           dueDate,
+          dueTime: dueDate ? dueTime : "", // Clear time if date is cleared
           goalId: goalId === "none" ? undefined : goalId,
         });
       }
@@ -127,14 +130,26 @@ export function EditTaskDialog({
                   placeholder="e.g., Pay electricity bill"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="dueDate">Due Date (Optional)</Label>
-                <Input
-                  id="dueDate"
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="dueDate">Due Date (Optional)</Label>
+                  <Input
+                    id="dueDate"
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                  />
+                </div>
+                 <div className="space-y-2">
+                  <Label htmlFor="dueTime">Time (Optional)</Label>
+                  <Input
+                    id="dueTime"
+                    type="time"
+                    value={dueTime}
+                    onChange={(e) => setDueTime(e.target.value)}
+                    disabled={!dueDate}
+                  />
+                </div>
               </div>
               <div className="space-y-2">
               <Label htmlFor="goalId">

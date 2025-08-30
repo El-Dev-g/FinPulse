@@ -24,8 +24,9 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { getTasks, getGoals, addTask, updateTask, deleteTask } from "@/lib/db";
 import { startOfToday, isBefore, isSameDay } from 'date-fns';
+import { formatTime } from "@/lib/utils";
 
-function CalendarView({ tasks }: { tasks: FinancialTask[] }) {
+function CalendarView({ tasks, onEdit }: { tasks: FinancialTask[], onEdit: (task: FinancialTask) => void; }) {
   const [date, setDate] = useState<Date | undefined>(new Date());
 
   const tasksByDate = React.useMemo(() => {
@@ -42,9 +43,10 @@ function CalendarView({ tasks }: { tasks: FinancialTask[] }) {
     return groupedTasks;
   }, [tasks]);
 
-  const selectedDayTasks = date
+  const selectedDayTasks = (date
     ? tasksByDate[date.toISOString().split("T")[0]] || []
-    : [];
+    : []
+  ).sort((a,b) => (a.dueTime || "").localeCompare(b.dueTime || ""));
 
   const getStatusBadgeVariant = (status: TaskStatus) => {
     switch (status) {
@@ -93,18 +95,24 @@ function CalendarView({ tasks }: { tasks: FinancialTask[] }) {
           <CardContent className="space-y-3">
             {selectedDayTasks.length > 0 ? (
               selectedDayTasks.map((task) => (
-                <div
+                <button
                   key={task.id}
-                  className="p-3 rounded-md border bg-card-foreground/5"
+                  onClick={() => onEdit(task)}
+                  className="w-full text-left p-3 rounded-md border bg-card-foreground/5 hover:bg-muted"
                 >
-                  <p className="font-semibold">{task.title}</p>
+                  <div className="flex justify-between items-start">
+                    <p className="font-semibold">{task.title}</p>
+                     {task.dueTime && (
+                       <p className="text-xs text-muted-foreground">{formatTime(task.dueTime)}</p>
+                     )}
+                  </div>
                   <Badge
                     variant={getStatusBadgeVariant(task.status)}
                     className="mt-1"
                   >
                     {task.status}
                   </Badge>
-                </div>
+                </button>
               ))
             ) : (
               <p className="text-muted-foreground text-sm">
@@ -245,7 +253,7 @@ export default function OrganizerPage() {
               </DndContext>
             </TabsContent>
             <TabsContent value="calendar" className="h-full">
-                <CalendarView tasks={tasks} />
+                <CalendarView tasks={tasks} onEdit={setEditingTask} />
             </TabsContent>
            </>
           )}

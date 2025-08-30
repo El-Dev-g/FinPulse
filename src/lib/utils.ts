@@ -52,6 +52,14 @@ export const getIconForBudgetCategory = (category: string): LucideIcon => {
     return budgetCategoryIcons[category] || Wallet;
 }
 
+export const formatTime = (timeString: string) => {
+    if (!timeString) return "";
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes);
+    return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
 
 // These functions convert Firestore Timestamps to JS Dates
 // This is necessary because the conversion doesn't happen automatically
