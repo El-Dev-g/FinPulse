@@ -48,16 +48,18 @@ export default function VerifyEmailPage() {
     }
     
     const interval = setInterval(async () => {
-      await user.reload();
-      if (user.emailVerified) {
-        clearInterval(interval);
-        if (!isVerified) { // Prevent multiple toasts
-            toast({
-                title: "Email Verified!",
-                description: "Redirecting you to get started...",
-            });
-            setIsVerified(true);
-            setTimeout(() => router.push('/welcome/onboarding'), 2000);
+      if (auth.currentUser) {
+        await auth.currentUser.reload();
+        if (auth.currentUser.emailVerified) {
+          clearInterval(interval);
+          if (!isVerified) { // Prevent multiple toasts
+              toast({
+                  title: "Email Verified!",
+                  description: "Redirecting you to get started...",
+              });
+              setIsVerified(true);
+              setTimeout(() => router.push('/welcome/onboarding'), 2000);
+          }
         }
       }
     }, 3000);
@@ -97,7 +99,12 @@ export default function VerifyEmailPage() {
   if (isVerified) {
        return (
           <div className="flex h-screen items-center justify-center">
-            <Loader className="h-12 w-12 animate-spin text-primary" />
+             <div className="flex flex-col items-center gap-4">
+                <MailCheck className="h-16 w-16 text-primary" />
+                <h2 className="text-2xl font-semibold">Email Verified!</h2>
+                <p className="text-muted-foreground">Redirecting you now...</p>
+                <Loader className="h-8 w-8 animate-spin text-primary mt-4" />
+             </div>
           </div>
       )
   }
