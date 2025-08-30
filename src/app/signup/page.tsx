@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
-  signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider,
   updateProfile,
   RecaptchaVerifier,
@@ -230,11 +230,9 @@ export default function SignUpPage() {
         setError(null);
         try {
           const provider = new GoogleAuthProvider();
-          await signInWithPopup(auth, provider);
-          router.push("/welcome/onboarding");
+          await signInWithRedirect(auth, provider);
         } catch (err: any) {
           setError(err.message);
-        } finally {
           setLoading(false);
         }
     };

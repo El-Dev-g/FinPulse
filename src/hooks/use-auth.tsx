@@ -9,7 +9,7 @@ import React, {
   ReactNode,
   useCallback,
 } from "react";
-import { User, onAuthStateChanged, getAuth } from "firebase/auth";
+import { User, onAuthStateChanged, getAuth, getRedirectResult, GoogleAuthProvider } from "firebase/auth";
 import { app } from "@/lib/firebase";
 import { useRouter, usePathname } from "next/navigation";
 import { getUserProfile, updateUserProfile } from "@/lib/db";
@@ -61,16 +61,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => unsubscribe();
   }, [auth]);
-  
+
   useEffect(() => {
     if (loading) return;
+
+    // Handle redirect result from Google Sign-In
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result && result.user) {
+          // This is a sign-in or sign-up event.
+          const user = result.user;
+          const creationTime = user.metadata.creationTime;
+          const lastSignInTime = user.metadata.lastSignInTime;
+
+          if (creationTime === lastSignInTime) {
+            // New user
+            router.push('/welcome/onboarding');
+          } else {
+            // Existing user
+            router.push('/dashboard');
+          }
+        }
+      }).catch((error) => {
+        console.error("Error during getRedirectResult: ", error);
+      });
 
     const isProtected = !unprotectedRoutes.includes(pathname);
 
     if (!user && isProtected) {
       router.push("/signin");
     }
-  }, [user, loading, pathname, router]);
+  }, [user, loading, pathname, router, auth]);
 
   
   const setCurrency = useCallback(async (newCurrency: string) => {
