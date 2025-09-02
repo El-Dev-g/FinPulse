@@ -1,3 +1,4 @@
+
 // src/hooks/use-auth.tsx
 "use client";
 
@@ -65,9 +66,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (profile?.currency) {
           setCurrencyState(profile.currency);
         }
-        if(profile?.isAdmin) {
-            setIsAdmin(profile.isAdmin);
-        }
+        // Ensure isAdmin is explicitly set to false if not present
+        setIsAdmin(profile?.isAdmin || false);
       } else {
         setIsAdmin(false);
       }
@@ -86,7 +86,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       router.push("/signin");
     }
 
-    if(user && isStudioRoute(pathname) && !isAdmin) {
+    // This is the key change: Only check studio route permissions after loading is complete
+    // and we are certain about the admin status.
+    if (user && !isAdmin && isStudioRoute(pathname)) {
         router.push("/dashboard");
     }
 
