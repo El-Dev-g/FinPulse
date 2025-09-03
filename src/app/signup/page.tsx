@@ -1,16 +1,13 @@
 // src/app/signup/page.tsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
-  signInWithRedirect,
-  GoogleAuthProvider,
   updateProfile,
-  signInWithPopup,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
@@ -27,15 +24,6 @@ import { Label } from "@/components/ui/label";
 import { Loader, UserPlus } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/hooks/use-auth";
-
-const GoogleIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24">
-    <path
-      fill="currentColor"
-      d="M21.35,11.1H12.18V13.83H18.69C18.36,17.64 15.19,19.27 12.19,19.27C8.36,19.27 5,16.25 5,12C5,7.9 8.2,4.73 12.19,4.73C14.03,4.73 15.6,5.33 16.9,6.53L19.05,4.58C17.02,2.68 14.83,1.69 12.19,1.69C6.81,1.69 2.5,6.25 2.5,12C2.5,17.75 6.81,22.31 12.19,22.31C17.64,22.31 21.5,18.45 21.5,12.23C21.5,11.66 21.45,11.38 21.35,11.1Z"
-    />
-  </svg>
-);
 
 function EmailSignUpForm() {
   const [displayName, setDisplayName] = useState("");
@@ -61,7 +49,7 @@ function EmailSignUpForm() {
         });
         await sendEmailVerification(userCredential.user);
       }
-      router.push('/verify-email');
+      router.push("/verify-email");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -99,6 +87,7 @@ function EmailSignUpForm() {
           <Input
             id="password"
             type="password"
+            placeholder="••••••••"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -106,10 +95,10 @@ function EmailSignUpForm() {
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
       </CardContent>
-      <CardFooter className="flex flex-col gap-4">
+      <CardFooter>
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? <Loader className="animate-spin" /> : <UserPlus />}
-          Sign Up with Email
+          Create Account
         </Button>
       </CardFooter>
     </form>
@@ -117,88 +106,38 @@ function EmailSignUpForm() {
 }
 
 export default function SignUpPage() {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const { user, loading: authLoading } = useAuth();
-    const router = useRouter();
-    
-    useEffect(() => {
-      if (!authLoading && user) {
-        // This is a new user signing up with Google
-        if(user.metadata.creationTime === user.metadata.lastSignInTime) {
-            router.push('/welcome/onboarding');
-        } else {
-            router.push("/dashboard");
-        }
-      }
-    }, [user, authLoading, router]);
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
 
-    const handleGoogleSignIn = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-          const provider = new GoogleAuthProvider();
-          await signInWithPopup(auth, provider);
-           // Let the useEffect handle redirection
-        } catch (err: any) {
-           if (err.code !== 'auth/popup-closed-by-user') {
-            setError(err.message);
-          }
-        } finally {
-          setLoading(false);
-        }
-    };
-    
-    if (authLoading) {
-        return (
-          <div className="flex h-screen items-center justify-center">
-            <Loader className="h-12 w-12 animate-spin text-primary" />
-          </div>
-        );
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push("/dashboard");
     }
+  }, [user, authLoading, router]);
 
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-6">
         <div className="flex justify-center">
           <Logo />
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Sign Up</CardTitle>
+        <Card className="w-full">
+          <CardHeader className="text-center">
+            <CardTitle>Create an Account</CardTitle>
             <CardDescription>
-              Create an account to get started with FinPulse.
+              Join FinPulse and start managing your finances.
             </CardDescription>
           </CardHeader>
           <EmailSignUpForm />
-            {/*
-            <CardContent className="pt-0">
-               <div className="relative my-4">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                      Or continue with
-                    </span>
-                  </div>
-                </div>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleGoogleSignIn}
-                type="button"
-                disabled={loading || !!user}
-              >
-                {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-                <GoogleIcon />
-                Sign Up with Google
-              </Button>
-            </CardContent>
-            */}
-          
-          <p className="text-center text-sm text-muted-foreground pb-6">
+          <p className="mt-4 px-6 pb-6 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link
               href="/signin"
