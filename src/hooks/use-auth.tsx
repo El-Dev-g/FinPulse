@@ -78,18 +78,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [auth]);
 
   useEffect(() => {
-    if (loading) return;
-      
-    const isProtectedRoute = !unprotectedRoutes.includes(pathname) && !isOnboardingRoute(pathname);
-
-    if (!user && isProtectedRoute) {
-      router.push("/signin");
+    // Don't run any redirect logic until the authentication state is fully loaded.
+    if (loading) {
+      return;
     }
 
-    // This is the key change: Only check studio route permissions after loading is complete
-    // and we are certain about the admin status.
-    if (user && !isAdmin && isStudioRoute(pathname)) {
+    const isProtectedRoute = !unprotectedRoutes.includes(pathname) && !isOnboardingRoute(pathname);
+    const isStudioPage = isStudioRoute(pathname);
+
+    // Case 1: User is not logged in.
+    if (!user) {
+      // If the route is protected, redirect to sign-in.
+      if (isProtectedRoute) {
+        router.push("/signin");
+      }
+      // Otherwise, allow access to unprotected routes.
+      return;
+    }
+
+    // Case 2: User is logged in.
+    if (user) {
+      // If they are not an admin but are trying to access a studio page, redirect them.
+      if (!isAdmin && isStudioPage) {
         router.push("/dashboard");
+      }
+      // If they are an admin, or are on a non-studio page, allow access.
     }
 
   }, [user, loading, pathname, router, isAdmin]);
