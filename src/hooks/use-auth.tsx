@@ -86,33 +86,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // --- ROUTE PROTECTION ---
   useEffect(() => {
-    if (loading) return; // Don't do anything until loading is false
+    if (loading) return; // Wait until auth state resolves
 
-    const isUnprotected = unprotectedRoutes.includes(pathname);
-    const isOnboarding = isOnboardingRoute(pathname);
     const isStudioPage = isStudioRoute(pathname);
-    
-    // User is not logged in
+    const isStudioAuthPage = studioAuthRoutes.includes(pathname);
+    const isUnprotectedPage = unprotectedRoutes.includes(pathname);
+    const isOnboardingPage = isOnboardingRoute(pathname);
+
+    // NOT LOGGED IN
     if (!user) {
-        if (!isUnprotected && !isOnboarding) {
-            router.push('/signin');
-        }
-        return;
+      if (!isUnprotectedPage && !isStudioAuthPage && !isOnboardingPage) {
+          router.push(isStudioPage ? "/studio/signin" : "/signin");
+      }
+      return;
     }
 
-    // User is logged in
+    // LOGGED IN
+    // If the user is an admin...
     if (isAdmin) {
-        if (!isStudioPage) {
-            router.push('/studio');
-        }
-    } else { // Regular user
-        if (isStudioPage) {
-            router.push('/dashboard');
-        } else if (pathname === '/' || pathname === '/signin' || pathname === '/signup') {
-            router.push('/dashboard');
-        }
+      // and they are not on a studio page...
+      if (!isStudioPage) {
+        // redirect them to the studio.
+        router.push("/studio");
+      }
+    } 
+    // If the user is a regular user...
+    else {
+      // and they are trying to access any studio page...
+      if (isStudioPage) {
+        // redirect them to the regular dashboard.
+        router.push("/dashboard");
+      }
+      // or if they are on a main auth page...
+      else if (pathname === "/signin" || pathname === "/signup" || pathname === "/") {
+        // redirect them to the regular dashboard.
+         router.push("/dashboard");
+      }
     }
-
   }, [user, loading, isAdmin, pathname, router]);
 
   // --- UTILS ---
@@ -120,7 +130,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     async (newCurrency: string) => {
       setCurrencyState(newCurrency);
       if (auth.currentUser) {
-        await updateUserProfile({ currency: newCurrency });
+        await updateUserProfile(auth.currentUser.uid, { currency: newCurrency });
       }
     },
     [auth.currentUser]
