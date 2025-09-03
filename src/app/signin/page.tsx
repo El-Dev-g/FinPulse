@@ -1,3 +1,4 @@
+
 // src/app/signin/page.tsx
 "use client";
 
@@ -15,6 +16,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -23,15 +25,6 @@ import { Label } from "@/components/ui/label";
 import { Loader, LogIn } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/hooks/use-auth";
-
-const GoogleIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24">
-    <path
-      fill="currentColor"
-      d="M21.35,11.1H12.18V13.83H18.69C18.36,17.64 15.19,19.27 12.19,19.27C8.36,19.27 5,16.25 5,12C5,7.9 8.2,4.73 12.19,4.73C14.03,4.73 15.6,5.33 16.9,6.53L19.05,4.58C17.02,2.68 14.83,1.69 12.19,1.69C6.81,1.69 2.5,6.25 2.5,12C2.5,17.75 6.81,22.31 12.19,22.31C17.64,22.31 21.5,18.45 21.5,12.23C21.5,11.66 21.45,11.38 21.35,11.1Z"
-    />
-  </svg>
-);
 
 function EmailSignInForm() {
   const [email, setEmail] = useState("");
@@ -116,21 +109,21 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md space-y-6 text-center">
         <div className="flex justify-center">
           <Logo />
         </div>
-        <Card className="w-full">
-          <CardHeader className="text-center">
-            <CardTitle>Welcome Back</CardTitle>
+        <Card className="w-full text-left">
+          <CardHeader>
+            <CardTitle>Sign In</CardTitle>
             <CardDescription>
-              Sign in to access your FinPulse dashboard.
+              Enter your credentials to access your account.
             </CardDescription>
           </CardHeader>
           <EmailSignInForm />
-          <p className="mt-4 px-6 pb-6 text-center text-sm text-muted-foreground">
-            Don't have an account?{" "}
+          <p className="px-6 pb-6 text-center text-sm text-muted-foreground">
+            Don&apos;t have an account?{" "}
             <Link
               href="/signup"
               className="font-semibold text-primary hover:underline"
