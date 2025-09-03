@@ -44,8 +44,6 @@ const unprotectedRoutes = [
   "/policy/terms",
 ];
 
-const studioAuthRoutes = ["/studio/signin", "/studio/signup"];
-
 const isOnboardingRoute = (pathname: string) =>
   pathname.startsWith("/welcome/onboarding");
 const isStudioRoute = (pathname: string) => pathname.startsWith("/studio");
@@ -65,7 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         setUser(user);
         if (user) {
-          const profile = await getUserProfile();
+          const profile = await getUserProfile(user.uid);
           if (profile?.currency) {
             setCurrencyState(profile.currency);
           }
@@ -86,37 +84,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // --- ROUTE PROTECTION ---
   useEffect(() => {
-    if (loading) return; // Wait until auth state resolves
+    if (loading) return; // Don't redirect until we know the user's auth state
 
+    const isUnprotected = unprotectedRoutes.includes(pathname) || isOnboardingRoute(pathname);
     const isStudioPage = isStudioRoute(pathname);
-    const isStudioAuthPage = studioAuthRoutes.includes(pathname);
-    const isUnprotectedPage = unprotectedRoutes.includes(pathname);
-    const isOnboardingPage = isOnboardingRoute(pathname);
 
-    // NOT LOGGED IN
-    if (!user) {
-      if (!isUnprotectedPage && !isStudioAuthPage && !isOnboardingPage) {
-        // If not on an allowed page, redirect
-         router.push(isStudioPage ? "/studio/signin" : "/signin");
-      }
+    // If user is not logged in, and trying to access a protected page
+    if (!user && !isUnprotected) {
+      router.push("/signin");
       return;
     }
 
-    // LOGGED IN
-    if (isAdmin) {
-      // If admin is on a non-studio page, redirect to studio
-      if (!isStudioPage) {
-         router.push("/studio");
-      }
-    } else {
-      // Regular user
-      if (isStudioPage) {
-        // If regular user on any studio page, redirect to dashboard
-        router.push("/dashboard");
-      }
-      // If a logged-in user lands on the marketing homepage, redirect to dashboard
-      if (pathname === '/') {
-        router.push('/dashboard');
+    // If user is logged in
+    if (user) {
+      // If user is admin
+      if (isAdmin) {
+        // If an admin is on a non-studio page, redirect them to the studio
+        if (!isStudioPage) {
+          router.push("/studio");
+        }
+      } else {
+        // If a regular user is on a studio page, redirect them to the dashboard
+        if (isStudioPage) {
+          router.push("/dashboard");
+        }
+        // If a logged-in regular user is on an auth page, redirect them to the dashboard
+        if (pathname === '/signin' || pathname === '/signup' || pathname === '/') {
+            router.push('/dashboard');
+        }
       }
     }
   }, [user, loading, isAdmin, pathname, router]);

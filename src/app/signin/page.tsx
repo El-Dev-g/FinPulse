@@ -145,15 +145,6 @@ function EmailSignInForm() {
                 Sign Up
                 </Link>
             </p>
-             <p>
-                Are you an admin?{" "}
-                <Link
-                href="/studio/signin"
-                className="font-semibold text-primary hover:underline"
-                >
-                Go to Studio Sign In
-                </Link>
-            </p>
           </div>
     </Card>
   )
