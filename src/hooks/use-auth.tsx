@@ -44,6 +44,8 @@ const unprotectedRoutes = [
   "/policy/terms",
 ];
 
+const studioAuthRoutes = ["/studio/signin", "/studio/signup"];
+
 const isOnboardingRoute = (pathname: string) =>
   pathname.startsWith("/welcome/onboarding");
 const isStudioRoute = (pathname: string) => pathname.startsWith("/studio");
@@ -84,37 +86,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // --- ROUTE PROTECTION ---
   useEffect(() => {
-    if (loading) return; // Don't redirect until we know the user's auth state
+    if (loading) return;
 
-    const isUnprotected = unprotectedRoutes.includes(pathname) || isOnboardingRoute(pathname);
+    const isUnprotected = unprotectedRoutes.includes(pathname);
     const isStudioPage = isStudioRoute(pathname);
 
-    // If user is not logged in, and trying to access a protected page
-    if (!user && !isUnprotected) {
-      router.push("/signin");
+    // Case 1: User is not logged in
+    if (!user) {
+      if (!isUnprotected && !isOnboardingRoute(pathname)) {
+        router.push('/signin');
+      }
       return;
     }
 
-    // If user is logged in
-    if (user) {
-      // If user is admin
-      if (isAdmin) {
-        // If an admin is on a non-studio page, redirect them to the studio
-        if (!isStudioPage) {
-          router.push("/studio");
-        }
-      } else {
-        // If a regular user is on a studio page, redirect them to the dashboard
-        if (isStudioPage) {
-          router.push("/dashboard");
-        }
-        // If a logged-in regular user is on an auth page, redirect them to the dashboard
-        if (pathname === '/signin' || pathname === '/signup' || pathname === '/') {
-            router.push('/dashboard');
-        }
+    // Case 2: User is logged in
+    if (isAdmin) {
+      // Admin user
+      if (!isStudioPage) {
+        router.push('/studio');
+      }
+    } else {
+      // Regular user
+      if (isStudioPage) {
+        router.push('/dashboard');
+      } else if (pathname === '/signin' || pathname === '/signup' || pathname === '/') {
+        router.push('/dashboard');
       }
     }
   }, [user, loading, isAdmin, pathname, router]);
+
 
   // --- UTILS ---
   const setCurrency = useCallback(
