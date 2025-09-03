@@ -45,10 +45,6 @@ const unprotectedRoutes = [
     "/policy/terms",
 ];
 
-const studioAuthRoutes = [
-    "/studio/signin",
-    "/studio/signup",
-]
 
 const isOnboardingRoute = (pathname: string) => pathname.startsWith('/welcome/onboarding');
 const isStudioRoute = (pathname: string) => pathname.startsWith('/studio');
@@ -88,19 +84,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const onUnprotectedRoute = unprotectedRoutes.includes(pathname);
-    const onStudioAuthRoute = studioAuthRoutes.includes(pathname);
-    const onStudioRoute = isStudioRoute(pathname);
     const onOnboarding = isOnboardingRoute(pathname);
+    const onStudioRoute = isStudioRoute(pathname);
 
     // If user is not logged in
     if (!user) {
       // If trying to access a protected route, redirect to the appropriate sign-in page
-      if (!onUnprotectedRoute && !onStudioAuthRoute && !onOnboarding) {
-        if (onStudioRoute) {
-          router.push('/studio/signin');
-        } else {
-          router.push('/signin');
-        }
+      if (!onUnprotectedRoute && !onOnboarding) {
+        router.push('/signin');
       }
       return;
     }
@@ -112,17 +103,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (onUnprotectedRoute && pathname !== '/') {
             router.push('/studio');
         }
-        // Admins should be redirected from studio auth pages to the studio dashboard
-        if (onStudioAuthRoute) {
-            router.push('/studio');
-        }
       } else { // It's a regular, non-admin user
         // Non-admins should be redirected from all studio routes
         if (onStudioRoute) {
             router.push('/dashboard');
         }
         // Regular users should be redirected from regular auth pages if logged in
-        if ((onUnprotectedRoute && pathname !== '/') || onStudioAuthRoute) {
+        if (onUnprotectedRoute && pathname !== '/') {
             router.push('/dashboard');
         }
       }
