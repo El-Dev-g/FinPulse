@@ -1,3 +1,4 @@
+
 // src/lib/db.ts
 import { db } from './firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy, setDoc } from 'firebase/firestore';
@@ -23,8 +24,8 @@ const getUid = async (): Promise<string | null> => {
 };
 
 // Generic add function
-const addDataItem = async <T extends object>(collectionName: string, data: T): Promise<string> => {
-    const uid = await getUid();
+const addDataItem = async <T extends object>(collectionName: string, data: T, customUid?: string): Promise<string> => {
+    const uid = customUid || await getUid();
     if (!uid) throw new Error("User not authenticated");
     const docRef = await addDoc(collection(db, `users/${uid}/${collectionName}`), {
         ...data,
@@ -37,13 +38,13 @@ const addDataItem = async <T extends object>(collectionName: string, data: T): P
 const getData = async <T>(collectionName: string): Promise<(T & { id: string })[]> => {
     const uid = await getUid();
     if (!uid) return [];
-    const q = query(collection(db, `users/${uid}/${collection_name}`), orderBy('createdAt', 'desc'));
+    const q = query(collection(db, `users/${uid}/${collectionName}`), orderBy('createdAt', 'desc'));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T & { id: string }));
 };
 
 // Generic update function
-const updateDataItem = async <T extends object>(collectionName: string, id: string, data: T): Promise<void> => {
+const updateDataItem = async <T extends object>(collectionName: string, id: string, data: Partial<T>): Promise<void> => {
     const uid = await getUid();
     if (!uid) throw new Error("User not authenticated");
     const docRef = doc(db, `users/${uid}/${collectionName}`, id);
@@ -90,9 +91,7 @@ export const addGoal = (goal: Omit<Goal, 'id' | 'current' | 'createdAt'>) => {
     return addDataItem('goals', goalData);
 };
 export const getGoals = () => getData<Goal>('goals');
-export const updateGoal = async (id: string, goal: Partial<Goal>) => {
-    const uid = await getUid();
-    if (!uid) throw new Error("User not authenticated");
+export const updateGoal = (id: string, goal: Partial<Goal>) => {
     return updateDataItem('goals', id, goal);
 };
 export const deleteGoal = (id: string) => deleteDataItem('goals', id);
@@ -140,16 +139,17 @@ export const addRecurringTransaction = (transaction: Omit<RecurringTransaction, 
 export const getRecurringTransactions = () => getData<RecurringTransaction>('recurring');
 
 // --- Categories ---
-export const addCategory = async (category: Omit<Category, 'id' | 'createdAt'>): Promise<string> => {
-    const uid = await getUid();
+export const addCategory = async (category: Omit<Category, 'id' | 'createdAt'>, customUid?: string): Promise<string> => {
+    const uid = customUid || await getUid();
     if (!uid) throw new Error("User not authenticated");
     // Check if category already exists
     const q = query(collection(db, `users/${uid}/categories`), where("name", "==", category.name));
     const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
-        throw new Error("Category already exists.");
+        // Return existing category ID or simply don't add, depending on desired behavior
+        return querySnapshot.docs[0].id;
     }
-    return addDataItem<Omit<Category, 'id'>>('categories', category);
+    return addDataItem<Omit<Category, 'id'>>('categories', category, uid);
 };
 export const getCategories = () => getData<Category>('categories');
 export const deleteCategory = (id: string) => deleteDataItem('categories', id);

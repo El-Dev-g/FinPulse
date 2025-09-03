@@ -1,3 +1,4 @@
+
 // src/app/studio/signup/page.tsx
 "use client";
 
@@ -23,7 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Loader, UserPlus } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/hooks/use-auth";
-import { updateUserProfile } from "@/lib/db";
+import { updateUserProfile, addCategory } from "@/lib/db";
 
 function StudioSignUpForm() {
   const [displayName, setDisplayName] = useState("");
@@ -44,11 +45,17 @@ function StudioSignUpForm() {
         password
       );
       if (userCredential.user) {
+        const uid = userCredential.user.uid;
+        // Set display name in Auth
         await updateProfile(userCredential.user, {
           displayName: displayName,
         });
-        // Set as admin
-        await updateUserProfile(userCredential.user.uid, { isAdmin: true });
+
+        // Set as admin in Firestore
+        await updateUserProfile(uid, { isAdmin: true, currency: 'USD' });
+        
+        // Add default "Income" category for the new admin user
+        await addCategory({ name: 'Income' }, uid);
       }
       // The auth hook will redirect to /studio upon successful admin login
     } catch (err: any) {
@@ -113,10 +120,12 @@ export default function StudioSignUpPage() {
   useEffect(() => {
     if (!authLoading && user && isAdmin) {
       router.push("/studio");
+    } else if (!authLoading && user && !isAdmin) {
+      router.push("/dashboard");
     }
   }, [user, authLoading, isAdmin, router]);
 
-  if (authLoading) {
+  if (authLoading || (user && isAdmin)) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader className="h-12 w-12 animate-spin text-primary" />

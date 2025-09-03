@@ -1,3 +1,4 @@
+
 // src/app/signup/page.tsx
 "use client";
 
@@ -24,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Loader, UserPlus } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/hooks/use-auth";
+import { addCategory, updateUserProfile } from "@/lib/db";
 
 function EmailSignUpForm() {
   const [displayName, setDisplayName] = useState("");
@@ -44,9 +46,18 @@ function EmailSignUpForm() {
         password
       );
       if (userCredential.user) {
+        const uid = userCredential.user.uid;
+        // Set display name in Auth
         await updateProfile(userCredential.user, {
           displayName: displayName,
         });
+        
+        // Create user profile in Firestore
+        await updateUserProfile(uid, { isAdmin: false, currency: 'USD' });
+        
+        // Add default "Income" category for the new user
+        await addCategory({ name: 'Income' }, uid);
+
         await sendEmailVerification(userCredential.user);
       }
       router.push("/verify-email");
@@ -115,7 +126,7 @@ export default function SignUpPage() {
     }
   }, [user, authLoading, router]);
 
-  if (authLoading) {
+  if (authLoading || user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader className="h-12 w-12 animate-spin text-primary" />
@@ -124,8 +135,8 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md space-y-6 text-center">
         <div className="flex justify-center">
           <Logo />
         </div>
