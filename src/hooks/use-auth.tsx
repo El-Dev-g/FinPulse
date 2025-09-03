@@ -43,8 +43,8 @@ const unprotectedRoutes = [
     "/contact",
     "/policy/privacy",
     "/policy/terms",
+    "/studio/signup", // Allow access to studio signup
 ];
-
 
 const isOnboardingRoute = (pathname: string) => pathname.startsWith('/welcome/onboarding');
 const isStudioRoute = (pathname: string) => pathname.startsWith('/studio');
@@ -67,7 +67,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (profile?.currency) {
           setCurrencyState(profile.currency);
         }
-        // Ensure isAdmin is explicitly set to false if not present
         setIsAdmin(profile?.isAdmin || false);
       } else {
         setIsAdmin(false);
@@ -80,40 +79,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (loading) {
-      return; // Do nothing until authentication state is determined
+      return; // Wait until authentication state is determined
     }
 
-    const onUnprotectedRoute = unprotectedRoutes.includes(pathname);
-    const onOnboarding = isOnboardingRoute(pathname);
-    const onStudioRoute = isStudioRoute(pathname);
+    const onProtectedRoute = !unprotectedRoutes.includes(pathname) && !isOnboardingRoute(pathname);
 
-    // If user is not logged in
+    // --- Handle Unauthenticated Users ---
     if (!user) {
-      // If trying to access a protected route, redirect to the appropriate sign-in page
-      if (!onUnprotectedRoute && !onOnboarding) {
+      if (onProtectedRoute) {
         router.push('/signin');
       }
       return;
     }
 
-    // If user is logged in
-    if (user) {
-      if (isAdmin) {
-        // Admins should be redirected from regular auth pages to the studio
-        if (onUnprotectedRoute && pathname !== '/') {
-            router.push('/studio');
-        }
-      } else { // It's a regular, non-admin user
-        // Non-admins should be redirected from all studio routes
-        if (onStudioRoute) {
-            router.push('/dashboard');
-        }
-        // Regular users should be redirected from regular auth pages if logged in
-        if (onUnprotectedRoute && pathname !== '/') {
-            router.push('/dashboard');
-        }
+    // --- Handle Authenticated Users ---
+    if (isAdmin) {
+      // If admin is on a non-studio page (and not on the homepage), redirect to studio
+      if (!isStudioRoute(pathname) && pathname !== '/') {
+        router.push('/studio');
+      }
+    } else { // Regular user
+      // If a regular user tries to access any studio route, redirect to dashboard
+      if (isStudioRoute(pathname)) {
+        router.push('/dashboard');
+      }
+      // If a regular user is on an auth page, redirect to dashboard
+      if (pathname === '/signin' || pathname === '/signup') {
+         router.push('/dashboard');
       }
     }
+
   }, [user, loading, isAdmin, pathname, router]);
 
   

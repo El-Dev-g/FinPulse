@@ -1,3 +1,4 @@
+
 // src/app/signin/page.tsx
 "use client";
 
@@ -42,6 +43,7 @@ function EmailSignInForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { isAdmin } = useAuth();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +51,7 @@ function EmailSignInForm() {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push('/dashboard');
+      // The useAuth hook will handle redirection based on admin status
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -78,7 +80,7 @@ function EmailSignInForm() {
         <CardHeader>
         <CardTitle>Sign In</CardTitle>
         <CardDescription>
-            Enter your credentials to access your dashboard.
+            Enter your credentials to access your account.
         </CardDescription>
         </CardHeader>
         <form onSubmit={handleSignIn}>
@@ -133,29 +135,44 @@ function EmailSignInForm() {
             */}
         </CardFooter>
         </form>
-         <p className="text-center text-sm text-muted-foreground pb-6">
-            Don't have an account?{" "}
-            <Link
-              href="/signup"
-              className="font-semibold text-primary hover:underline"
-            >
-              Sign Up
-            </Link>
-          </p>
+         <div className="text-center text-sm text-muted-foreground pb-6 px-6">
+            <p className="mb-2">
+                Don't have an account?{" "}
+                <Link
+                href="/signup"
+                className="font-semibold text-primary hover:underline"
+                >
+                Sign Up
+                </Link>
+            </p>
+             <p>
+                Are you an admin?{" "}
+                <Link
+                href="/studio/signup"
+                className="font-semibold text-primary hover:underline"
+                >
+                Create an Admin Account
+                </Link>
+            </p>
+          </div>
     </Card>
   )
 }
 
 
 export default function SignInPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!loading && user) {
-      router.push("/dashboard");
+        if(isAdmin) {
+            router.push("/studio");
+        } else {
+             router.push("/dashboard");
+        }
     }
-  }, [user, loading, router]);
+  }, [user, loading, isAdmin, router]);
   
   if (loading || user) {
     return (
