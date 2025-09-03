@@ -79,38 +79,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [auth]);
 
   useEffect(() => {
-    if (loading) {
-      return; // Wait until authentication state is determined
-    }
+    if (loading) return; // Do nothing until authentication state is resolved
 
-    const isProtectedRoute = !unprotectedRoutes.includes(pathname) && !isOnboardingRoute(pathname) && !studioAuthRoutes.includes(pathname);
-    const isMainAuthRoute = pathname === '/signin' || pathname === '/signup';
-
-    // --- Handle Unauthenticated Users ---
+    const isStudioPage = isStudioRoute(pathname);
+    const isStudioAuthPage = studioAuthRoutes.includes(pathname);
+    const isUnprotectedPage = unprotectedRoutes.includes(pathname);
+    const isOnboardingPage = isOnboardingRoute(pathname);
+    
+    // If the user is NOT logged in
     if (!user) {
-      if (isStudioRoute(pathname) && !studioAuthRoutes.includes(pathname)) {
-        router.push('/studio/signin');
-      } else if (isProtectedRoute) {
-        router.push('/signin');
+      // If the user is trying to access a protected route (not studio, not regular auth, not onboarding)
+      if (!isUnprotectedPage && !isStudioAuthPage && !isOnboardingPage) {
+        // If it's a studio route, send to studio signin, otherwise regular signin
+        router.push(isStudioPage ? '/studio/signin' : '/signin');
       }
-      return;
+      return; // No other checks needed for unauthenticated users
     }
 
-    // --- Handle Authenticated Users ---
+    // If the user IS logged in
     if (isAdmin) {
-      if (isMainAuthRoute) {
-        router.push('/studio');
-      } else if (studioAuthRoutes.includes(pathname)) {
-        router.push('/studio');
+      // If admin is on a regular user auth page or a studio auth page, redirect to studio dashboard
+      if (isUnprotectedPage || isStudioAuthPage) {
+         if (pathname === '/' || pathname === '/signin' || pathname === '/signup' || pathname === '/studio/signin' || pathname === '/studio/signup') {
+            router.push('/studio');
+         }
       }
     } else { // Regular user
-      if (isStudioRoute(pathname)) {
+      // If a regular user tries to access any studio page, redirect to their dashboard
+      if (isStudioPage) {
         router.push('/dashboard');
-      } else if (isMainAuthRoute) {
-         router.push('/dashboard');
+      }
+      // If a regular user is on the main auth pages, redirect them to dashboard
+      if (pathname === '/signin' || pathname === '/signup') {
+        router.push('/dashboard');
       }
     }
-
   }, [user, loading, isAdmin, pathname, router]);
 
   
