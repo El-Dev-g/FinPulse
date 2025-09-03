@@ -136,7 +136,7 @@ export default function StudioSignUpPage() {
            <p className="text-center text-sm text-muted-foreground pb-6">
             Already have an admin account?{" "}
             <Link
-              href="/signin"
+              href="/studio/signin"
               className="font-semibold text-primary hover:underline"
             >
               Sign In

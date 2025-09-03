@@ -43,8 +43,9 @@ const unprotectedRoutes = [
     "/contact",
     "/policy/privacy",
     "/policy/terms",
-    "/studio/signup", // Allow access to studio signup
 ];
+
+const studioAuthRoutes = ["/studio/signin", "/studio/signup"];
 
 const isOnboardingRoute = (pathname: string) => pathname.startsWith('/welcome/onboarding');
 const isStudioRoute = (pathname: string) => pathname.startsWith('/studio');
@@ -82,11 +83,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return; // Wait until authentication state is determined
     }
 
-    const onProtectedRoute = !unprotectedRoutes.includes(pathname) && !isOnboardingRoute(pathname);
+    const isProtectedRoute = !unprotectedRoutes.includes(pathname) && !isOnboardingRoute(pathname) && !studioAuthRoutes.includes(pathname);
+    const isMainAuthRoute = pathname === '/signin' || pathname === '/signup';
 
     // --- Handle Unauthenticated Users ---
     if (!user) {
-      if (onProtectedRoute) {
+      if (isStudioRoute(pathname) && !studioAuthRoutes.includes(pathname)) {
+        router.push('/studio/signin');
+      } else if (isProtectedRoute) {
         router.push('/signin');
       }
       return;
@@ -94,17 +98,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // --- Handle Authenticated Users ---
     if (isAdmin) {
-      // If admin is on a non-studio page (and not on the homepage), redirect to studio
-      if (!isStudioRoute(pathname) && pathname !== '/') {
+      if (isMainAuthRoute) {
+        router.push('/studio');
+      } else if (studioAuthRoutes.includes(pathname)) {
         router.push('/studio');
       }
     } else { // Regular user
-      // If a regular user tries to access any studio route, redirect to dashboard
       if (isStudioRoute(pathname)) {
         router.push('/dashboard');
-      }
-      // If a regular user is on an auth page, redirect to dashboard
-      if (pathname === '/signin' || pathname === '/signup') {
+      } else if (isMainAuthRoute) {
          router.push('/dashboard');
       }
     }
