@@ -34,11 +34,11 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 const unprotectedRoutes = [
+    "/",
     "/signin",
     "/signup",
     "/forgot-password",
     "/verify-email",
-    "/",
     "/about",
     "/contact",
     "/policy/privacy",
@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (loading) {
-      return; // Wait until authentication state is loaded
+      return;
     }
 
     const onStudioRoute = isStudioRoute(pathname);
@@ -92,46 +92,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const onUnprotectedRoute = unprotectedRoutes.includes(pathname);
     const onOnboardingRoute = isOnboardingRoute(pathname);
 
-    // If there's no user logged in
+    // If user is not logged in...
     if (!user) {
-        // If trying to access a protected studio page, redirect to studio signin
-        if (onStudioRoute && !onStudioAuthRoute) {
-            router.push('/studio/signin');
-        } 
-        // If trying to access any other protected page, redirect to user signin
-        else if (!onStudioRoute && !onUnprotectedRoute && !onOnboardingRoute) {
-            router.push('/signin');
+      if (onStudioRoute && !onStudioAuthRoute) {
+        router.push('/studio/signin');
+      } else if (!onUnprotectedRoute && !onStudioAuthRoute && !onOnboardingRoute) {
+        router.push('/signin');
+      }
+      return;
+    }
+
+    // If user is logged in...
+    if (user) {
+      // Handle admins
+      if (isAdmin) {
+        if (onStudioAuthRoute || pathname === '/signin' || pathname === '/signup') {
+          router.push('/studio');
         }
         return;
+      }
+      
+      // Handle non-admins
+      if (!isAdmin) {
+        if (onStudioRoute) {
+          router.push('/dashboard');
+        } else if (onUnprotectedRoute && pathname !== '/') {
+          router.push('/dashboard');
+        }
+      }
     }
-
-    // If a user is logged in
-    if (user) {
-        // If a non-admin tries to access any studio page, kick them to their dashboard
-        if (!isAdmin && onStudioRoute) {
-            router.push('/dashboard');
-            return;
-        }
-
-        // If an admin is on a regular user auth page, redirect to studio
-        if (isAdmin && (pathname === '/signin' || pathname === '/signup')) {
-            router.push('/studio');
-            return;
-        }
-        
-        // If a logged-in admin is on a studio auth page, redirect to studio dashboard
-        if (isAdmin && onStudioAuthRoute) {
-            router.push('/studio');
-            return;
-        }
-
-        // If any logged-in user is on a main auth page, send them to their correct dashboard
-        if (onUnprotectedRoute) {
-            router.push(isAdmin ? '/studio' : '/dashboard');
-            return;
-        }
-    }
-  }, [user, loading, pathname, router, isAdmin]);
+  }, [user, loading, isAdmin, pathname, router]);
 
   
   const setCurrency = useCallback(async (newCurrency: string) => {
