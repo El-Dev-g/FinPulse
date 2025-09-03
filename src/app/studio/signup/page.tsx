@@ -96,11 +96,11 @@ function AdminSignUpForm() {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {error && <p className="text-sm text-destructive mb-4">{error}</p>}
       </CardContent>
       <CardFooter className="flex flex-col gap-4">
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? <Loader className="animate-spin" /> : <UserPlus />}
+          {loading ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus />}
           Create Admin Account
         </Button>
       </CardFooter>
@@ -118,7 +118,7 @@ export default function AdminSignUpPage() {
       }
     }, [isAdmin, authLoading, router]);
 
-    if (authLoading) {
+    if (authLoading || isAdmin) {
         return (
           <div className="flex h-screen items-center justify-center">
             <Loader className="h-12 w-12 animate-spin text-primary" />
