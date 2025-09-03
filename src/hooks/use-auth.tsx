@@ -1,4 +1,3 @@
-
 // src/hooks/use-auth.tsx
 "use client";
 
@@ -34,22 +33,22 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 const unprotectedRoutes = [
-    "/",
-    "/signin",
-    "/signup",
-    "/forgot-password",
-    "/verify-email",
-    "/about",
-    "/contact",
-    "/policy/privacy",
-    "/policy/terms",
+  "/",
+  "/signin",
+  "/signup",
+  "/forgot-password",
+  "/verify-email",
+  "/about",
+  "/contact",
+  "/policy/privacy",
+  "/policy/terms",
 ];
 
 const studioAuthRoutes = ["/studio/signin", "/studio/signup"];
 
-const isOnboardingRoute = (pathname: string) => pathname.startsWith('/welcome/onboarding');
-const isStudioRoute = (pathname: string) => pathname.startsWith('/studio');
-
+const isOnboardingRoute = (pathname: string) =>
+  pathname.startsWith("/welcome/onboarding");
+const isStudioRoute = (pathname: string) => pathname.startsWith("/studio");
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -60,79 +59,93 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
 
+  // --- AUTH STATE LISTENER ---
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
-        const profile = await getUserProfile();
-        if (profile?.currency) {
-          setCurrencyState(profile.currency);
+      try {
+        setUser(user);
+        if (user) {
+          const profile = await getUserProfile();
+          if (profile?.currency) {
+            setCurrencyState(profile.currency);
+          }
+          setIsAdmin(profile?.isAdmin || false);
+        } else {
+          setIsAdmin(false);
         }
-        setIsAdmin(profile?.isAdmin || false);
-      } else {
+      } catch (err) {
+        console.error("Error loading profile:", err);
         setIsAdmin(false);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
   }, [auth]);
 
+  // --- ROUTE PROTECTION ---
   useEffect(() => {
-    if (loading) return; // Do nothing until authentication state is resolved
+    if (loading) return; // Wait until auth state resolves
 
     const isStudioPage = isStudioRoute(pathname);
     const isStudioAuthPage = studioAuthRoutes.includes(pathname);
     const isUnprotectedPage = unprotectedRoutes.includes(pathname);
     const isOnboardingPage = isOnboardingRoute(pathname);
-    
-    // If the user is NOT logged in
+
+    // NOT LOGGED IN
     if (!user) {
-      // If the user is trying to access a protected route (not studio, not regular auth, not onboarding)
       if (!isUnprotectedPage && !isStudioAuthPage && !isOnboardingPage) {
-        // If it's a studio route, send to studio signin, otherwise regular signin
-        router.push(isStudioPage ? '/studio/signin' : '/signin');
+        // If not on an allowed page, redirect
+         router.push(isStudioPage ? "/studio/signin" : "/signin");
       }
-      return; // No other checks needed for unauthenticated users
+      return;
     }
 
-    // If the user IS logged in
+    // LOGGED IN
     if (isAdmin) {
-      // If admin is on a regular user auth page or a studio auth page, redirect to studio dashboard
-      if (isUnprotectedPage || isStudioAuthPage) {
-         if (pathname === '/' || pathname === '/signin' || pathname === '/signup' || pathname === '/studio/signin' || pathname === '/studio/signup') {
-            router.push('/studio');
-         }
+      // If admin is on a non-studio page, redirect to studio
+      if (!isStudioPage) {
+         router.push("/studio");
       }
-    } else { // Regular user
-      // If a regular user tries to access any studio page, redirect to their dashboard
+    } else {
+      // Regular user
       if (isStudioPage) {
-        router.push('/dashboard');
+        // If regular user on any studio page, redirect to dashboard
+        router.push("/dashboard");
       }
-      // If a regular user is on the main auth pages, redirect them to dashboard
-      if (pathname === '/signin' || pathname === '/signup') {
+      // If a logged-in user lands on the marketing homepage, redirect to dashboard
+      if (pathname === '/') {
         router.push('/dashboard');
       }
     }
   }, [user, loading, isAdmin, pathname, router]);
 
-  
-  const setCurrency = useCallback(async (newCurrency: string) => {
-    setCurrencyState(newCurrency);
-    if(auth.currentUser) {
-      await updateUserProfile({ currency: newCurrency });
-    }
-  }, [auth.currentUser]);
-  
-  const formatCurrency = useCallback((amount: number) => {
-    return new Intl.NumberFormat("en-US", {
+  // --- UTILS ---
+  const setCurrency = useCallback(
+    async (newCurrency: string) => {
+      setCurrencyState(newCurrency);
+      if (auth.currentUser) {
+        await updateUserProfile({ currency: newCurrency });
+      }
+    },
+    [auth.currentUser]
+  );
+
+  const formatCurrency = useCallback(
+    (amount: number) => {
+      return new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: currency,
-    }).format(amount);
-  }, [currency]);
+      }).format(amount);
+    },
+    [currency]
+  );
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin, currency, setCurrency, formatCurrency }}>
+    <AuthContext.Provider
+      value={{ user, loading, isAdmin, currency, setCurrency, formatCurrency }}
+    >
       {children}
     </AuthContext.Provider>
   );
