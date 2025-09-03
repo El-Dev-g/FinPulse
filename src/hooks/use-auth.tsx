@@ -84,40 +84,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (loading) {
-      return;
+      return; // Do nothing until authentication state is determined
     }
 
-    const onStudioRoute = isStudioRoute(pathname);
-    const onStudioAuthRoute = studioAuthRoutes.includes(pathname);
     const onUnprotectedRoute = unprotectedRoutes.includes(pathname);
-    const onOnboardingRoute = isOnboardingRoute(pathname);
+    const onStudioAuthRoute = studioAuthRoutes.includes(pathname);
+    const onStudioRoute = isStudioRoute(pathname);
+    const onOnboarding = isOnboardingRoute(pathname);
 
-    // If user is not logged in...
+    // If user is not logged in
     if (!user) {
-      if (onStudioRoute && !onStudioAuthRoute) {
-        router.push('/studio/signin');
-      } else if (!onUnprotectedRoute && !onStudioAuthRoute && !onOnboardingRoute) {
-        router.push('/signin');
+      // If trying to access a protected route, redirect to the appropriate sign-in page
+      if (!onUnprotectedRoute && !onStudioAuthRoute && !onOnboarding) {
+        if (onStudioRoute) {
+          router.push('/studio/signin');
+        } else {
+          router.push('/signin');
+        }
       }
       return;
     }
 
-    // If user is logged in...
+    // If user is logged in
     if (user) {
-      // Handle admins
       if (isAdmin) {
-        if (onStudioAuthRoute || pathname === '/signin' || pathname === '/signup') {
-          router.push('/studio');
+        // Admins should be redirected from regular auth pages to the studio
+        if (onUnprotectedRoute && pathname !== '/') {
+            router.push('/studio');
         }
-        return;
-      }
-      
-      // Handle non-admins
-      if (!isAdmin) {
+        // Admins should be redirected from studio auth pages to the studio dashboard
+        if (onStudioAuthRoute) {
+            router.push('/studio');
+        }
+      } else { // It's a regular, non-admin user
+        // Non-admins should be redirected from all studio routes
         if (onStudioRoute) {
-          router.push('/dashboard');
-        } else if (onUnprotectedRoute && pathname !== '/') {
-          router.push('/dashboard');
+            router.push('/dashboard');
+        }
+        // Regular users should be redirected from regular auth pages if logged in
+        if ((onUnprotectedRoute && pathname !== '/') || onStudioAuthRoute) {
+            router.push('/dashboard');
         }
       }
     }
