@@ -86,35 +86,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // --- ROUTE PROTECTION ---
   useEffect(() => {
-    if (loading) return;
+    if (loading) return; // Don't do anything until loading is false
 
     const isUnprotected = unprotectedRoutes.includes(pathname);
+    const isOnboarding = isOnboardingRoute(pathname);
     const isStudioPage = isStudioRoute(pathname);
-
-    // Case 1: User is not logged in
+    
+    // User is not logged in
     if (!user) {
-      if (!isUnprotected && !isOnboardingRoute(pathname)) {
-        router.push('/signin');
-      }
-      return;
+        if (!isUnprotected && !isOnboarding) {
+            router.push('/signin');
+        }
+        return;
     }
 
-    // Case 2: User is logged in
+    // User is logged in
     if (isAdmin) {
-      // Admin user
-      if (!isStudioPage) {
-        router.push('/studio');
-      }
-    } else {
-      // Regular user
-      if (isStudioPage) {
-        router.push('/dashboard');
-      } else if (pathname === '/signin' || pathname === '/signup' || pathname === '/') {
-        router.push('/dashboard');
-      }
+        if (!isStudioPage) {
+            router.push('/studio');
+        }
+    } else { // Regular user
+        if (isStudioPage) {
+            router.push('/dashboard');
+        } else if (pathname === '/' || pathname === '/signin' || pathname === '/signup') {
+            router.push('/dashboard');
+        }
     }
-  }, [user, loading, isAdmin, pathname, router]);
 
+  }, [user, loading, isAdmin, pathname, router]);
 
   // --- UTILS ---
   const setCurrency = useCallback(
