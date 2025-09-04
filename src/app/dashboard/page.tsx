@@ -1,15 +1,12 @@
 "use client";
 
-import { useSidebar } from "@/components/ui/sidebar";
 import { OverviewCards } from "@/components/dashboard/overview-cards";
-import { SpendingChart } from "@/components/dashboard/spending-chart";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/use-auth";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { GoalTracker } from "@/components/dashboard/goal-tracker";
+import { SpendingChart } from "@/components/dashboard/spending-chart";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function DashboardPage() {
-  const { open } = useSidebar();
   const { user } = useAuth();
 
   return (
@@ -24,14 +21,14 @@ export default function DashboardPage() {
           </p>
         </div>
       </div>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <OverviewCards />
       </div>
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <SpendingChart />
         </div>
-        <div>
+        <div className="lg:col-span-1">
           <GoalTracker />
         </div>
       </div>
