@@ -18,6 +18,7 @@ import {
   Repeat,
   ListTree,
   Lightbulb,
+  Bell,
 } from "lucide-react";
 import {
   Sidebar,
@@ -51,6 +52,7 @@ const navItems = [
   { href: "/dashboard/budgets", icon: Wallet, label: "Budgets" },
   { href: "/dashboard/reports", icon: PieChart, label: "Reports" },
   { href: "/dashboard/organizer", icon: ClipboardList, label: "Organizer" },
+  { href: "/dashboard/alerts", icon: Bell, label: "Alerts" },
   { href: "/dashboard/catalog", icon: ListTree, label: "Categories" },
   { href: "/dashboard/calculator", icon: Calculator, label: "Calculator" },
   { href: "/dashboard/advisor", icon: Lightbulb, label: "AI Advisor" },

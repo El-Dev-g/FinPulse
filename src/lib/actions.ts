@@ -5,8 +5,10 @@ import { getPersonalizedFinancialAdvice } from "@/ai/flows/personalized-financia
 import { suggestCategory } from "@/ai/flows/suggest-category";
 import { answerQuestion } from "@/ai/flows/chatbot";
 import { generateDescription } from "@/ai/flows/generate-description";
-import { getCategories, getGoals } from "./db";
-import type { Advice, Category, Goal } from "./types";
+import { generateSmartAlerts } from "@/ai/flows/generate-smart-alerts";
+import { getBudgets, getCategories, getGoals, getRecurringTransactions, getTransactions } from "./db";
+import type { Advice, Budget, Category, Goal, RecurringTransaction, Transaction } from "./types";
+import { processBudgets } from "./utils";
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -44,4 +46,35 @@ export async function generateAdvisorPrompt() {
 
     const result = await generateDescription({ activeGoals, archivedGoals });
     return result.description;
+}
+
+
+export type SmartAlert = {
+    title: string;
+    description: string;
+    severity: "High" | "Medium" | "Low";
+    actionableLink?: {
+        text: string;
+        href: string;
+    };
+};
+
+export async function getSmartAlerts(): Promise<SmartAlert[]> {
+    const [transactions, recurringTransactions, goals, budgets] = await Promise.all([
+        getTransactions() as Promise<Transaction[]>,
+        getRecurringTransactions() as Promise<RecurringTransaction[]>,
+        getGoals('active') as Promise<Goal[]>,
+        getBudgets() as Promise<Budget[]>,
+    ]);
+    
+    const processedBudgets = processBudgets(budgets, transactions);
+
+    const response = await generateSmartAlerts({
+        transactions: transactions.slice(0, 50), // Send recent 50 transactions
+        recurringTransactions,
+        goals,
+        budgets: processedBudgets,
+    });
+    
+    return response.alerts;
 }
