@@ -4,7 +4,6 @@ import type { LucideIcon } from "lucide-react";
 
 export interface UserProfile {
   currency?: string;
-  isAdmin?: boolean;
 }
 
 export interface Transaction {

@@ -1,4 +1,3 @@
-
 // src/app/signup/page.tsx
 "use client";
 
@@ -53,7 +52,7 @@ function EmailSignUpForm() {
         });
         
         // Create user profile in Firestore
-        await updateUserProfile(uid, { isAdmin: false, currency: 'USD' });
+        await updateUserProfile(uid, { currency: 'USD' });
         
         // Add default "Income" category for the new user
         await addCategory({ name: 'Income' }, uid);

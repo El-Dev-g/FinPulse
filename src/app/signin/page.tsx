@@ -1,4 +1,3 @@
-
 // src/app/signin/page.tsx
 "use client";
 
@@ -118,7 +117,7 @@ export default function SignInPage() {
           <CardHeader>
             <CardTitle>Sign In</CardTitle>
             <CardDescription>
-              Enter your credentials to access your account.
+              Enter your credentials to access your FinPulse account.
             </CardDescription>
           </CardHeader>
           <EmailSignInForm />

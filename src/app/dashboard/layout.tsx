@@ -178,7 +178,7 @@ export default function DashboardLayout({
   }
 
   if (!user) {
-    // router.push("/signin");
+    router.push("/signin");
     return null;
   }
   

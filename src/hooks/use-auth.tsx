@@ -17,7 +17,6 @@ import { getUserProfile, updateUserProfile } from "@/lib/db";
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  isAdmin: boolean;
   currency: string;
   setCurrency: (currency: string) => void;
   formatCurrency: (amount: number) => string;
@@ -26,7 +25,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  isAdmin: false,
   currency: "USD",
   setCurrency: () => {},
   formatCurrency: (amount: number) => String(amount),
@@ -44,16 +42,12 @@ const unprotectedRoutes = [
   "/policy/terms",
 ];
 
-const studioAuthRoutes = ["/studio/signin", "/studio/signup"];
-
 const isOnboardingRoute = (pathname: string) =>
   pathname.startsWith("/welcome/onboarding");
-const isStudioRoute = (pathname: string) => pathname.startsWith("/studio");
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [currency, setCurrencyState] = useState("USD");
   const auth = getAuth(app);
   const router = useRouter();
@@ -69,13 +63,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (profile?.currency) {
             setCurrencyState(profile.currency);
           }
-          setIsAdmin(profile?.isAdmin || false);
-        } else {
-          setIsAdmin(false);
         }
       } catch (err) {
         console.error("Error loading profile:", err);
-        setIsAdmin(false);
       } finally {
         setLoading(false);
       }
@@ -86,44 +76,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // --- ROUTE PROTECTION ---
   useEffect(() => {
-    if (loading) return; // Wait until auth state resolves
+    if (loading) return;
 
-    const isStudioPage = isStudioRoute(pathname);
-    const isStudioAuthPage = studioAuthRoutes.includes(pathname);
     const isUnprotectedPage = unprotectedRoutes.includes(pathname);
     const isOnboardingPage = isOnboardingRoute(pathname);
 
-    // NOT LOGGED IN
+    // If user is not logged in, redirect to signin page if route is protected
     if (!user) {
-      if (!isUnprotectedPage && !isStudioAuthPage && !isOnboardingPage) {
-          router.push(isStudioPage ? "/studio/signin" : "/signin");
+      if (!isUnprotectedPage && !isOnboardingPage) {
+        router.push("/signin");
       }
-      return;
-    }
-
-    // LOGGED IN
-    // If the user is an admin...
-    if (isAdmin) {
-      // and they are not on a studio page...
-      if (!isStudioPage) {
-        // redirect them to the studio.
-        router.push("/studio");
-      }
-    } 
-    // If the user is a regular user...
-    else {
-      // and they are trying to access any studio page...
-      if (isStudioPage) {
-        // redirect them to the regular dashboard.
+    } else {
+      // If user is logged in, redirect from auth pages to dashboard
+      if (pathname === "/signin" || pathname === "/signup" || pathname === "/") {
         router.push("/dashboard");
       }
-      // or if they are on a main auth page...
-      else if (pathname === "/signin" || pathname === "/signup" || pathname === "/") {
-        // redirect them to the regular dashboard.
-         router.push("/dashboard");
-      }
     }
-  }, [user, loading, isAdmin, pathname, router]);
+  }, [user, loading, pathname, router]);
 
   // --- UTILS ---
   const setCurrency = useCallback(
@@ -148,7 +117,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, isAdmin, currency, setCurrency, formatCurrency }}
+      value={{ user, loading, currency, setCurrency, formatCurrency }}
     >
       {children}
     </AuthContext.Provider>
