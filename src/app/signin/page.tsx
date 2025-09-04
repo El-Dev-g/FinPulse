@@ -15,19 +15,20 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
+  CardFooter,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, LogIn } from "lucide-react";
+import { Loader, LogIn, Eye, EyeOff } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/hooks/use-auth";
 
 function EmailSignInForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -69,13 +70,22 @@ function EmailSignInForm() {
               Forgot Password?
             </Link>
           </div>
-          <Input
-            id="password"
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+           <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+             <button
+              type="button"
+              className="absolute inset-y-0 right-0 flex items-center pr-3"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+            </button>
+          </div>
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
       </CardContent>
@@ -109,17 +119,17 @@ export default function SignInPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-6 text-center">
-        <div className="flex justify-center">
+      <div className="w-full max-w-md space-y-6">
+         <div className="flex flex-col items-center text-center">
           <Logo />
+           <h1 className="text-2xl font-semibold tracking-tight mt-6">
+            Welcome Back
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Enter your credentials to access your account
+          </p>
         </div>
         <Card className="w-full text-left">
-          <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>
-              Enter your credentials to access your FinPulse account.
-            </CardDescription>
-          </CardHeader>
           <EmailSignInForm />
           <p className="px-6 pb-6 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
