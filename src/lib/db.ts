@@ -90,17 +90,12 @@ export const addGoal = (goal: Omit<Goal, 'id' | 'current' | 'createdAt' | 'statu
     }
     return addDataItem('goals', goalData);
 };
-export const getGoals = (status: 'active' | 'archived' | 'all' = 'active') => {
-    const uid = getUid();
-    if (!uid) return Promise.resolve([]);
+export const getGoals = async (status: 'active' | 'archived' | 'all' = 'active') => {
+    const allGoals = await getData<Goal>('goals');
     if (status === 'all') {
-        return getData<Goal>('goals');
+        return allGoals;
     }
-    return new Promise(async (resolve) => {
-        const q = query(collection(db, `users/${await uid}/goals`), where("status", "==", status), orderBy('createdAt', 'desc'));
-        const querySnapshot = await getDocs(q);
-        resolve(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Goal & { id: string })));
-    });
+    return allGoals.filter(goal => goal.status === status);
 };
 export const updateGoal = (id: string, goal: Partial<Goal>) => {
     return updateDataItem('goals', id, goal);
