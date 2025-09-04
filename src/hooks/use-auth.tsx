@@ -13,21 +13,26 @@ import { User, onAuthStateChanged, getAuth } from "firebase/auth";
 import { app } from "@/lib/firebase";
 import { useRouter, usePathname } from "next/navigation";
 import { getUserProfile, updateUserProfile } from "@/lib/db";
+import type { UserProfile } from "@/lib/types";
 
 interface AuthContextType {
   user: User | null;
+  profile: UserProfile | null;
   loading: boolean;
   currency: string;
   setCurrency: (currency: string) => void;
   formatCurrency: (amount: number) => string;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  profile: null,
   loading: true,
   currency: "USD",
   setCurrency: () => {},
   formatCurrency: (amount: number) => String(amount),
+  refreshProfile: async () => {},
 });
 
 const unprotectedRoutes = [
@@ -47,11 +52,26 @@ const isOnboardingRoute = (pathname: string) =>
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [currency, setCurrencyState] = useState("USD");
   const auth = getAuth(app);
   const router = useRouter();
   const pathname = usePathname();
+
+  const refreshProfile = useCallback(async () => {
+    if (auth.currentUser) {
+        try {
+            const userProfile = await getUserProfile(auth.currentUser.uid);
+            setProfile(userProfile);
+            if (userProfile?.currency) {
+                setCurrencyState(userProfile.currency);
+            }
+        } catch (err) {
+            console.error("Error loading profile:", err);
+        }
+    }
+  }, [auth.currentUser]);
 
   // --- AUTH STATE LISTENER ---
   useEffect(() => {
@@ -59,10 +79,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         setUser(user);
         if (user) {
-          const profile = await getUserProfile(user.uid);
-          if (profile?.currency) {
-            setCurrencyState(profile.currency);
+          const userProfile = await getUserProfile(user.uid);
+          setProfile(userProfile);
+          if (userProfile?.currency) {
+            setCurrencyState(userProfile.currency);
           }
+        } else {
+            setProfile(null);
         }
       } catch (err) {
         console.error("Error loading profile:", err);
@@ -117,7 +140,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, currency, setCurrency, formatCurrency }}
+      value={{ user, profile, loading, currency, setCurrency, formatCurrency, refreshProfile }}
     >
       {children}
     </AuthContext.Provider>

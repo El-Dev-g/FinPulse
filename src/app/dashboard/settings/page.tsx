@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, Settings, Trash, Upload, User, DollarSign } from "lucide-react";
+import { Loader, Settings, Trash, Upload, User, DollarSign, KeyRound } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
@@ -32,39 +32,55 @@ import {
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { updateUserProfile } from "@/lib/db";
 
 const currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "INR", "BRL", "NGN", "GHS"];
 
 export default function SettingsPage() {
-  const { user, loading: authLoading, currency, setCurrency } = useAuth();
+  const { user, profile, loading: authLoading, currency, setCurrency, refreshProfile } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+
+  // Profile States
   const [displayName, setDisplayName] = useState("");
   const [photoURL, setPhotoURL] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // API Key States
+  const [apiKey, setApiKey] = useState("");
+  const [secretKey, setSecretKey] = useState("");
+  const [apiKeysLoading, setApiKeysLoading] = useState(false);
+
+  // Account Deletion States
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   useEffect(() => {
     if (user) {
       setDisplayName(user.displayName || "");
       setPhotoURL(user.photoURL || "");
     }
-  }, [user]);
+    if (profile) {
+        setApiKey(profile.apiKey || "");
+        setSecretKey(profile.secretKey || "");
+    }
+  }, [user, profile]);
 
-  const handleSaveChanges = async (e: React.FormEvent) => {
+  const handleProfileSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
-    setLoading(true);
+    setProfileLoading(true);
     try {
       await updateProfile(user, { displayName });
       toast({
         title: "Success",
         description: "Your profile has been updated.",
       });
+      await refreshProfile();
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -72,7 +88,30 @@ export default function SettingsPage() {
         description: error.message,
       });
     } finally {
-      setLoading(false);
+      setProfileLoading(false);
+    }
+  };
+  
+   const handleApiKeysSaveChanges = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    setApiKeysLoading(true);
+    try {
+      await updateUserProfile(user.uid, { apiKey, secretKey });
+      toast({
+        title: "Success",
+        description: "Your API keys have been updated.",
+      });
+      await refreshProfile();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not save API keys.",
+      });
+    } finally {
+      setApiKeysLoading(false);
     }
   };
 
@@ -101,6 +140,7 @@ export default function SettingsPage() {
             title: "Success",
             description: "Profile picture updated.",
           });
+          await refreshProfile();
         } catch (error: any) {
            toast({
             variant: "destructive",
@@ -162,7 +202,7 @@ export default function SettingsPage() {
             </p>
           </div>
           <Card>
-            <form onSubmit={handleSaveChanges}>
+            <form onSubmit={handleProfileSaveChanges}>
               <CardHeader>
                 <CardTitle>Profile</CardTitle>
                 <CardDescription>
@@ -193,7 +233,7 @@ export default function SettingsPage() {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Enter your username"
-                    disabled={loading}
+                    disabled={profileLoading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -211,11 +251,53 @@ export default function SettingsPage() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button type="submit" disabled={loading}>
-                  {loading ? (
+                <Button type="submit" disabled={profileLoading}>
+                  {profileLoading ? (
                     <Loader className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
                   Save Changes
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
+           <Card>
+            <form onSubmit={handleApiKeysSaveChanges}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><KeyRound /> API Keys</CardTitle>
+                <CardDescription>
+                  Manage API keys for third-party integrations.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                 <div className="space-y-2">
+                  <Label htmlFor="apiKey">API Key</Label>
+                  <Input
+                    id="apiKey"
+                    type="password"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder="Enter your API key"
+                    disabled={apiKeysLoading}
+                  />
+                </div>
+                 <div className="space-y-2">
+                  <Label htmlFor="secretKey">Secret Key</Label>
+                  <Input
+                    id="secretKey"
+                    type="password"
+                    value={secretKey}
+                    onChange={(e) => setSecretKey(e.target.value)}
+                    placeholder="Enter your Secret key"
+                    disabled={apiKeysLoading}
+                  />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button type="submit" disabled={apiKeysLoading}>
+                  {apiKeysLoading ? (
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Save Keys
                 </Button>
               </CardFooter>
             </form>
