@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, Settings, Trash, Upload, User, DollarSign, KeyRound } from "lucide-react";
+import { Loader, Settings, Trash, Upload, User, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
@@ -48,11 +48,6 @@ export default function SettingsPage() {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // API Key States
-  const [apiKey, setApiKey] = useState("");
-  const [secretKey, setSecretKey] = useState("");
-  const [apiKeysLoading, setApiKeysLoading] = useState(false);
-
   // Account Deletion States
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -62,10 +57,6 @@ export default function SettingsPage() {
     if (user) {
       setDisplayName(user.displayName || "");
       setPhotoURL(user.photoURL || "");
-    }
-    if (profile) {
-        setApiKey(profile.apiKey || "");
-        setSecretKey(profile.secretKey || "");
     }
   }, [user, profile]);
 
@@ -89,29 +80,6 @@ export default function SettingsPage() {
       });
     } finally {
       setProfileLoading(false);
-    }
-  };
-  
-   const handleApiKeysSaveChanges = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-
-    setApiKeysLoading(true);
-    try {
-      await updateUserProfile(user.uid, { apiKey, secretKey });
-      toast({
-        title: "Success",
-        description: "Your API keys have been updated.",
-      });
-      await refreshProfile();
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not save API keys.",
-      });
-    } finally {
-      setApiKeysLoading(false);
     }
   };
 
@@ -256,48 +224,6 @@ export default function SettingsPage() {
                     <Loader className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
                   Save Changes
-                </Button>
-              </CardFooter>
-            </form>
-          </Card>
-           <Card>
-            <form onSubmit={handleApiKeysSaveChanges}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><KeyRound /> API Keys</CardTitle>
-                <CardDescription>
-                  Manage API keys for third-party integrations.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                 <div className="space-y-2">
-                  <Label htmlFor="apiKey">API Key</Label>
-                  <Input
-                    id="apiKey"
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="Enter your API key"
-                    disabled={apiKeysLoading}
-                  />
-                </div>
-                 <div className="space-y-2">
-                  <Label htmlFor="secretKey">Secret Key</Label>
-                  <Input
-                    id="secretKey"
-                    type="password"
-                    value={secretKey}
-                    onChange={(e) => setSecretKey(e.target.value)}
-                    placeholder="Enter your Secret key"
-                    disabled={apiKeysLoading}
-                  />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button type="submit" disabled={apiKeysLoading}>
-                  {apiKeysLoading ? (
-                    <Loader className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
-                  Save Keys
                 </Button>
               </CardFooter>
             </form>
