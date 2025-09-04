@@ -1,12 +1,12 @@
-
 // src/lib/actions.ts
 "use server";
 
 import { getPersonalizedFinancialAdvice } from "@/ai/flows/personalized-financial-advice";
 import { suggestCategory } from "@/ai/flows/suggest-category";
 import { answerQuestion } from "@/ai/flows/chatbot";
-import { getCategories } from "./db";
-import type { Advice, Category } from "./types";
+import { generateDescription } from "@/ai/flows/generate-description";
+import { getCategories, getGoals } from "./db";
+import type { Advice, Category, Goal } from "./types";
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -34,4 +34,14 @@ export async function getChatbotResponse(query: string) {
     
     const response = await answerQuestion({ query, context });
     return response;
+}
+
+
+export async function generateAdvisorPrompt() {
+    const goals = await getGoals('all') as Goal[];
+    const activeGoals = goals.filter(g => g.status === 'active');
+    const archivedGoals = goals.filter(g => g.status === 'archived');
+
+    const result = await generateDescription({ activeGoals, archivedGoals });
+    return result.description;
 }

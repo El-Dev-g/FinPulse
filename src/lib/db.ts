@@ -78,22 +78,37 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
 
 
 // --- Goals ---
-export const addGoal = (goal: Omit<Goal, 'id' | 'current' | 'createdAt'>) => {
-    const goalData: { title: string; target: number; current: number; advice?: Advice } = {
+export const addGoal = (goal: Omit<Goal, 'id' | 'current' | 'createdAt' | 'status'>) => {
+    const goalData: { title: string; target: number; current: number; advice?: Advice, status: 'active' | 'archived' } = {
         title: goal.title,
         target: goal.target,
         current: 0,
+        status: 'active'
     };
     if (goal.advice) {
         goalData.advice = goal.advice;
     }
     return addDataItem('goals', goalData);
 };
-export const getGoals = () => getData<Goal>('goals');
+export const getGoals = (status: 'active' | 'archived' | 'all' = 'active') => {
+    const uid = getUid();
+    if (!uid) return Promise.resolve([]);
+    if (status === 'all') {
+        return getData<Goal>('goals');
+    }
+    return new Promise(async (resolve) => {
+        const q = query(collection(db, `users/${await uid}/goals`), where("status", "==", status), orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(q);
+        resolve(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Goal & { id: string })));
+    });
+};
 export const updateGoal = (id: string, goal: Partial<Goal>) => {
     return updateDataItem('goals', id, goal);
 };
-export const deleteGoal = (id: string) => deleteDataItem('goals', id);
+export const deleteGoal = (id: string) => {
+    // We archive instead of deleting
+    return updateGoal(id, { status: 'archived' });
+};
 export const getGoal = async (id: string): Promise<(Goal & {id: string}) | null> => {
     const uid = await getUid();
     if (!uid) return null;

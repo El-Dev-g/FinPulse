@@ -27,7 +27,7 @@ import {
 interface AddGoalDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddGoal: (newGoal: Omit<Goal, "id" | "current" | "createdAt">) => Promise<void>;
+  onAddGoal: (newGoal: Omit<Goal, "id" | "current" | "createdAt" | "status">) => Promise<void>;
   isSubmitting?: boolean;
   aiPlans?: AIPlan[];
 }

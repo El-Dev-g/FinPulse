@@ -76,6 +76,7 @@ export interface Goal {
   target: number;
   advice?: Advice;
   createdAt: any; // Firestore timestamp
+  status: 'active' | 'archived';
 }
 
 export interface ClientGoal extends Omit<Goal, 'createdAt'>{

@@ -38,7 +38,7 @@ function GoalsPageContent() {
     setLoading(true);
     try {
       const [dbGoals, dbAIPlans] = await Promise.all([
-        getGoals(),
+        getGoals('active'),
         getAIPlans(),
       ]);
 
@@ -81,7 +81,7 @@ function GoalsPageContent() {
     fetchData();
   }, [fetchData]);
 
-  const handleAddGoal = async (newGoal: Omit<Goal, "id" | "current" | "createdAt">) => {
+  const handleAddGoal = async (newGoal: Omit<Goal, "id" | "current" | "createdAt" | "status">) => {
     await addGoal({ ...newGoal, current: 0 });
     fetchData();
   };

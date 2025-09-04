@@ -23,9 +23,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader, Sparkles } from "lucide-react";
+import { Loader, Sparkles, Wand2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { getGoals } from "@/lib/db";
+import { generateAdvisorPrompt } from "@/lib/actions";
 import type { Goal } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -43,11 +44,12 @@ interface AdvisorFormProps {
 export function AdvisorForm({ onGetAdvice, loading, initialGoalId }: AdvisorFormProps) {
   const { user } = useAuth();
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     async function fetchGoals() {
       if (user) {
-        const dbGoals = (await getGoals()) as Goal[];
+        const dbGoals = (await getGoals('active')) as Goal[];
         setGoals(dbGoals);
       }
     }
@@ -58,7 +60,7 @@ export function AdvisorForm({ onGetAdvice, loading, initialGoalId }: AdvisorForm
     resolver: zodResolver(formSchema),
     defaultValues: {
       prompt: "",
-      goalId: initialGoalId || undefined,
+      goalId: initialGoalId || "none",
     },
   });
   
@@ -74,7 +76,20 @@ export function AdvisorForm({ onGetAdvice, loading, initialGoalId }: AdvisorForm
     if (selectedGoal) {
         fullPrompt += `\n\nThis advice should be tailored to helping me achieve my specific goal: "${selectedGoal.title}", for which I am trying to save ${selectedGoal.target} and have currently saved ${selectedGoal.current}.`;
     }
-    onGetAdvice(fullPrompt, values.goalId || null);
+    onGetAdvice(fullPrompt, values.goalId === 'none' ? null : values.goalId || null);
+  }
+  
+  const handleGeneratePrompt = async () => {
+    setIsGenerating(true);
+    try {
+        const generatedPrompt = await generateAdvisorPrompt();
+        form.setValue('prompt', generatedPrompt);
+    } catch(e) {
+        console.error("Failed to generate prompt", e);
+        form.setError('prompt', { message: "Could not generate prompt. Please try again." });
+    } finally {
+        setIsGenerating(false);
+    }
   }
 
   return (
@@ -87,7 +102,13 @@ export function AdvisorForm({ onGetAdvice, loading, initialGoalId }: AdvisorForm
               name="prompt"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Your Financial Situation & Goals</FormLabel>
+                  <div className="flex justify-between items-center">
+                    <FormLabel>Your Financial Situation & Goals</FormLabel>
+                    <Button type="button" variant="link" size="sm" className="h-auto p-0 text-xs" onClick={handleGeneratePrompt} disabled={isGenerating}>
+                        {isGenerating ? <Loader className="mr-2 h-3 w-3 animate-spin"/> : <Wand2 className="mr-2 h-3 w-3" />}
+                        Generate with AI
+                    </Button>
+                  </div>
                   <FormControl>
                     <Textarea
                       placeholder="Describe your current financial situation, income, expenses, and what you want to achieve. The more detail, the better the advice!"
