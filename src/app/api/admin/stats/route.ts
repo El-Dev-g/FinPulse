@@ -1,8 +1,10 @@
 
 // src/app/api/admin/stats/route.ts
 import { NextResponse } from 'next/server';
-import { getTransactions, getGoals, getBudgets, getRecurringTransactions, getTasks } from '@/lib/db';
+import { getTransactions, getGoals, getBudgets, getRecurringTransactions, getTasks, getAIPlans, getUserProfile } from '@/lib/db';
 import { headers } from 'next/headers';
+import { auth } from '@/lib/firebase';
+import { subDays, format, startOfToday } from 'date-fns';
 
 // This function handles GET requests to /api/admin/stats
 export async function GET() {
@@ -23,31 +25,92 @@ export async function GET() {
   }
 
   try {
-    // --- Fetch Data ---
-    // We can assume a single user for now, as this is a prototype.
-    // In a real multi-user app, you would perform these fetches across all users.
+    // We can assume a single user for now. In a real app, you'd iterate through all users.
+    const uid = auth.currentUser?.uid;
+
+    // --- Fetch All Data Concurrently ---
     const [
         transactions,
         goals,
         budgets,
         recurring,
-        tasks
+        tasks,
+        aiPlans,
+        profile
     ] = await Promise.all([
       getTransactions(),
       getGoals('all'),
       getBudgets(),
       getRecurringTransactions(),
-      getTasks()
+      getTasks(),
+      getAIPlans(),
+      uid ? getUserProfile(uid) : Promise.resolve(null),
     ]);
 
-    // --- Format Response ---
+    // --- Process Data for Admin Dashboard ---
+
+    const kpis = [
+        { title: 'Total Users', value: 1, change: 0 },
+        { title: 'Total Transactions', value: transactions.length, change: 0 },
+        { title: 'Total Goals', value: goals.length, change: 0 },
+        { title: 'Total Budgets', value: budgets.length, change: 0 },
+    ];
+    
+    // Create some sample user growth data for the last 7 days
+    const userGrowth = Array.from({ length: 7 }).map((_, i) => {
+        const date = subDays(startOfToday(), i);
+        return {
+            date: format(date, 'MMM d'),
+            // Mocking user growth for prototype
+            count: i === 6 ? 1 : 0 
+        }
+    }).reverse();
+    
+    const engagementMetrics = [
+        { name: 'AI Plans Generated', value: aiPlans.length },
+        { name: 'Tasks Created', value: tasks.length },
+        { name: 'Recurring Transactions', value: recurring.length },
+    ];
+
+    const recentActivities = transactions.slice(0, 5).map(t => ({
+        id: t.id,
+        user: auth.currentUser?.displayName || 'User',
+        description: `New transaction: ${t.description}`,
+        timestamp: t.createdAt.toDate().toISOString(),
+    }));
+    
+    const users = auth.currentUser ? [{
+        id: auth.currentUser.uid,
+        name: auth.currentUser.displayName,
+        email: auth.currentUser.email,
+        signUpDate: auth.currentUser.metadata.creationTime,
+        lastLogin: auth.currentUser.metadata.lastSignInTime,
+        currency: profile?.currency || 'USD',
+    }] : [];
+
     const stats = {
-      totalUsers: 1, // Hardcoded to 1 for this single-user prototype
-      totalTransactions: transactions.length,
-      totalGoals: goals.length,
-      totalBudgets: budgets.length,
-      totalRecurring: recurring.length,
-      totalTasks: tasks.length,
+      kpis,
+      userGrowth,
+      engagementMetrics,
+      recentActivities,
+      content: { // Static content can be added here if needed
+        hero: {},
+        features: { features: [] },
+        cta: {},
+        footerLinks: {},
+        terms: {},
+        policy: {}
+      },
+      users,
+      monitoring: {
+        aiUsageStats: aiPlans.map(plan => ({
+            id: plan.id,
+            planTitle: plan.advice.title,
+            linkedGoal: plan.goalId || 'None',
+            timestamp: plan.createdAt.toDate().toISOString()
+        })),
+        recentErrors: [] // Can be connected to a logging service
+      }
     };
 
     return NextResponse.json(stats, { status: 200 });
