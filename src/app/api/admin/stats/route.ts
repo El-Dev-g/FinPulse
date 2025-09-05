@@ -8,8 +8,37 @@ import { subDays, format, startOfToday } from 'date-fns';
 import fs from 'fs/promises';
 import path from 'path';
 
+// Define allowed origins
+const allowedOrigins = [
+    // Add your admin project's domain here
+    'http://localhost:3000', // Example for local development
+    'https://your-admin-project.com' // Example for production
+];
+
+const getCorsHeaders = (origin: string | null) => {
+    const headers: { [key: string]: string } = {
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, x-api-key, x-secret-key',
+    };
+
+    if (origin && allowedOrigins.includes(origin)) {
+        headers['Access-Control-Allow-Origin'] = origin;
+    } else if (!origin) {
+        // Allow for server-to-server requests
+    } else {
+        // You can choose to block or handle unlisted origins here.
+        // For now, we'll allow the request to proceed but without the Allow-Origin header,
+        // which will cause it to fail on the client-side due to CORS policy.
+    }
+    return headers;
+};
+
+
 // This function handles GET requests to /api/admin/stats
 export async function GET() {
+  const requestOrigin = headers().get('origin');
+  const corsHeaders = getCorsHeaders(requestOrigin);
+
   const headersList = headers();
   const apiKey = headersList.get('x-api-key');
   const secretKey = headersList.get('x-secret-key');
@@ -23,7 +52,7 @@ export async function GET() {
     secretKey !== process.env.ADMIN_SECRET_KEY
   ) {
     // If the keys don't match, or are missing, deny access
-    return NextResponse.json({ error: 'Unauthorized: Invalid API credentials' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized: Invalid API credentials' }, { status: 401, headers: corsHeaders });
   }
 
   try {
@@ -39,11 +68,11 @@ export async function GET() {
         tasks,
         aiPlans,
         profile,
+        landingContent,
         termsContent,
         policyContent,
         aboutContent,
         contactContent,
-        landingContent,
     ] = await Promise.all([
       getTransactions(),
       getGoals('all'),
@@ -52,11 +81,11 @@ export async function GET() {
       getTasks(),
       getAIPlans(),
       uid ? getUserProfile(uid) : Promise.resolve(null),
-      fs.readFile(path.join(process.cwd(), 'src/app/(info)/policy/terms/page.tsx'), 'utf-8'),
-      fs.readFile(path.join(process.cwd(), 'src/app/(info)/policy/privacy/page.tsx'), 'utf-8'),
-      fs.readFile(path.join(process.cwd(), 'src/app/(info)/about/page.tsx'), 'utf-8'),
-      fs.readFile(path.join(process.cwd(), 'src/app/(info)/contact/page.tsx'), 'utf-8'),
-      fs.readFile(path.join(process.cwd(), 'src/content/landing-page.json'), 'utf-8'),
+      fs.readFile(path.join(process.cwd(), 'src/content/landing-page.json'), 'utf-8').catch(() => '{}'),
+      fs.readFile(path.join(process.cwd(), 'src/app/(info)/policy/terms/page.tsx'), 'utf-8').catch(() => ''),
+      fs.readFile(path.join(process.cwd(), 'src/app/(info)/policy/privacy/page.tsx'), 'utf-8').catch(() => ''),
+      fs.readFile(path.join(process.cwd(), 'src/app/(info)/about/page.tsx'), 'utf-8').catch(() => ''),
+      fs.readFile(path.join(process.cwd(), 'src/app/(info)/contact/page.tsx'), 'utf-8').catch(() => ''),
     ]);
     
     const landingData = JSON.parse(landingContent);
@@ -108,10 +137,10 @@ export async function GET() {
       engagementMetrics,
       recentActivities,
       content: {
-        hero: landingData.hero,
-        features: { features: landingData.features },
-        cta: landingData.cta,
-        footerLinks: landingData.footer,
+        hero: landingData.hero || {},
+        features: { features: landingData.features?.items || [] },
+        cta: landingData.cta || {},
+        footerLinks: landingData.footer || { columns: [] },
         terms: { content: termsContent },
         policy: { content: policyContent },
         about: { content: aboutContent },
@@ -129,10 +158,23 @@ export async function GET() {
       }
     };
 
-    return NextResponse.json(stats, { status: 200 });
+    return NextResponse.json(stats, { status: 200, headers: corsHeaders });
 
   } catch (error) {
     console.error('Admin API Error:', error);
-    return NextResponse.json({ error: 'An internal server error occurred.' }, { status: 500 });
+    const requestOrigin = headers().get('origin');
+    const corsHeaders = getCorsHeaders(requestOrigin);
+    return NextResponse.json({ error: 'An internal server error occurred.' }, { status: 500, headers: corsHeaders });
   }
+}
+
+
+// This handles preflight OPTIONS requests from browsers
+export async function OPTIONS(request: Request) {
+    const requestOrigin = request.headers.get('origin');
+    const headers = getCorsHeaders(requestOrigin);
+    return new NextResponse(null, {
+        status: 204, // No Content
+        headers,
+    });
 }
