@@ -1,0 +1,71 @@
+{
+  "hero": {
+    "title": "Take Control of Your Financial Future.",
+    "description": "FinPulse is your all-in-one financial companion. Track your spending, set meaningful goals, and get personalized AI-powered advice to build a healthier financial life.",
+    "buttonText": "Get Started for Free",
+    "imageUrl": "https://picsum.photos/800/600",
+    "imageAlt": "Financial Dashboard"
+  },
+  "features": {
+    "title": "Everything You Need to Succeed",
+    "description": "FinPulse provides a powerful suite of tools to help you understand and improve your financial well-being.",
+    "items": [
+      {
+        "icon": "Wallet",
+        "title": "Dashboard Overview",
+        "description": "A consolidated view of key financial metrics, including income, expenses, and net worth."
+      },
+      {
+        "icon": "BarChart",
+        "title": "Data Visualization",
+        "description": "Generate interactive charts and graphs to visualize financial data trends over time."
+      },
+      {
+        "icon": "Target",
+        "title": "Goal Setting",
+        "description": "Enable users to set financial goals and track progress towards them effectively."
+      },
+      {
+        "icon": "Bot",
+        "title": "Personalized Financial Tips",
+        "description": "Our AI offers personalized financial advice based on your spending habits and goals."
+      },
+      {
+        "icon": "PieChart",
+        "title": "Transaction Categorization",
+        "description": "Automatically categorize transactions to understand where your money is going."
+      },
+      {
+        "icon": "Lightbulb",
+        "title": "Smart Insights",
+        "description": "Gain actionable insights to improve your financial health and make better decisions."
+      }
+    ]
+  },
+  "cta": {
+    "title": "Ready to Transform Your Finances?",
+    "description": "Join thousands of users who are building a brighter financial future with FinPulse. It's free to get started.",
+    "buttonText": "Create Your Account"
+  },
+  "footer": {
+    "description": "Your all-in-one financial companion to help you achieve financial wellness.",
+    "companyName": "FinPulse",
+    "columns": [
+      {
+        "title": "Company",
+        "links": [
+          { "text": "About Us", "href": "/about" },
+          { "text": "Contact", "href": "/contact" },
+          { "text": "Features", "href": "/#features" }
+        ]
+      },
+      {
+        "title": "Legal",
+        "links": [
+          { "text": "Privacy Policy", "href": "/policy/privacy" },
+          { "text": "Terms of Service", "href": "/policy/terms" }
+        ]
+      }
+    ]
+  }
+}

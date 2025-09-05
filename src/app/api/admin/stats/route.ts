@@ -43,6 +43,7 @@ export async function GET() {
         policyContent,
         aboutContent,
         contactContent,
+        landingContent,
     ] = await Promise.all([
       getTransactions(),
       getGoals('all'),
@@ -55,7 +56,10 @@ export async function GET() {
       fs.readFile(path.join(process.cwd(), 'src/app/(info)/policy/privacy/page.tsx'), 'utf-8'),
       fs.readFile(path.join(process.cwd(), 'src/app/(info)/about/page.tsx'), 'utf-8'),
       fs.readFile(path.join(process.cwd(), 'src/app/(info)/contact/page.tsx'), 'utf-8'),
+      fs.readFile(path.join(process.cwd(), 'src/content/landing-page.json'), 'utf-8'),
     ]);
+    
+    const landingData = JSON.parse(landingContent);
 
     // --- Process Data for Admin Dashboard ---
 
@@ -104,10 +108,10 @@ export async function GET() {
       engagementMetrics,
       recentActivities,
       content: {
-        hero: {},
-        features: { features: [] },
-        cta: {},
-        footerLinks: {},
+        hero: landingData.hero,
+        features: { features: landingData.features },
+        cta: landingData.cta,
+        footerLinks: landingData.footer,
         terms: { content: termsContent },
         policy: { content: policyContent },
         about: { content: aboutContent },

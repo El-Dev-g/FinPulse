@@ -20,47 +20,20 @@ import {
 } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
 import { Chatbot } from "./chatbot";
+import content from "@/content/landing-page.json";
 
-const features = [
-  {
-    icon: <Wallet className="h-8 w-8 text-primary" />,
-    title: "Dashboard Overview",
-    description:
-      "A consolidated view of key financial metrics, including income, expenses, and net worth.",
-  },
-  {
-    icon: <BarChart className="h-8 w-8 text-primary" />,
-    title: "Data Visualization",
-    description:
-      "Generate interactive charts and graphs to visualize financial data trends over time.",
-  },
-  {
-    icon: <Target className="h-8 w-8 text-primary" />,
-    title: "Goal Setting",
-    description:
-      "Enable users to set financial goals and track progress towards them effectively.",
-  },
-  {
-    icon: <Bot className="h-8 w-8 text-primary" />,
-    title: "Personalized Financial Tips",
-    description:
-      "Our AI offers personalized financial advice based on your spending habits and goals.",
-  },
-  {
-    icon: <PieChart className="h-8 w-8 text-primary" />,
-    title: "Transaction Categorization",
-    description:
-      "Automatically categorize transactions to understand where your money is going.",
-  },
-  {
-    icon: <Lightbulb className="h-8 w-8 text-primary" />,
-    title: "Smart Insights",
-    description:
-      "Gain actionable insights to improve your financial health and make better decisions.",
-  },
-];
+const icons: { [key: string]: React.ReactNode } = {
+  Wallet: <Wallet className="h-8 w-8 text-primary" />,
+  BarChart: <BarChart className="h-8 w-8 text-primary" />,
+  Target: <Target className="h-8 w-8 text-primary" />,
+  Bot: <Bot className="h-8 w-8 text-primary" />,
+  PieChart: <PieChart className="h-8 w-8 text-primary" />,
+  Lightbulb: <Lightbulb className="h-8 w-8 text-primary" />,
+};
 
 export default function LandingPage() {
+  const { hero, features, cta, footer } = content;
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="container mx-auto px-4 h-20 flex items-center justify-between">
@@ -79,23 +52,21 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <h1 className="text-4xl md:text-6xl font-headline font-bold text-primary">
-                Take Control of Your Financial Future.
+                {hero.title}
               </h1>
               <p className="text-lg text-foreground/80">
-                FinPulse is your all-in-one financial companion. Track your
-                spending, set meaningful goals, and get personalized AI-powered
-                advice to build a healthier financial life.
+                {hero.description}
               </p>
               <div className="flex gap-4">
                 <Button size="lg" asChild>
-                  <Link href="/signup">Get Started for Free</Link>
+                  <Link href="/signup">{hero.buttonText}</Link>
                 </Button>
               </div>
             </div>
             <div className="relative h-64 md:h-96 rounded-2xl overflow-hidden shadow-2xl">
               <Image
-                src="https://picsum.photos/800/600"
-                alt="Financial Dashboard"
+                src={hero.imageUrl}
+                alt={hero.imageAlt}
                 fill
                 className="object-cover"
                 data-ai-hint="finance dashboard"
@@ -110,21 +81,20 @@ export default function LandingPage() {
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-12">
               <h2 className="text-3xl md:text-4xl font-headline font-bold">
-                Everything You Need to Succeed
+                {features.title}
               </h2>
               <p className="text-lg mt-4 text-foreground/70">
-                FinPulse provides a powerful suite of tools to help you
-                understand and improve your financial well-being.
+                {features.description}
               </p>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {features.map((feature, index) => (
+              {features.items.map((feature, index) => (
                 <Card
                   key={index}
                   className="bg-card/80 hover:bg-card transition-all duration-300 hover:shadow-lg"
                 >
                   <CardHeader>
-                    {feature.icon}
+                    {icons[feature.icon]}
                     <CardTitle className="mt-4 font-headline">
                       {feature.title}
                     </CardTitle>
@@ -141,14 +111,13 @@ export default function LandingPage() {
         <section className="container mx-auto px-4 py-20 md:py-32">
           <div className="bg-primary text-primary-foreground p-12 rounded-2xl text-center flex flex-col items-center">
             <h2 className="text-3xl md:text-4xl font-headline font-bold">
-              Ready to Transform Your Finances?
+              {cta.title}
             </h2>
             <p className="mt-4 max-w-2xl">
-              Join thousands of users who are building a brighter financial
-              future with FinPulse. It's free to get started.
+              {cta.description}
             </p>
             <Button variant="secondary" size="lg" className="mt-8" asChild>
-              <Link href="/signup">Create Your Account</Link>
+              <Link href="/signup">{cta.buttonText}</Link>
             </Button>
           </div>
         </section>
@@ -158,27 +127,24 @@ export default function LandingPage() {
             <div className="grid md:grid-cols-3 gap-8">
                 <div className="space-y-4">
                     <Logo />
-                    <p className="text-sm text-muted-foreground max-w-xs">Your all-in-one financial companion to help you achieve financial wellness.</p>
+                    <p className="text-sm text-muted-foreground max-w-xs">{footer.description}</p>
                      <p className="text-sm text-muted-foreground">
-                        © {new Date().getFullYear()} FinPulse. All rights reserved.
+                        © {new Date().getFullYear()} {footer.companyName}. All rights reserved.
                     </p>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:col-span-2">
-                    <div>
-                        <h4 className="font-semibold mb-3">Company</h4>
-                        <ul className="space-y-2 text-sm text-muted-foreground">
-                            <li><Link href="/about" className="hover:text-primary">About Us</Link></li>
-                            <li><Link href="/contact" className="hover:text-primary">Contact</Link></li>
-                            <li><Link href="#features" className="hover:text-primary">Features</Link></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 className="font-semibold mb-3">Legal</h4>
-                        <ul className="space-y-2 text-sm text-muted-foreground">
-                            <li><Link href="/policy/privacy" className="hover:text-primary">Privacy Policy</Link></li>
-                            <li><Link href="/policy/terms" className="hover:text-primary">Terms of Service</Link></li>
-                        </ul>
-                    </div>
+                    {footer.columns.map((column, index) => (
+                        <div key={index}>
+                            <h4 className="font-semibold mb-3">{column.title}</h4>
+                            <ul className="space-y-2 text-sm text-muted-foreground">
+                                {column.links.map((link, linkIndex) => (
+                                    <li key={linkIndex}>
+                                        <Link href={link.href} className="hover:text-primary">{link.text}</Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ))}
                     <div>
                         <h4 className="font-semibold mb-3">Follow Us</h4>
                         <div className="flex space-x-4 text-muted-foreground">
