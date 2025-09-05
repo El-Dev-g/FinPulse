@@ -5,6 +5,8 @@ import { getTransactions, getGoals, getBudgets, getRecurringTransactions, getTas
 import { headers } from 'next/headers';
 import { auth } from '@/lib/firebase';
 import { subDays, format, startOfToday } from 'date-fns';
+import fs from 'fs/promises';
+import path from 'path';
 
 // This function handles GET requests to /api/admin/stats
 export async function GET() {
@@ -36,7 +38,9 @@ export async function GET() {
         recurring,
         tasks,
         aiPlans,
-        profile
+        profile,
+        termsContent,
+        policyContent
     ] = await Promise.all([
       getTransactions(),
       getGoals('all'),
@@ -45,6 +49,8 @@ export async function GET() {
       getTasks(),
       getAIPlans(),
       uid ? getUserProfile(uid) : Promise.resolve(null),
+      fs.readFile(path.join(process.cwd(), 'src/app/(info)/policy/terms/page.tsx'), 'utf-8'),
+      fs.readFile(path.join(process.cwd(), 'src/app/(info)/policy/privacy/page.tsx'), 'utf-8')
     ]);
 
     // --- Process Data for Admin Dashboard ---
@@ -93,13 +99,13 @@ export async function GET() {
       userGrowth,
       engagementMetrics,
       recentActivities,
-      content: { // Static content can be added here if needed
+      content: {
         hero: {},
         features: { features: [] },
         cta: {},
         footerLinks: {},
-        terms: {},
-        policy: {}
+        terms: { content: termsContent },
+        policy: { content: policyContent }
       },
       users,
       monitoring: {
