@@ -20,6 +20,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   currency: string;
+  isPro: boolean;
   setCurrency: (currency: string) => void;
   formatCurrency: (amount: number) => string;
   refreshProfile: () => Promise<void>;
@@ -30,6 +31,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   currency: "USD",
+  isPro: false,
   setCurrency: () => {},
   formatCurrency: (amount: number) => String(amount),
   refreshProfile: async () => {},
@@ -55,6 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [currency, setCurrencyState] = useState("USD");
+  const [isPro, setIsPro] = useState(false);
   const auth = getAuth(app);
   const router = useRouter();
   const pathname = usePathname();
@@ -67,6 +70,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (userProfile?.currency) {
                 setCurrencyState(userProfile.currency);
             }
+            // In a real app, you'd check a subscription status field here.
+            // For this prototype, we'll keep it simple.
+            // setIsPro(userProfile?.isSubscribed || false);
         } catch (err) {
             console.error("Error loading profile:", err);
         }
@@ -84,8 +90,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (userProfile?.currency) {
             setCurrencyState(userProfile.currency);
           }
+           // In a real app, you'd check a subscription status field here.
+           // For this prototype, we'll hardcode it to false.
+           setIsPro(false);
         } else {
             setProfile(null);
+            setIsPro(false);
         }
       } catch (err) {
         console.error("Error loading profile:", err);
@@ -140,7 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, currency, setCurrency, formatCurrency, refreshProfile }}
+      value={{ user, profile, loading, currency, isPro, setCurrency, formatCurrency, refreshProfile }}
     >
       {children}
     </AuthContext.Provider>

@@ -19,6 +19,7 @@ import {
   ListTree,
   Lightbulb,
   Bell,
+  Sparkles,
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,6 +41,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { ProBadge } from "@/components/pro-badge";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -63,7 +66,7 @@ function DashboardSidebar() {
   const pathname = usePathname();
   const { open, setOpen, isMobile, setOpenMobile } = useSidebar();
   const isCollapsed = !open;
-  const { user } = useAuth();
+  const { user, isPro } = useAuth();
   const router = useRouter();
 
   const handleLinkClick = () => {
@@ -92,22 +95,56 @@ function DashboardSidebar() {
 
       <SidebarContent className="p-4">
         <SidebarMenu>
-          {navItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname.startsWith(item.href) && item.href !== "/dashboard" || pathname === "/dashboard" && item.href === "/dashboard"}
-                tooltip={{ children: item.label }}
-                onClick={handleLinkClick}
-              >
-                <Link href={item.href}>
-                  <item.icon />
-                  <span>{item.label}</span>
-                  {!isCollapsed && item.isPro && <ProBadge />}
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {navItems.map((item) => {
+            const isProFeature = item.isPro && !isPro;
+            const linkContent = (
+              <>
+                <item.icon />
+                <span>{item.label}</span>
+                 {item.isPro && !isCollapsed && <ProBadge />}
+              </>
+            );
+
+            if (isProFeature) {
+              return (
+                <SidebarMenuItem key={item.href}>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                         <SidebarMenuButton
+                            asChild
+                            disabled
+                            className="cursor-not-allowed"
+                            tooltip={{ children: "Upgrade to Pro to access this feature" }}
+                          >
+                           <div>{linkContent}</div>
+                          </SidebarMenuButton>
+                      </TooltipTrigger>
+                       <TooltipContent side="right" className="flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        <p>Upgrade to Pro to access this feature</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </SidebarMenuItem>
+              );
+            }
+
+            return (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith(item.href) && item.href !== "/dashboard" || pathname === "/dashboard" && item.href === "/dashboard"}
+                  tooltip={{ children: item.label }}
+                  onClick={handleLinkClick}
+                >
+                  <Link href={item.href}>
+                    {linkContent}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-4">

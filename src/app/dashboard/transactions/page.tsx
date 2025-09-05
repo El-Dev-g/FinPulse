@@ -48,7 +48,7 @@ export default function ExpensesPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isAddTransactionDialogOpen, setIsAddTransactionDialogOpen] =
     useState(false);
-  const { user, formatCurrency } = useAuth();
+  const { user, formatCurrency, isPro } = useAuth();
   
   const fetchTransactions = React.useCallback(async () => {
     if (!user) return;
@@ -90,6 +90,7 @@ export default function ExpensesPage() {
   };
 
   const handleExportCSV = () => {
+    if (!isPro) return; // This should be redundant due to the button being disabled, but it's good practice.
     const headers = ["ID", "Description", "Amount", "Date", "Category"];
     const csvRows = [
       headers.join(","),
@@ -133,18 +134,22 @@ export default function ExpensesPage() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="relative">
-                    <Button variant="outline" disabled>
+                    <Button variant="outline" onClick={handleExportCSV} disabled={!isPro}>
                       <Download className="mr-2" />
                       Export CSV
+                       {!isPro && (
+                        <div className="absolute -top-2 -right-2">
+                          <ProBadge />
+                        </div>
+                      )}
                     </Button>
-                     <div className="absolute -top-2 -right-2">
-                       <ProBadge />
-                    </div>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p>This is a Pro feature. Upgrade to unlock.</p>
-                </TooltipContent>
+                {!isPro && (
+                  <TooltipContent>
+                    <p>Upgrade to Pro to export your data.</p>
+                  </TooltipContent>
+                )}
               </Tooltip>
             </TooltipProvider>
             <Button onClick={() => setIsAddTransactionDialogOpen(true)}>

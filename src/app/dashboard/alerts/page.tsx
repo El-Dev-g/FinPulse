@@ -9,6 +9,7 @@ import {
   Info,
   Lightbulb,
   LucideIcon,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { getSmartAlerts, type SmartAlert } from "@/lib/actions";
@@ -34,14 +35,37 @@ const alertColors: { [key in SmartAlert["severity"]]: string } = {
   Low: "border-blue-500/50 bg-blue-500/5",
 };
 
+function UpgradeToPro() {
+  return (
+    <Card className="mt-8 text-center">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-center gap-2 font-headline">
+          <Sparkles className="h-6 w-6 text-primary" />
+          Unlock Smart Alerts
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-muted-foreground mb-4">
+          This is a Pro feature. Upgrade your plan to get AI-powered insights and alerts to keep your finances on track.
+        </p>
+        <Button>Upgrade to Pro</Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+
 export default function AlertsPage() {
-  const { user } = useAuth();
+  const { user, isPro } = useAuth();
   const [alerts, setAlerts] = useState<SmartAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchAlerts = useCallback(async () => {
-    if (!user) return;
+    if (!user || !isPro) {
+        setLoading(false);
+        return;
+    };
     setLoading(true);
     setError(null);
     try {
@@ -53,7 +77,7 @@ export default function AlertsPage() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, isPro]);
 
   useEffect(() => {
     fetchAlerts();
@@ -79,16 +103,20 @@ export default function AlertsPage() {
               AI-powered insights to keep your finances on track.
             </p>
           </div>
-          <Button onClick={fetchAlerts} disabled={loading}>
-            {loading ? (
-              <Loader className="mr-2 animate-spin" />
-            ) : (
-              "Refresh"
-            )}
-          </Button>
+          {isPro && (
+             <Button onClick={fetchAlerts} disabled={loading}>
+              {loading ? (
+                <Loader className="mr-2 animate-spin" />
+              ) : (
+                "Refresh"
+              )}
+            </Button>
+          )}
         </div>
 
-        {loading ? (
+        {!isPro ? (
+            <UpgradeToPro />
+        ) : loading ? (
           <div className="flex flex-col items-center justify-center h-96">
             <Loader className="h-12 w-12 animate-spin text-primary" />
             <p className="mt-4 text-muted-foreground">

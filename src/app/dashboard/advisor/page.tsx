@@ -7,12 +7,34 @@ import { FinancialPlan } from "@/components/dashboard/financial-plan";
 import type { Advice, ClientAIPlan } from "@/lib/types";
 import { getFinancialAdvice } from "@/lib/actions";
 import { addAIPlan, updateGoal } from "@/lib/db";
-import { Lightbulb, Loader } from "lucide-react";
+import { Lightbulb, Loader, Sparkles } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getAIPlans } from "@/lib/db";
 import { PastPlansList } from "@/components/dashboard/past-plans-list";
 import { useAuth } from "@/hooks/use-auth";
 import { ProBadge } from "@/components/pro-badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+function UpgradeToPro() {
+  return (
+    <Card className="mt-8 text-center">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-center gap-2 font-headline">
+          <Sparkles className="h-6 w-6 text-primary" />
+          Unlock Your AI Financial Advisor
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-muted-foreground mb-4">
+          This is a Pro feature. Upgrade your plan to get personalized financial advice, create unlimited goals, and more.
+        </p>
+        <Button>Upgrade to Pro</Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 
 export default function AdvisorPage() {
   return (
@@ -30,7 +52,7 @@ function AdvisorPageContent() {
   const searchParams = useSearchParams();
   const initialGoalId = searchParams.get("goalId");
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isPro } = useAuth();
 
 
   const fetchPastPlans = useCallback(async () => {
@@ -46,8 +68,10 @@ function AdvisorPageContent() {
   }, [user]);
 
   useEffect(() => {
-    fetchPastPlans();
-  }, [fetchPastPlans]);
+    if (isPro) {
+      fetchPastPlans();
+    }
+  }, [fetchPastPlans, isPro]);
 
 
   const handleGetAdvice = async (prompt: string, goalId: string | null) => {
@@ -113,40 +137,44 @@ function AdvisorPageContent() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="md:col-span-2">
-            <AdvisorForm
-              onGetAdvice={handleGetAdvice}
-              loading={loading}
-              initialGoalId={initialGoalId}
-            />
-          </div>
-          <div>
-            <PastPlansList
-              plans={pastPlans}
-              onSelectPlan={handleSelectPlan}
-              activePlan={plan}
-            />
-          </div>
-        </div>
+        {!isPro ? <UpgradeToPro /> : (
+          <>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="md:col-span-2">
+                <AdvisorForm
+                  onGetAdvice={handleGetAdvice}
+                  loading={loading}
+                  initialGoalId={initialGoalId}
+                />
+              </div>
+              <div>
+                <PastPlansList
+                  plans={pastPlans}
+                  onSelectPlan={handleSelectPlan}
+                  activePlan={plan}
+                />
+              </div>
+            </div>
 
-        {loading && (
-          <div className="flex justify-center items-center h-64">
-            <Loader className="h-8 w-8 animate-spin text-primary" />
-            <p className="ml-4 text-muted-foreground">
-              Generating your personalized plan...
-            </p>
-          </div>
+            {loading && (
+              <div className="flex justify-center items-center h-64">
+                <Loader className="h-8 w-8 animate-spin text-primary" />
+                <p className="ml-4 text-muted-foreground">
+                  Generating your personalized plan...
+                </p>
+              </div>
+            )}
+
+            {error && (
+              <div className="text-center py-12 text-destructive">
+                <h3 className="text-lg font-semibold">An Error Occurred</h3>
+                <p>{error}</p>
+              </div>
+            )}
+
+            {plan && !loading && <FinancialPlan plan={plan} />}
+          </>
         )}
-
-        {error && (
-          <div className="text-center py-12 text-destructive">
-            <h3 className="text-lg font-semibold">An Error Occurred</h3>
-            <p>{error}</p>
-          </div>
-        )}
-
-        {plan && !loading && <FinancialPlan plan={plan} />}
       </div>
     </main>
   );
