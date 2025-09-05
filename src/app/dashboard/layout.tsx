@@ -171,9 +171,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, loading } = useAuth();
-  const router = useRouter();
-
-  if (loading) {
+  
+  if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader className="h-12 w-12 animate-spin text-primary" />
@@ -181,11 +180,6 @@ export default function DashboardLayout({
     );
   }
 
-  if (!user) {
-    router.push("/signin");
-    return null;
-  }
-  
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
