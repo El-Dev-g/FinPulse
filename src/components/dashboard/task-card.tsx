@@ -6,15 +6,8 @@ import { CSS } from "@dnd-kit/utilities";
 import { Card } from "@/components/ui/card";
 import { FinancialTask, Goal, TaskStatus } from "@/lib/types";
 import { GripVertical, Pencil, Target, Check, Circle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatTime } from "@/lib/utils";
 import { Button } from "../ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
 
 interface TaskCardProps {
   task: FinancialTask;
@@ -70,13 +63,15 @@ export function TaskCard({ task, goal, onEdit, onStatusChange, isOverdue = false
                 
                 <div className="flex flex-wrap gap-x-4 gap-y-1 items-center mt-1">
                     {task.dueDate && (
-                    <p className={cn("text-xs text-muted-foreground", isOverdue && !isDragging && "font-semibold text-destructive")}>
-                        Due: {new Date(task.dueDate + "T00:00:00").toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                        })}
-                    </p>
+                     <div className={cn("flex items-center gap-1.5 text-xs text-muted-foreground", isOverdue && !isDragging && "font-semibold text-destructive")}>
+                        <span>
+                            {new Date(task.dueDate + "T00:00:00").toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            })}
+                        </span>
+                        {task.dueTime && <span>{formatTime(task.dueTime)}</span>}
+                    </div>
                     )}
                     {goal && (
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

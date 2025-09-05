@@ -11,6 +11,14 @@ import {
   ShoppingCart,
   UtensilsCrossed,
   Wallet,
+  Landmark,
+  PiggyBank,
+  Briefcase,
+  Gift,
+  Ticket,
+  Wrench,
+  Receipt,
+  GraduationCap
 } from "lucide-react";
 import type { ClientTransaction, Transaction, ClientBudget, Budget, ClientRecurringTransaction, RecurringTransaction, ClientFinancialTask, FinancialTask, ClientGoal, Goal } from "./types";
 
@@ -20,26 +28,27 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 const categoryIcons: { [key: string]: LucideIcon } = {
-  Groceries: ShoppingCart,
+  'Groceries': ShoppingCart,
   'Dining Out': UtensilsCrossed,
-  Transport: Car,
-  Shopping: Shirt,
-  Housing: Home,
-  Entertainment: Film,
-  Health: HeartPulse,
-  Savings: Wallet,
-  Income: ArrowRightLeft,
-  Default: ArrowRightLeft
+  'Transport': Car,
+  'Shopping': Shirt,
+  'Housing': Home,
+  'Entertainment': Film,
+  'Health': HeartPulse,
+  'Savings': PiggyBank,
+  'Income': ArrowRightLeft,
+  'Investments': Landmark,
+  'Business': Briefcase,
+  'Gifts': Gift,
+  'Travel': Ticket,
+  'Utilities': Wrench,
+  'Taxes': Receipt,
+  'Education': GraduationCap,
+  Default: Wallet
 };
 
 const budgetCategoryIcons: { [key: string]: LucideIcon } = {
-  Groceries: ShoppingCart,
-  'Dining Out': UtensilsCrossed,
-  Transport: Car,
-  Shopping: Shirt,
-  Housing: Home,
-  Entertainment: Film,
-  Health: HeartPulse,
+  ...categoryIcons,
   Other: Wallet,
 };
 

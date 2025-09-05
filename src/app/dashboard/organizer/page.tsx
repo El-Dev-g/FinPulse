@@ -191,9 +191,9 @@ export default function OrganizerPage() {
     const notDone = tasks.filter(t => t.status !== 'Done');
 
     return {
-      overdueTasks: notDone.filter(t => t.dueDate && isBefore(new Date(t.dueDate), today)),
-      todayTasks: notDone.filter(t => t.dueDate && isSameDay(new Date(t.dueDate), today)),
-      upcomingTasks: notDone.filter(t => t.dueDate && isBefore(today, new Date(t.dueDate))),
+      overdueTasks: notDone.filter(t => t.dueDate && isBefore(new Date(t.dueDate + "T23:59:59"), today)),
+      todayTasks: notDone.filter(t => t.dueDate && isSameDay(new Date(t.dueDate + "T00:00:00"), today)),
+      upcomingTasks: notDone.filter(t => t.dueDate && isBefore(today, new Date(t.dueDate + "T00:00:00"))),
       otherTasks: notDone.filter(t => !t.dueDate),
       doneTasks: done,
     };

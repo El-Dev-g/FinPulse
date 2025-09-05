@@ -21,12 +21,9 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
     return { convertedAmount: 0 };
   }
 
-  const apiKey = process.env.EXCHANGE_RATE_API_KEY;
-  if (!apiKey) {
-    throw new Error("Exchange rate API key not configured.");
-  }
-  
-  const url = `http://api.exchangerate.host/convert?access_key=${apiKey}&from=${from}&to=${to}&amount=${amount}`;
+  // NOTE: This uses a free, public API. For production, use a reliable paid service.
+  // This API does not require an API key.
+  const url = `https://api.exchangerate.host/convert?from=${from}&to=${to}&amount=${amount}`;
 
   try {
     const response = await fetch(url);

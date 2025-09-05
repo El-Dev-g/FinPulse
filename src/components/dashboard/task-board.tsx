@@ -32,6 +32,7 @@ interface TaskSectionColumnProps {
 function TaskSectionColumn({ title, tasks, goals, onEdit, onStatusChange, isOverdue = false }: TaskSectionColumnProps) {
     const { setNodeRef } = useDroppable({ id: title });
 
+    // Only render the column if it has tasks, except for the "Done" column which should always be visible.
     if (tasks.length === 0 && title !== 'Done') {
         return null;
     }
@@ -56,13 +57,14 @@ function TaskSectionColumn({ title, tasks, goals, onEdit, onStatusChange, isOver
                             />
                         )
                     })}
+                     {isDoneColumn && tasks.length === 0 && (
+                        <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed border-muted-foreground/20 rounded-lg min-h-24 flex items-center justify-center">
+                            <p>Completed tasks appear here</p>
+                        </div>
+                    )}
                 </div>
             </SortableContext>
-            {isDoneColumn && tasks.length === 0 && (
-                <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed border-muted-foreground/20 rounded-lg">
-                    <p>Completed tasks appear here</p>
-                </div>
-            )}
+           
         </div>
     )
 }
