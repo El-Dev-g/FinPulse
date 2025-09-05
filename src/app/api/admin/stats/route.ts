@@ -12,7 +12,7 @@ import path from 'path';
 const allowedOrigins = [
     // Add your admin project's domain here
     'http://localhost:3000', // Example for local development
-    'https://your-admin-project.com' // Example for production
+    'https://6000-firebase-studio-1757022081447.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev' // Example for production
 ];
 
 const getCorsHeaders = (origin: string | null) => {
