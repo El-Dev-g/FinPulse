@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to generate smart financial alerts for a user.
@@ -130,7 +131,7 @@ const smartAlertsFlow = ai.defineFlow(
     outputSchema: SmartAlertsResponseSchema,
   },
   async (input) => {
-    const { output } = await prompt(input, { model: 'googleai/gemini-1.5-flash' });
+    const { output } = await prompt(input, { model: 'googleai/gemini-pro' });
     return output!;
   }
 );
