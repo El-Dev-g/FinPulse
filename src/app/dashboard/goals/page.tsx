@@ -36,15 +36,12 @@ function GoalsPageContent() {
   const [isAddGoalDialogOpen, setIsAddGoalDialogOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
 
-  const { user, formatCurrency } = useAuth();
+  const { user, isPro, formatCurrency } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // For now, we'll assume the user is on a free plan.
-  // In a real app, this would come from a database check.
-  const isProUser = false;
-  const goalLimit = 3;
-  const hasReachedGoalLimit = !isProUser && goals.length >= goalLimit;
+  const goalLimit = 2;
+  const hasReachedGoalLimit = !isPro && goals.length >= goalLimit;
 
   const fetchData = useCallback(async () => {
     if (!user) return;

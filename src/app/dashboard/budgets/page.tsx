@@ -19,18 +19,15 @@ import {
 } from "@/components/ui/tooltip";
 
 export default function BudgetsPage() {
-  const { user } = useAuth();
+  const { user, isPro } = useAuth();
   const [budgets, setBudgets] = useState<ClientBudget[]>([]);
   const [goals, setGoals] = useState<ClientGoal[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddBudgetDialogOpen, setIsAddBudgetDialogOpen] = useState(false);
   const [sweepingBudget, setSweepingBudget] = useState<ClientBudget | null>(null);
 
-  // For now, we'll assume the user is on a free plan.
-  // In a real app, this would come from a database check.
-  const isProUser = false;
-  const budgetLimit = 3;
-  const hasReachedBudgetLimit = !isProUser && budgets.length >= budgetLimit;
+  const budgetLimit = 5;
+  const hasReachedBudgetLimit = !isPro && budgets.length >= budgetLimit;
 
   const fetchData = useCallback(async () => {
     if (!user) return;
