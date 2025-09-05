@@ -42,6 +42,40 @@
       }
     ]
   },
+  "pricing": {
+    "title": "Choose the Plan That's Right for You",
+    "description": "Simple, transparent pricing. Get started for free or unlock powerful features with Pro.",
+    "plans": [
+      {
+        "title": "Free",
+        "price": "$0",
+        "frequency": "/ month",
+        "description": "For individuals getting started with managing their finances.",
+        "features": [
+          "Transaction Tracking",
+          "Basic Budgeting",
+          "Goal Setting (up to 3)",
+          "Standard Reporting"
+        ],
+        "buttonText": "Get Started Free"
+      },
+      {
+        "title": "Pro",
+        "price": "$9.99",
+        "frequency": "/ month",
+        "description": "For those who want to unlock the full power of financial management.",
+        "features": [
+          "Everything in Free, plus:",
+          "Unlimited Goals & Budgets",
+          "AI Financial Advisor",
+          "Smart Alerts & Insights",
+          "Data Export (CSV)"
+        ],
+        "buttonText": "Go Pro",
+        "isFeatured": true
+      }
+    ]
+  },
   "cta": {
     "title": "Ready to Transform Your Finances?",
     "description": "Join thousands of users who are building a brighter financial future with FinPulse. It's free to get started.",

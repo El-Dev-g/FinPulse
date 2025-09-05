@@ -10,6 +10,7 @@ import {
   Twitter,
   Github,
   Linkedin,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,10 +18,13 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardContent,
+  CardFooter,
 } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
 import { Chatbot } from "./chatbot";
 import content from "@/content/landing-page.json";
+import { cn } from "@/lib/utils";
 
 const icons: { [key: string]: React.ReactNode } = {
   Wallet: <Wallet className="h-8 w-8 text-primary" />,
@@ -32,7 +36,7 @@ const icons: { [key: string]: React.ReactNode } = {
 };
 
 export default function LandingPage() {
-  const { hero, features, cta, footer } = content;
+  const { hero, features, pricing, cta, footer } = content;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -102,6 +106,51 @@ export default function LandingPage() {
                       {feature.description}
                     </CardDescription>
                   </CardHeader>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+        
+         <section id="pricing" className="bg-muted/30 py-20 md:py-28">
+          <div className="container mx-auto px-4">
+            <div className="text-center max-w-3xl mx-auto mb-12">
+              <h2 className="text-3xl md:text-4xl font-headline font-bold">
+                {pricing.title}
+              </h2>
+              <p className="text-lg mt-4 text-foreground/70">
+                {pricing.description}
+              </p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-start">
+              {pricing.plans.map((plan, index) => (
+                <Card
+                  key={index}
+                  className={cn("flex flex-col h-full", plan.isFeatured && "border-primary shadow-lg")}
+                >
+                  <CardHeader>
+                    <CardTitle className="font-headline text-2xl">{plan.title}</CardTitle>
+                    <CardDescription>{plan.description}</CardDescription>
+                    <div>
+                      <span className="text-4xl font-bold">{plan.price}</span>
+                      <span className="text-muted-foreground">{plan.frequency}</span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="flex-grow">
+                    <ul className="space-y-3">
+                      {plan.features.map((feature, fIndex) => (
+                        <li key={fIndex} className="flex items-center gap-3">
+                          <Check className="h-5 w-5 text-primary" />
+                          <span className="text-sm text-muted-foreground">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                  <CardFooter>
+                     <Button asChild className="w-full" size="lg" variant={plan.isFeatured ? 'default' : 'outline'}>
+                        <Link href="/signup">{plan.buttonText}</Link>
+                    </Button>
+                  </CardFooter>
                 </Card>
               ))}
             </div>
