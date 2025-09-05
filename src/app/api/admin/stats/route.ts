@@ -40,7 +40,9 @@ export async function GET() {
         aiPlans,
         profile,
         termsContent,
-        policyContent
+        policyContent,
+        aboutContent,
+        contactContent,
     ] = await Promise.all([
       getTransactions(),
       getGoals('all'),
@@ -50,7 +52,9 @@ export async function GET() {
       getAIPlans(),
       uid ? getUserProfile(uid) : Promise.resolve(null),
       fs.readFile(path.join(process.cwd(), 'src/app/(info)/policy/terms/page.tsx'), 'utf-8'),
-      fs.readFile(path.join(process.cwd(), 'src/app/(info)/policy/privacy/page.tsx'), 'utf-8')
+      fs.readFile(path.join(process.cwd(), 'src/app/(info)/policy/privacy/page.tsx'), 'utf-8'),
+      fs.readFile(path.join(process.cwd(), 'src/app/(info)/about/page.tsx'), 'utf-8'),
+      fs.readFile(path.join(process.cwd(), 'src/app/(info)/contact/page.tsx'), 'utf-8'),
     ]);
 
     // --- Process Data for Admin Dashboard ---
@@ -105,7 +109,9 @@ export async function GET() {
         cta: {},
         footerLinks: {},
         terms: { content: termsContent },
-        policy: { content: policyContent }
+        policy: { content: policyContent },
+        about: { content: aboutContent },
+        contact: { content: contactContent },
       },
       users,
       monitoring: {
