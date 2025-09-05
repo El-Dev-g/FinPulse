@@ -12,6 +12,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { getAIPlans } from "@/lib/db";
 import { PastPlansList } from "@/components/dashboard/past-plans-list";
 import { useAuth } from "@/hooks/use-auth";
+import { ProBadge } from "@/components/pro-badge";
 
 export default function AdvisorPage() {
   return (
@@ -100,10 +101,13 @@ function AdvisorPageContent() {
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
-            <Lightbulb className="h-8 w-8" />
-            AI Financial Advisor
-          </h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
+              <Lightbulb className="h-8 w-8" />
+              AI Financial Advisor
+            </h2>
+            <ProBadge />
+          </div>
           <p className="text-muted-foreground">
             Get a personalized financial plan based on your goals.
           </p>

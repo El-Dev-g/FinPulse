@@ -32,6 +32,14 @@ import type { ClientTransaction, Transaction } from "@/lib/types";
 import { addTransaction, getTransactions } from "@/lib/db";
 import { processTransactions, getIconForCategory } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { ProBadge } from "@/components/pro-badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 
 export default function ExpensesPage() {
   const [transactions, setTransactions] = useState<ClientTransaction[]>([]);
@@ -121,10 +129,24 @@ export default function ExpensesPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExportCSV}>
-              <Download className="mr-2" />
-              Export CSV
-            </Button>
+             <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="relative">
+                    <Button variant="outline" disabled>
+                      <Download className="mr-2" />
+                      Export CSV
+                    </Button>
+                     <div className="absolute -top-2 -right-2">
+                       <ProBadge />
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>This is a Pro feature. Upgrade to unlock.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <Button onClick={() => setIsAddTransactionDialogOpen(true)}>
               <Plus className="mr-2" />
               Add Transaction

@@ -39,6 +39,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
+import { ProBadge } from "@/components/pro-badge";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -52,10 +53,10 @@ const navItems = [
   { href: "/dashboard/budgets", icon: Wallet, label: "Budgets" },
   { href: "/dashboard/reports", icon: PieChart, label: "Reports" },
   { href: "/dashboard/organizer", icon: ClipboardList, label: "Organizer" },
-  { href: "/dashboard/alerts", icon: Bell, label: "Alerts" },
+  { href: "/dashboard/alerts", icon: Bell, label: "Alerts", isPro: true },
   { href: "/dashboard/catalog", icon: ListTree, label: "Categories" },
   { href: "/dashboard/calculator", icon: Calculator, label: "Calculator" },
-  { href: "/dashboard/advisor", icon: Lightbulb, label: "AI Advisor" },
+  { href: "/dashboard/advisor", icon: Lightbulb, label: "AI Advisor", isPro: true },
 ];
 
 function DashboardSidebar() {
@@ -102,6 +103,7 @@ function DashboardSidebar() {
                 <Link href={item.href}>
                   <item.icon />
                   <span>{item.label}</span>
+                  {!isCollapsed && item.isPro && <ProBadge />}
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
