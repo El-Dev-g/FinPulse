@@ -4,13 +4,19 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import type { Budget, ClientBudget, ClientGoal, Goal, Transaction } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Plus, Wallet, ArrowRightLeft, Loader } from "lucide-react";
+import { Plus, Wallet, ArrowRightLeft, Loader, Lock } from "lucide-react";
 import { BudgetCard } from "@/components/dashboard/budget-card";
 import { AddBudgetDialog } from "@/components/dashboard/add-budget-dialog";
 import { SweepToGoalDialog } from "@/components/dashboard/sweep-to-goal-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { getBudgets, getGoals, getTransactions, addBudget, updateGoal, addTransaction } from "@/lib/db";
 import { processBudgets, processGoals, processTransactions } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function BudgetsPage() {
   const { user } = useAuth();
@@ -19,6 +25,12 @@ export default function BudgetsPage() {
   const [loading, setLoading] = useState(true);
   const [isAddBudgetDialogOpen, setIsAddBudgetDialogOpen] = useState(false);
   const [sweepingBudget, setSweepingBudget] = useState<ClientBudget | null>(null);
+
+  // For now, we'll assume the user is on a free plan.
+  // In a real app, this would come from a database check.
+  const isProUser = false;
+  const budgetLimit = 3;
+  const hasReachedBudgetLimit = !isProUser && budgets.length >= budgetLimit;
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -91,11 +103,30 @@ export default function BudgetsPage() {
               Track your spending against your set limits.
             </p>
           </div>
-           <Button onClick={() => setIsAddBudgetDialogOpen(true)}>
-            <Plus className="mr-2" />
-            Add Budget
-          </Button>
+           <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="relative">
+                   <Button onClick={() => setIsAddBudgetDialogOpen(true)} disabled={hasReachedBudgetLimit}>
+                    <Plus className="mr-2" />
+                    Add Budget
+                  </Button>
+                </div>
+              </TooltipTrigger>
+               {hasReachedBudgetLimit && (
+                 <TooltipContent>
+                    <p>Upgrade to Pro to add unlimited budgets.</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
+         {hasReachedBudgetLimit && (
+            <div className="mb-6 p-4 bg-accent/30 border border-accent/50 rounded-lg text-center text-sm">
+                <p className="font-semibold text-accent-foreground">You've reached your budget limit!</p>
+                <p className="text-muted-foreground mt-1">The free plan allows for up to {budgetLimit} active budgets. Please upgrade to Pro to add more.</p>
+            </div>
+        )}
         {loading ? (
             <div className="flex justify-center items-center h-64">
                 <Loader className="h-8 w-8 animate-spin text-primary" />
