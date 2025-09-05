@@ -14,13 +14,20 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Sparkles, Loader } from "lucide-react";
+import { Plus, Sparkles, Loader, Lock } from "lucide-react";
 import { AddGoalDialog } from "@/components/dashboard/add-goal-dialog";
 import { EditGoalDialog } from "@/components/dashboard/edit-goal-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import type { Goal, Advice, AIPlan } from "@/lib/types";
 import { addGoal, deleteGoal, getGoals, updateGoal, getAIPlans } from "@/lib/db";
 import { processGoals } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 
 function GoalsPageContent() {
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -32,6 +39,12 @@ function GoalsPageContent() {
   const { user, formatCurrency } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // For now, we'll assume the user is on a free plan.
+  // In a real app, this would come from a database check.
+  const isProUser = false;
+  const goalLimit = 3;
+  const hasReachedGoalLimit = !isProUser && goals.length >= goalLimit;
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -112,11 +125,31 @@ function GoalsPageContent() {
               Track and manage your financial milestones.
             </p>
           </div>
-          <Button onClick={() => setIsAddGoalDialogOpen(true)}>
-            <Plus className="mr-2" />
-            Add New Goal
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                 <div className="relative">
+                    <Button onClick={() => setIsAddGoalDialogOpen(true)} disabled={hasReachedGoalLimit}>
+                      <Plus className="mr-2" />
+                      Add New Goal
+                    </Button>
+                </div>
+              </TooltipTrigger>
+              {hasReachedGoalLimit && (
+                 <TooltipContent>
+                    <p>Upgrade to Pro to add unlimited goals.</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
+
+        {hasReachedGoalLimit && (
+            <div className="mb-6 p-4 bg-accent/30 border border-accent/50 rounded-lg text-center text-sm">
+                <p className="font-semibold text-accent-foreground">You've reached your goal limit!</p>
+                <p className="text-muted-foreground mt-1">The free plan allows for up to {goalLimit} active goals. Please upgrade to Pro to add more.</p>
+            </div>
+        )}
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {goals.map((goal) => {
