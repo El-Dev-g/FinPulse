@@ -54,7 +54,7 @@ const navItems = [
   { href: "/dashboard/recurring", icon: Repeat, label: "Recurring" },
   { href: "/dashboard/goals", icon: Target, label: "Goals" },
   { href: "/dashboard/budgets", icon: Wallet, label: "Budgets" },
-  { href: "/dashboard/reports", icon: PieChart, label: "Reports" },
+  { href: "/dashboard/reports", icon: PieChart, label: "Reports", isPro: true },
   { href: "/dashboard/organizer", icon: ClipboardList, label: "Organizer" },
   { href: "/dashboard/alerts", icon: Bell, label: "Alerts", isPro: true },
   { href: "/dashboard/catalog", icon: ListTree, label: "Categories" },

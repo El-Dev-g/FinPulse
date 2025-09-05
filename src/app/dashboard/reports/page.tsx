@@ -25,11 +25,13 @@ import {
 import { getTransactions } from "@/lib/db";
 import type { Transaction } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
-import { PieChart as PieChartIcon, Loader } from "lucide-react";
+import { PieChart as PieChartIcon, Loader, Sparkles, FileText } from "lucide-react";
 import { subDays, format, isWithinInterval, startOfDay } from 'date-fns';
 import { DateRangePicker } from "@/components/dashboard/date-range-picker";
 import type { DateRange } from "react-day-picker";
 import { ReportMetrics } from "@/components/dashboard/report-metrics";
+import { Button } from "@/components/ui/button";
+import { ProBadge } from "@/components/pro-badge";
 
 const COLORS = [
     "hsl(var(--chart-1))",
@@ -40,8 +42,28 @@ const COLORS = [
     "hsl(var(--muted))",
 ];
 
+
+function UpgradeToPro() {
+  return (
+    <Card className="mt-8 text-center">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-center gap-2 font-headline">
+          <Sparkles className="h-6 w-6 text-primary" />
+          Unlock Advanced Reports
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-muted-foreground mb-4">
+          This is a Pro feature. Upgrade your plan to get advanced charts, custom date ranges, and PDF exports.
+        </p>
+        <Button>Upgrade to Pro</Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function ReportsPage() {
-    const { user, formatCurrency } = useAuth();
+    const { user, isPro, formatCurrency } = useAuth();
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
     const today = startOfDay(new Date());
@@ -143,18 +165,31 @@ export default function ReportsPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>
-                <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
-                <PieChartIcon className="h-8 w-8" />
-                Financial Reports
-                </h2>
+                 <div className="flex items-center gap-4">
+                     <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
+                        <PieChartIcon className="h-8 w-8" />
+                        Financial Reports
+                    </h2>
+                    <ProBadge />
+                </div>
                 <p className="text-muted-foreground">
-                Deep dive into your financial data with custom date ranges.
+                    Deep dive into your financial data with custom date ranges.
                 </p>
             </div>
-            <DateRangePicker dateRange={dateRange} onDateChange={setDateRange} />
+            {isPro && (
+                <div className="flex gap-2 items-center">
+                    <Button variant="outline" disabled>
+                        <FileText className="mr-2" />
+                        Export to PDF
+                    </Button>
+                    <DateRangePicker dateRange={dateRange} onDateChange={setDateRange} />
+                </div>
+            )}
         </div>
 
-        {loading ? (
+        {!isPro ? (
+            <UpgradeToPro />
+        ) : loading ? (
              <div className="flex justify-center items-center h-96">
                 <Loader className="h-8 w-8 animate-spin text-primary" />
             </div>
