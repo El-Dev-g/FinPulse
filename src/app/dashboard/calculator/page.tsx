@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calculator, Target, TrendingUp, CreditCard, Coins, Send, Loader } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { convertCurrency } from "@/lib/currency-actions";
@@ -35,46 +34,44 @@ function InvestmentCalculator({ values, setValues, onUseFutureValue }: any) {
   }, [initial, contribution, rate, years]);
   
   return (
-    <div className="space-y-6">
-       <div>
-        <h3 className="text-xl font-semibold">Investment Growth</h3>
-        <p className="text-muted-foreground text-sm">Project the future value of your investments.</p>
-      </div>
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="initial">Initial Investment ($)</Label>
-            <Input id="initial" type="number" value={initial} onChange={(e) => setValues({ initial: e.target.value })} placeholder="0"/>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="contribution">Monthly Contribution ($)</Label>
-            <Input id="contribution" type="number" value={contribution} onChange={(e) => setValues({ contribution: e.target.value })} placeholder="0"/>
-          </div>
+     <Card className="flex flex-col">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><TrendingUp /> Investment Growth</CardTitle>
+        <CardDescription>Project the future value of your investments.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6 flex-grow">
+        <div className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="initial">Initial Investment ($)</Label>
+                <Input id="initial" type="number" value={initial} onChange={(e) => setValues({ initial: e.target.value })} placeholder="0"/>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="contribution">Monthly Contribution ($)</Label>
+                <Input id="contribution" type="number" value={contribution} onChange={(e) => setValues({ contribution: e.target.value })} placeholder="0"/>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="rate">Annual Return Rate (%)</Label>
+                <Input id="rate" type="number" value={rate} onChange={(e) => setValues({ rate: e.target.value })} placeholder="0"/>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="years">Years to Grow</Label>
+                <Input id="years" type="number" value={years} onChange={(e) => setValues({ years: e.target.value })} placeholder="0"/>
+            </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="rate">Annual Return Rate (%)</Label>
-            <Input id="rate" type="number" value={rate} onChange={(e) => setValues({ rate: e.target.value })} placeholder="0"/>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="years">Years to Grow</Label>
-            <Input id="years" type="number" value={years} onChange={(e) => setValues({ years: e.target.value })} placeholder="0"/>
-          </div>
+        <div className="p-6 bg-muted rounded-lg text-center space-y-3">
+            <p className="text-muted-foreground">Projected Future Value</p>
+            <p className="text-4xl font-bold text-primary">{formatCurrency(futureValue)}</p>
+            <div className="flex justify-center gap-2 pt-2">
+                <Button size="sm" variant="outline" onClick={() => onUseFutureValue(futureValue, 'savings')}>
+                    <Send className="mr-2" /> Use for Savings
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => onUseFutureValue(futureValue, 'debt')}>
+                    <Send className="mr-2" /> Use for Debt
+                </Button>
+            </div>
         </div>
-      </div>
-      <div className="p-6 bg-muted rounded-lg text-center space-y-3">
-        <p className="text-muted-foreground">Projected Future Value</p>
-        <p className="text-4xl font-bold text-primary">{formatCurrency(futureValue)}</p>
-         <div className="flex justify-center gap-2 pt-2">
-            <Button size="sm" variant="outline" onClick={() => onUseFutureValue(futureValue, 'savings')}>
-                <Send className="mr-2" /> Use for Savings
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => onUseFutureValue(futureValue, 'debt')}>
-                <Send className="mr-2" /> Use for Debt
-            </Button>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -107,13 +104,13 @@ function SavingsGoalCalculator({ values, setValues, onUseContribution }: any) {
     }, [target, current, years]);
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h3 className="text-xl font-semibold">Savings Goal Planner</h3>
-                <p className="text-muted-foreground text-sm">Calculate how much you need to save to reach your goal.</p>
-            </div>
-            <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="flex flex-col">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Target /> Savings Goal Planner</CardTitle>
+                <CardDescription>Calculate how much you need to save to reach your goal.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 flex-grow">
+                <div className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="target">Goal Amount ($)</Label>
                         <Input id="target" type="number" value={target} onChange={(e) => setValues({ target: e.target.value })} placeholder="0"/>
@@ -122,22 +119,22 @@ function SavingsGoalCalculator({ values, setValues, onUseContribution }: any) {
                         <Label htmlFor="current">Current Savings ($)</Label>
                         <Input id="current" type="number" value={current} onChange={(e) => setValues({ current: e.target.value })} placeholder="0"/>
                     </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="years-savings">Years to Save</Label>
+                        <Input id="years-savings" type="number" value={years} onChange={(e) => setValues({ years: e.target.value })} placeholder="0"/>
+                    </div>
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="years-savings">Years to Save</Label>
-                    <Input id="years-savings" type="number" value={years} onChange={(e) => setValues({ years: e.target.value })} placeholder="0"/>
+                <div className="p-6 bg-muted rounded-lg text-center space-y-3">
+                    <p className="text-muted-foreground">Required Monthly Contribution</p>
+                    <p className="text-4xl font-bold text-primary">{formatCurrency(monthlyContribution)}</p>
+                    <div className="flex justify-center gap-2 pt-2">
+                        <Button size="sm" variant="outline" onClick={() => onUseContribution(monthlyContribution)}>
+                            <Send className="mr-2" /> Use for Investment
+                        </Button>
+                    </div>
                 </div>
-            </div>
-            <div className="p-6 bg-muted rounded-lg text-center space-y-3">
-                <p className="text-muted-foreground">Required Monthly Contribution</p>
-                <p className="text-4xl font-bold text-primary">{formatCurrency(monthlyContribution)}</p>
-                 <div className="flex justify-center gap-2 pt-2">
-                    <Button size="sm" variant="outline" onClick={() => onUseContribution(monthlyContribution)}>
-                        <Send className="mr-2" /> Use for Investment
-                    </Button>
-                </div>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     );
 }
 
@@ -166,27 +163,26 @@ function DebtPayoffCalculator({ values, setValues, onUsePayment }: any) {
   }, [debtAmount, interestRate, monthlyPayment]);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-xl font-semibold">Debt Payoff Planner</h3>
-        <p className="text-muted-foreground text-sm">See how fast you can become debt-free.</p>
-      </div>
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <Card className="flex flex-col">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><CreditCard /> Debt Payoff Planner</CardTitle>
+        <CardDescription>See how fast you can become debt-free.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6 flex-grow">
+        <div className="space-y-4">
             <div className="space-y-2">
                 <Label htmlFor="debtAmount">Total Debt ($)</Label>
                 <Input id="debtAmount" type="number" value={debtAmount} onChange={(e) => setValues({ debtAmount: e.target.value })} placeholder="0"/>
             </div>
-             <div className="space-y-2">
+            <div className="space-y-2">
                 <Label htmlFor="interestRate">Annual Rate (%)</Label>
                 <Input id="interestRate" type="number" value={interestRate} onChange={(e) => setValues({ interestRate: e.target.value })} placeholder="0"/>
             </div>
+            <div className="space-y-2">
+                <Label htmlFor="monthlyPayment">Monthly Payment ($)</Label>
+                <Input id="monthlyPayment" type="number" value={monthlyPayment} onChange={(e) => setValues({ monthlyPayment: e.target.value })} placeholder="0"/>
+            </div>
         </div>
-        <div className="space-y-2">
-            <Label htmlFor="monthlyPayment">Monthly Payment ($)</Label>
-            <Input id="monthlyPayment" type="number" value={monthlyPayment} onChange={(e) => setValues({ monthlyPayment: e.target.value })} placeholder="0"/>
-        </div>
-      </div>
        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-muted rounded-lg text-center">
                 <p className="text-muted-foreground text-sm">Payoff Time</p>
@@ -202,7 +198,8 @@ function DebtPayoffCalculator({ values, setValues, onUsePayment }: any) {
             <Send className="mr-2" /> Use for Savings
         </Button>
        </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -258,59 +255,59 @@ function CurrencyConverter({ values, setValues, onUseConversion }: any) {
 
 
   return (
-    <div className="space-y-6">
-       <div>
-        <h3 className="text-xl font-semibold">Currency Converter</h3>
-        <p className="text-muted-foreground text-sm">Convert between major currencies using live rates.</p>
-      </div>
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="amount-converter">Amount</Label>
-          <Input id="amount-converter" type="number" value={amount} onChange={(e) => setValues({ amount: e.target.value })} placeholder="0.00"/>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="from-currency">From</Label>
-            <Select value={fromCurrency} onValueChange={(v) => setValues({ fromCurrency: v })}>
-                <SelectTrigger id="from-currency"><SelectValue/></SelectTrigger>
-                <SelectContent>
-                    {currencies.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="to-currency">To</Label>
-            <Select value={toCurrency} onValueChange={(v) => setValues({ toCurrency: v })}>
-                <SelectTrigger id="to-currency"><SelectValue/></SelectTrigger>
-                <SelectContent>
-                    {currencies.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-       <div className="p-6 bg-muted rounded-lg text-center space-y-3 min-h-[148px] flex flex-col justify-center">
-        {loading ? (
-            <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                <Loader className="animate-spin" />
-                <span>Converting...</span>
+    <Card className="flex flex-col">
+       <CardHeader>
+        <CardTitle className="flex items-center gap-2"><Coins /> Currency Converter</CardTitle>
+        <CardDescription>Convert between major currencies using live rates.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6 flex-grow">
+        <div className="space-y-4">
+            <div className="space-y-2">
+            <Label htmlFor="amount-converter">Amount</Label>
+            <Input id="amount-converter" type="number" value={amount} onChange={(e) => setValues({ amount: e.target.value })} placeholder="0.00"/>
             </div>
-        ) : error ? (
-            <p className="text-destructive text-sm">{error}</p>
-        ) : (
-          <>
-            <p className="text-muted-foreground">Converted Amount</p>
-            <p className="text-4xl font-bold text-primary">{formatLocalCurrency(convertedAmount, toCurrency)}</p>
-            <div className="flex justify-center gap-2 pt-2">
-                <Button size="sm" variant="outline" onClick={() => onUseConversion(convertedAmount)}>
-                    <Send className="mr-2" /> Use Value
-                </Button>
+            <div className="space-y-2">
+                <Label htmlFor="from-currency">From</Label>
+                <Select value={fromCurrency} onValueChange={(v) => setValues({ fromCurrency: v })}>
+                    <SelectTrigger id="from-currency"><SelectValue/></SelectTrigger>
+                    <SelectContent>
+                        {currencies.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                </Select>
             </div>
-          </>
-        )}
-      </div>
-       <p className="text-xs text-muted-foreground text-center">Rates provided by exchangerate.host.</p>
-    </div>
+            <div className="space-y-2">
+                <Label htmlFor="to-currency">To</Label>
+                <Select value={toCurrency} onValueChange={(v) => setValues({ toCurrency: v })}>
+                    <SelectTrigger id="to-currency"><SelectValue/></SelectTrigger>
+                    <SelectContent>
+                        {currencies.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            </div>
+        </div>
+        <div className="p-6 bg-muted rounded-lg text-center space-y-3 min-h-[148px] flex flex-col justify-center">
+            {loading ? (
+                <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                    <Loader className="animate-spin" />
+                    <span>Converting...</span>
+                </div>
+            ) : error ? (
+                <p className="text-destructive text-sm">{error}</p>
+            ) : (
+            <>
+                <p className="text-muted-foreground">Converted Amount</p>
+                <p className="text-4xl font-bold text-primary">{formatLocalCurrency(convertedAmount, toCurrency)}</p>
+                <div className="flex justify-center gap-2 pt-2">
+                    <Button size="sm" variant="outline" onClick={() => onUseConversion(convertedAmount)}>
+                        <Send className="mr-2" /> Use Value
+                    </Button>
+                </div>
+            </>
+            )}
+        </div>
+        <p className="text-xs text-muted-foreground text-center">Rates provided by exchangerate.host.</p>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -326,13 +323,14 @@ export default function CalculatorPage() {
 function CalculatorPageContent() {
   const searchParams = useSearchParams();
   const tab = searchParams.get('tab') || 'investment';
-  const [activeTab, setActiveTab] = useState(tab);
-
+  
   // Unified state for all calculators
   const [investmentValues, setInvestmentValues] = useState({ initial: "", contribution: "", rate: "", years: "" });
   const [savingsValues, setSavingsValues] = useState({ target: "", current: "", years: "" });
   const [debtValues, setDebtValues] = useState({ debtAmount: "", interestRate: "", monthlyPayment: "" });
   const [currencyValues, setCurrencyValues] = useState({ amount: "1", fromCurrency: "USD", toCurrency: "EUR" });
+  
+  const [activeTab, setActiveTab] = useState('investment');
 
   const setPartialState = useCallback((setter: React.Dispatch<React.SetStateAction<any>>) => (newValues: object) => {
       setter((prev: object) => ({...prev, ...newValues}));
@@ -342,16 +340,13 @@ function CalculatorPageContent() {
   const handleUseFutureValue = (value: number, destination: 'savings' | 'debt') => {
       if (destination === 'savings') {
           setSavingsValues(prev => ({...prev, current: value.toFixed(2)}));
-          setActiveTab('goals');
       } else {
           setDebtValues(prev => ({...prev, debtAmount: value.toFixed(2)}));
-          setActiveTab('debt');
       }
   }
 
   const handleUseContribution = (value: number) => {
       setInvestmentValues(prev => ({...prev, contribution: value.toFixed(2)}));
-      setActiveTab('investment');
   }
 
   const handleUsePayment = (value: string) => {
@@ -359,7 +354,6 @@ function CalculatorPageContent() {
       if (isNaN(numericValue)) return;
       setSavingsValues(prev => ({...prev, years: '5' })); // Default to 5 years
       handleUseContribution(numericValue);
-      setActiveTab('goals');
   }
 
   const handleUseConversion = (value: number) => {
@@ -367,17 +361,16 @@ function CalculatorPageContent() {
     setInvestmentValues(prev => ({...prev, initial: valStr}));
     setSavingsValues(prev => ({...prev, target: valStr}));
     setDebtValues(prev => ({...prev, debtAmount: valStr}));
-    setActiveTab('investment');
   }
 
 
   useEffect(() => {
-    setActiveTab(tab);
+    if (tab) setActiveTab(tab);
   }, [tab]);
 
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="mb-8">
             <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
               <Calculator className="h-8 w-8" />
@@ -387,42 +380,12 @@ function CalculatorPageContent() {
               Plan your financial future with these powerful tools.
             </p>
         </div>
-        <Card>
-          <CardContent className="p-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-                <TabsTrigger value="investment">
-                    <TrendingUp className="mr-2"/>
-                    Investment
-                </TabsTrigger>
-                <TabsTrigger value="goals">
-                    <Target className="mr-2"/>
-                    Savings Goals
-                </TabsTrigger>
-                <TabsTrigger value="debt">
-                    <CreditCard className="mr-2"/>
-                    Debt Payoff
-                </TabsTrigger>
-                 <TabsTrigger value="currency">
-                    <Coins className="mr-2"/>
-                    Currency
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="investment" className="pt-6">
-                <InvestmentCalculator values={investmentValues} setValues={setPartialState(setInvestmentValues)} onUseFutureValue={handleUseFutureValue} />
-              </TabsContent>
-              <TabsContent value="goals" className="pt-6">
-                <SavingsGoalCalculator values={savingsValues} setValues={setPartialState(setSavingsValues)} onUseContribution={handleUseContribution} />
-              </TabsContent>
-               <TabsContent value="debt" className="pt-6">
-                <DebtPayoffCalculator values={debtValues} setValues={setPartialState(setDebtValues)} onUsePayment={handleUsePayment} />
-              </TabsContent>
-               <TabsContent value="currency" className="pt-6">
-                <CurrencyConverter values={currencyValues} setValues={setPartialState(setCurrencyValues)} onUseConversion={handleUseConversion} />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <InvestmentCalculator values={investmentValues} setValues={setPartialState(setInvestmentValues)} onUseFutureValue={handleUseFutureValue} />
+            <SavingsGoalCalculator values={savingsValues} setValues={setPartialState(setSavingsValues)} onUseContribution={handleUseContribution} />
+            <DebtPayoffCalculator values={debtValues} setValues={setPartialState(setDebtValues)} onUsePayment={handleUsePayment} />
+            <CurrencyConverter values={currencyValues} setValues={setPartialState(setCurrencyValues)} onUseConversion={handleUseConversion} />
+        </div>
       </div>
     </main>
   );
