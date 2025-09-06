@@ -40,7 +40,7 @@ function GoalsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const goalLimit = 2;
+  const goalLimit = 20;
   const hasReachedGoalLimit = !isPro && goals.length >= goalLimit;
 
   const fetchData = useCallback(async () => {

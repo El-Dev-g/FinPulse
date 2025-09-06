@@ -26,7 +26,7 @@ export default function BudgetsPage() {
   const [isAddBudgetDialogOpen, setIsAddBudgetDialogOpen] = useState(false);
   const [sweepingBudget, setSweepingBudget] = useState<ClientBudget | null>(null);
 
-  const budgetLimit = 5;
+  const budgetLimit = 20;
   const hasReachedBudgetLimit = !isPro && budgets.length >= budgetLimit;
 
   const fetchData = useCallback(async () => {

@@ -22,7 +22,7 @@ const getCorsHeaders = (origin: string | null) => {
     };
 
     if (origin && allowedOrigins.includes(origin)) {
-        headers['Access-Control-Allow-Origin'] = origin;
+        headers['Access-Control-All ow-Origin'] = origin;
     } else if (!origin) {
         // Allow for server-to-server requests
     } else {
@@ -34,8 +34,7 @@ const getCorsHeaders = (origin: string | null) => {
 };
 
 
-// This function handles GET requests to /api/admin/stats
-export async function GET() {
+// This function handles GET requests to /api/admin/export async function GET() {
   const requestOrigin = headers().get('origin');
   const corsHeaders = getCorsHeaders(requestOrigin);
 
