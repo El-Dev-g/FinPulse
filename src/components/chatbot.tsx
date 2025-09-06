@@ -5,42 +5,51 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
-import { Loader, MessageSquare, Send, User, X, GripVertical } from "lucide-react";
+import { Loader, MessageSquare, Send, User, X, GripVertical, Bot } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { getChatbotResponse } from "@/lib/actions";
 import { Avatar, AvatarFallback } from "./ui/avatar";
+import faqContent from '@/content/faq.json';
 
 type Message = {
   sender: "user" | "bot";
   text: string;
 };
 
-enum ChatState {
-  Initial,
-  AskName,
-  AskEmail,
-  Ready,
-  Loading,
-}
+const CommandItem = ({ command, description, onSelect }: { command: string, description: string, onSelect: (command: string) => void }) => (
+    <button 
+        className="w-full text-left p-2 hover:bg-muted rounded-md"
+        onClick={() => onSelect(command)}
+    >
+        <p className="font-semibold text-sm">{command}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
+    </button>
+)
 
 export function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [chatState, setChatState] = useState(ChatState.Initial);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showCommands, setShowCommands] = useState(false);
+  const [filteredCommands, setFilteredCommands] = useState(faqContent.faqs);
   
-  const [userInfo, setUserInfo] = useState({ name: "", email: ""});
-
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const chatWindowRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const dragInfo = useRef({ isDragging: false, startX: 0, startY: 0, lastX: 0, lastY: 0 });
+
+  const commands = faqContent.faqs.map(faq => ({
+      name: `/${faq.question.toLowerCase().replace(/\s+/g, '-').replace('?', '')}`,
+      question: faq.question,
+      description: faq.answer.substring(0, 50) + "..."
+  }));
 
   useEffect(() => {
     if (isOpen) {
-        setChatState(ChatState.AskName);
         setMessages([
-            { sender: "bot", text: "Hello! I'm the FinPulse assistant. What's your name?" }
+            { sender: "bot", text: "Hello! I'm the FinPulse assistant. Type `/` to see what I can help with, or just ask a question." }
         ]);
         // Reset position when opening
         if (chatWindowRef.current) {
@@ -51,8 +60,8 @@ export function Chatbot() {
         // Reset on close
         setMessages([]);
         setInput("");
-        setChatState(ChatState.Initial);
-        setUserInfo({ name: "", email: "" });
+        setIsLoading(false);
+        setShowCommands(false);
     }
   }, [isOpen]);
 
@@ -66,46 +75,54 @@ export function Chatbot() {
         }
     }, 100);
   };
+  
+  const sendQuery = useCallback(async (query: string) => {
+    if (!query.trim()) return;
 
+    const userMessage = { sender: "user" as const, text: query };
+    setMessages(prev => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
+    setShowCommands(false);
+    scrollToBottom();
+    
+    try {
+        const response = await getChatbotResponse(query);
+        setMessages(prev => [...prev, { sender: "bot", text: response.answer }]);
+    } catch (error) {
+        setMessages(prev => [...prev, { sender: "bot", text: "Sorry, I'm having trouble connecting. Please try again later." }]);
+    } finally {
+        setIsLoading(false);
+    }
+  }, []);
 
   const handleUserInput = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
-
-    const userMessage = { sender: "user" as const, text: input };
-    setMessages(prev => [...prev, userMessage]);
-    const currentInput = input;
-    setInput("");
-    
-    switch(chatState) {
-        case ChatState.AskName:
-            setUserInfo(prev => ({...prev, name: currentInput}));
-            setChatState(ChatState.AskEmail);
-            setMessages(prev => [...prev, { sender: "bot", text: `Nice to meet you, ${currentInput}! What's your email address?` }]);
-            break;
-        case ChatState.AskEmail:
-             setUserInfo(prev => ({...prev, email: currentInput}));
-             setChatState(ChatState.Ready);
-             setMessages(prev => [...prev, { sender: "bot", text: "Great! What can I help you with today? Feel free to ask me anything about FinPulse." }]);
-             break;
-        case ChatState.Ready:
-            setChatState(ChatState.Loading);
-            try {
-                const response = await getChatbotResponse(currentInput);
-                setMessages(prev => [...prev, { sender: "bot", text: response.answer }]);
-            } catch (error) {
-                setMessages(prev => [...prev, { sender: "bot", text: "Sorry, I'm having trouble connecting. Please try again later." }]);
-            } finally {
-                setChatState(ChatState.Ready);
-            }
-            break;
-    }
-    scrollToBottom();
+    sendQuery(input);
   };
   
+  const handleCommandSelect = (question: string) => {
+      sendQuery(question);
+      inputRef.current?.focus();
+  }
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setInput(value);
+      if (value.startsWith('/')) {
+          setShowCommands(true);
+          const searchTerm = value.substring(1).toLowerCase();
+          setFilteredCommands(faqContent.faqs.filter(faq => 
+              faq.question.toLowerCase().includes(searchTerm)
+          ));
+      } else {
+          setShowCommands(false);
+      }
+  }
+
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isLoading]);
   
   const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (window.innerWidth < 768) return; // Disable drag on mobile
@@ -146,24 +163,9 @@ export function Chatbot() {
   }, [onMouseMove, onMouseUp]);
 
 
-  const getPlaceholderText = () => {
-    switch (chatState) {
-      case ChatState.AskName:
-        return "Type your name...";
-      case ChatState.AskEmail:
-        return "Type your email...";
-      case ChatState.Ready:
-        return "Ask about FinPulse...";
-      case ChatState.Loading:
-        return "Waiting for response...";
-      default:
-        return "";
-    }
-  };
-
   return (
     <>
-      <div className="fixed bottom-4 right-4 md:top-1/2 md:right-4 md:-translate-y-1/2 md:bottom-auto z-50">
+      <div className="fixed bottom-4 right-4 z-50">
         <Button
           size="icon"
           className="rounded-full w-14 h-14 shadow-lg"
@@ -176,7 +178,7 @@ export function Chatbot() {
       {isOpen && (
         <div
             ref={chatWindowRef}
-            className="fixed bottom-20 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm md:w-full md:top-1/2 md:-translate-y-1/2 md:right-20 md:bottom-auto"
+            className="fixed bottom-20 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm md:w-full"
         >
           <Card className="shadow-2xl" onMouseDown={onMouseDown}>
             <CardHeader 
@@ -186,7 +188,20 @@ export function Chatbot() {
               <CardTitle>FinPulse Assistant</CardTitle>
               <GripVertical className="text-muted-foreground hidden md:block" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="relative">
+                {showCommands && (
+                    <div className="absolute bottom-full left-0 w-full mb-2 bg-background border rounded-lg shadow-lg p-2 max-h-60 overflow-y-auto">
+                        <p className="text-xs font-semibold text-muted-foreground px-2 pb-1">Ask about...</p>
+                        {filteredCommands.length > 0 ? filteredCommands.map(faq => (
+                            <CommandItem 
+                                key={faq.question}
+                                command={faq.question}
+                                description={faq.answer.substring(0, 70) + "..."}
+                                onSelect={() => handleCommandSelect(faq.question)}
+                            />
+                        )) : <p className="text-sm text-muted-foreground text-center p-4">No commands found.</p>}
+                    </div>
+                )}
               <ScrollArea className="h-[400px] pr-4" ref={scrollAreaRef}>
                 <div className="space-y-4">
                   {messages.map((message, index) => (
@@ -199,7 +214,7 @@ export function Chatbot() {
                     >
                       {message.sender === "bot" && (
                         <Avatar className="h-8 w-8">
-                            <AvatarFallback>FP</AvatarFallback>
+                            <AvatarFallback><Bot size={20} /></AvatarFallback>
                         </Avatar>
                       )}
                       <div
@@ -214,15 +229,15 @@ export function Chatbot() {
                       </div>
                        {message.sender === "user" && (
                         <Avatar className="h-8 w-8">
-                            <AvatarFallback><User/></AvatarFallback>
+                            <AvatarFallback><User size={20}/></AvatarFallback>
                         </Avatar>
                       )}
                     </div>
                   ))}
-                  {chatState === ChatState.Loading && (
+                  {isLoading && (
                       <div className="flex items-end gap-2">
                         <Avatar className="h-8 w-8">
-                            <AvatarFallback>FP</AvatarFallback>
+                            <AvatarFallback><Bot size={20} /></AvatarFallback>
                         </Avatar>
                          <div className="bg-muted p-3 rounded-lg">
                             <Loader className="h-5 w-5 animate-spin"/>
@@ -233,12 +248,13 @@ export function Chatbot() {
               </ScrollArea>
               <form onSubmit={handleUserInput} className="mt-4 flex gap-2">
                 <Input
+                  ref={inputRef}
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder={getPlaceholderText()}
-                  disabled={chatState === ChatState.Initial || chatState === ChatState.Loading}
+                  onChange={handleInputChange}
+                  placeholder="Ask a question or type '/'..."
+                  disabled={isLoading}
                 />
-                <Button type="submit" size="icon" disabled={chatState === ChatState.Initial || chatState === ChatState.Loading}>
+                <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
                   <Send />
                 </Button>
               </form>
