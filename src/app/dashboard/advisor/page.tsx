@@ -1,13 +1,13 @@
 // src/app/dashboard/advisor/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { AdvisorForm } from "@/components/dashboard/advisor-form";
 import { FinancialPlan } from "@/components/dashboard/financial-plan";
 import type { Advice, ClientAIPlan } from "@/lib/types";
 import { getFinancialAdvice } from "@/lib/actions";
 import { addAIPlan, updateGoal } from "@/lib/db";
-import { Lightbulb, Loader, Sparkles } from "lucide-react";
+import { Lightbulb, Loader, Sparkles, FileText } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getAIPlans } from "@/lib/db";
 import { PastPlansList } from "@/components/dashboard/past-plans-list";
@@ -15,6 +15,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { ProBadge } from "@/components/pro-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useReactToPrint } from "react-to-print";
+import { PrintableFinancialPlan } from "@/components/dashboard/printable-financial-plan";
 
 function UpgradeToPro() {
   return (
@@ -53,6 +55,12 @@ function AdvisorPageContent() {
   const initialGoalId = searchParams.get("goalId");
   const router = useRouter();
   const { user, isPro } = useAuth();
+  
+  const componentRef = useRef<HTMLDivElement>(null);
+  const handlePrint = useReactToPrint({
+      content: () => componentRef.current,
+      documentTitle: `FinPulse AI Plan - ${plan?.title || 'Financial Advice'}`
+  });
 
 
   const fetchPastPlans = useCallback(async () => {
@@ -82,7 +90,7 @@ function AdvisorPageContent() {
       const advice = await getFinancialAdvice(prompt);
       
       // Save all generated plans
-      await addAIPlan({
+      const newPlanId = await addAIPlan({
         prompt,
         advice,
         goalId: goalId || undefined,
@@ -100,6 +108,8 @@ function AdvisorPageContent() {
         );
       } else {
         // Otherwise, just refresh the past plans list. The plan will not be displayed until clicked.
+        // And display the plan we just generated.
+        setPlan(advice);
         fetchPastPlans();
       }
     } catch (e: any) {
@@ -172,7 +182,22 @@ function AdvisorPageContent() {
               </div>
             )}
 
-            {plan && !loading && <FinancialPlan plan={plan} />}
+            {plan && !loading && (
+              <>
+                <div className="text-right mt-4">
+                  <Button variant="outline" onClick={handlePrint}>
+                    <FileText className="mr-2" />
+                    Download PDF
+                  </Button>
+                </div>
+                <FinancialPlan plan={plan} />
+                 <div className="hidden">
+                  <div ref={componentRef}>
+                    <PrintableFinancialPlan plan={plan} />
+                  </div>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
