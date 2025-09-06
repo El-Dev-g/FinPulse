@@ -35,12 +35,12 @@ function InvestmentCalculator({ values, setValues, onUseFutureValue }: any) {
   }, [initial, contribution, rate, years]);
   
   return (
-     <Card className="flex flex-col">
+     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><TrendingUp /> Investment Growth</CardTitle>
         <CardDescription>Project the future value of your investments.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6 flex-grow">
+      <CardContent className="space-y-6">
         <div className="space-y-4">
             <div className="space-y-2">
                 <Label htmlFor="initial">Initial Investment ($)</Label>
@@ -105,12 +105,12 @@ function SavingsGoalCalculator({ values, setValues, onUseContribution }: any) {
     }, [target, current, years]);
 
     return (
-        <Card className="flex flex-col">
+        <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Target /> Savings Goal Planner</CardTitle>
                 <CardDescription>Calculate how much you need to save to reach your goal.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6 flex-grow">
+            <CardContent className="space-y-6">
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="target">Goal Amount ($)</Label>
@@ -164,12 +164,12 @@ function DebtPayoffCalculator({ values, setValues, onUsePayment }: any) {
   }, [debtAmount, interestRate, monthlyPayment]);
 
   return (
-    <Card className="flex flex-col">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><CreditCard /> Debt Payoff Planner</CardTitle>
         <CardDescription>See how fast you can become debt-free.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6 flex-grow">
+      <CardContent className="space-y-6">
         <div className="space-y-4">
             <div className="space-y-2">
                 <Label htmlFor="debtAmount">Total Debt ($)</Label>
@@ -256,12 +256,12 @@ function CurrencyConverter({ values, setValues, onUseConversion }: any) {
 
 
   return (
-    <Card className="flex flex-col">
+    <Card>
        <CardHeader>
         <CardTitle className="flex items-center gap-2"><Coins /> Currency Converter</CardTitle>
         <CardDescription>Convert between major currencies using live rates.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6 flex-grow">
+      <CardContent className="space-y-6">
         <div className="space-y-4">
             <div className="space-y-2">
             <Label htmlFor="amount-converter">Amount</Label>
