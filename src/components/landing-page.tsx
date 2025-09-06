@@ -78,7 +78,7 @@ export default function LandingPage() {
                 alt={hero.imageAlt}
                 fill
                 className="object-cover"
-                data-ai-hint="finance dashboard"
+                data-ai-hint="financial tracking"
                 priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-transparent" />
