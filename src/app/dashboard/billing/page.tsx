@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from '@/lib/utils';
+import { ChangePlanDialog } from '@/components/dashboard/change-plan-dialog';
 
 const billingHistory = [
   {
@@ -161,6 +162,7 @@ export default function BillingPage() {
   const { isPro, subscriptionStatus, setSubscriptionStatus, formatCurrency } = useAuth();
   const { toast } = useToast();
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [isChangePlanOpen, setIsChangePlanOpen] = useState(false);
   
   const handleDownloadInvoice = (invoiceId: string) => {
     toast({
@@ -212,11 +214,8 @@ export default function BillingPage() {
               <CardTitle>Your Current Plan</CardTitle>
               <CardDescription>You are currently on the {isPro ? "Pro" : "Free"} Plan.</CardDescription>
             </div>
-             <Button asChild>
-                <Link href="/pricing">
-                  {isPro ? "Change Plan" : "Upgrade to Pro"}
-                  <ExternalLink className="ml-2" />
-                </Link>
+             <Button onClick={() => setIsChangePlanOpen(true)}>
+                {isPro ? "Change Plan" : "Upgrade to Pro"}
              </Button>
           </CardHeader>
           <CardContent>
@@ -315,6 +314,10 @@ export default function BillingPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <ChangePlanDialog 
+        isOpen={isChangePlanOpen}
+        onOpenChange={setIsChangePlanOpen}
+      />
     </>
   );
 }
