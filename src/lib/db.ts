@@ -94,17 +94,24 @@ export const addGoal = async (goal: Omit<Goal, 'id' | 'current' | 'createdAt' | 
         goalData.advice = advice;
     } else if (goal.advice) {
         // For Pro users, use the advice they might have selected
-        goalData.advice = goal.advice;
+        goalData.advice = advice;
     }
 
     return addDataItem('goals', goalData);
 };
 export const getGoals = async (status: 'active' | 'archived' | 'all' = 'active') => {
-    const allGoals = await getData<Goal>('goals');
+    const uid = await getUid();
+    if (!uid) return [];
+    
+    let q;
     if (status === 'all') {
-        return allGoals;
+        q = query(collection(db, `users/${uid}/goals`), orderBy('createdAt', 'desc'));
+    } else {
+        q = query(collection(db, `users/${uid}/goals`), where("status", "==", status), orderBy('createdAt', 'desc'));
     }
-    return allGoals.filter(goal => goal.status === status);
+    
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Goal & { id: string }));
 };
 export const updateGoal = (id: string, goal: Partial<Goal>) => {
     return updateDataItem('goals', id, goal);
@@ -113,6 +120,9 @@ export const deleteGoal = (id: string) => {
     // We archive instead of deleting
     return updateGoal(id, { status: 'archived' });
 };
+export const permanentDeleteGoal = (id: string) => {
+    return deleteDataItem('goals', id);
+}
 export const getGoal = async (id: string): Promise<(Goal & {id: string}) | null> => {
     const uid = await getUid();
     if (!uid) return null;
@@ -155,6 +165,8 @@ export const deleteTask = (id: string) => deleteDataItem('tasks', id);
 // --- Recurring Transactions ---
 export const addRecurringTransaction = (transaction: Omit<RecurringTransaction, 'id' | 'Icon'>) => addDataItem<Omit<RecurringTransaction, 'id' | 'Icon'>>('recurring', transaction);
 export const getRecurringTransactions = () => getData<RecurringTransaction>('recurring');
+export const updateRecurringTransaction = (id: string, transaction: Partial<RecurringTransaction>) => updateDataItem('recurring', id, transaction);
+export const deleteRecurringTransaction = (id: string) => deleteDataItem('recurring', id);
 
 // --- Categories ---
 export const addCategory = async (category: Omit<Category, 'id' | 'createdAt'>, customUid?: string): Promise<string> => {

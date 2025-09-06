@@ -13,7 +13,13 @@ export default function Home() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push("/dashboard");
+       // Check if onboarding is complete
+      const onboardingComplete = localStorage.getItem('onboardingComplete') === 'true';
+      if (!onboardingComplete) {
+        router.push("/welcome/onboarding");
+      } else {
+        router.push("/dashboard");
+      }
     }
   }, [user, loading, router]);
 

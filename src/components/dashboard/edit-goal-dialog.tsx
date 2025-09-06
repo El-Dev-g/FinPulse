@@ -23,7 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, Trash } from "lucide-react";
+import { Loader, Trash, Archive } from "lucide-react";
 import type { Goal } from "@/lib/types";
 
 interface EditGoalDialogProps {
@@ -31,7 +31,8 @@ interface EditGoalDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onEditGoal: (updatedGoal: Goal) => Promise<void>;
-  onDeleteGoal: (goalId: string) => Promise<void>;
+  onArchiveGoal: (goalId: string) => Promise<void>;
+  onPermanentDelete: (goalId: string) => Promise<void>;
 }
 
 export function EditGoalDialog({
@@ -39,20 +40,25 @@ export function EditGoalDialog({
   isOpen,
   onOpenChange,
   onEditGoal,
-  onDeleteGoal,
+  onArchiveGoal,
+  onPermanentDelete,
 }: EditGoalDialogProps) {
   const [title, setTitle] = useState("");
   const [current, setCurrent] = useState("");
   const [target, setTarget] = useState("");
+  const [status, setStatus] = useState<"active" | "archived">("active");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const isArchived = status === 'archived';
 
   useEffect(() => {
     if (goal) {
       setTitle(goal.title);
       setCurrent(goal.current.toString());
       setTarget(goal.target.toString());
+      setStatus(goal.status);
     }
   }, [goal]);
 
@@ -92,6 +98,7 @@ export function EditGoalDialog({
             title,
             current: currentAmount,
             target: targetAmount,
+            status: isArchived ? 'active' : goal.status, // Restore if it was archived
             });
         }
         onOpenChange(false);
@@ -102,17 +109,28 @@ export function EditGoalDialog({
     }
   };
   
-  const handleDelete = async () => {
+  const handleArchive = async () => {
     if (goal) {
       try {
-        await onDeleteGoal(goal.id);
-        setIsDeleteDialogOpen(false);
+        await onArchiveGoal(goal.id);
         onOpenChange(false);
       } catch (err) {
-        setError("Failed to delete goal.");
+        setError("Failed to archive goal.");
       }
     }
   };
+
+  const handleDelete = async () => {
+     if (goal) {
+      try {
+        await onPermanentDelete(goal.id);
+        setIsDeleteDialogOpen(false);
+        onOpenChange(false);
+      } catch (err) {
+        setError("Failed to delete goal permanently.");
+      }
+    }
+  }
 
 
   return (
@@ -165,17 +183,20 @@ export function EditGoalDialog({
           </div>
           {error && <p className="text-sm text-destructive mb-4">{error}</p>}
           <DialogFooter className="justify-between">
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => setIsDeleteDialogOpen(true)}
-              >
-                <Trash className="mr-2 h-4 w-4" />
-                Delete
-              </Button>
+            <div>
+              {isArchived ? (
+                <Button type="button" variant="destructive" onClick={() => setIsDeleteDialogOpen(true)}>
+                    <Trash className="mr-2" /> Delete Permanently
+                </Button>
+              ) : (
+                 <Button type="button" variant="outline" onClick={handleArchive}>
+                    <Archive className="mr-2" /> Archive
+                </Button>
+              )}
+            </div>
             <Button type="submit" disabled={loading}>
               {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-              Save Changes
+              {isArchived ? "Restore Goal" : "Save Changes"}
             </Button>
           </DialogFooter>
         </form>
@@ -187,15 +208,15 @@ export function EditGoalDialog({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will archive the goal but not permanently delete it. You can view archived goals later.
+                This action cannot be undone. This will permanently delete this goal and all associated data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-              Archive
+              Delete Forever
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -14,12 +14,12 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Sparkles, Loader, Lock } from "lucide-react";
+import { Plus, Sparkles, Loader, Lock, Archive } from "lucide-react";
 import { AddGoalDialog } from "@/components/dashboard/add-goal-dialog";
 import { EditGoalDialog } from "@/components/dashboard/edit-goal-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import type { Goal, Advice, AIPlan } from "@/lib/types";
-import { addGoal, deleteGoal, getGoals, updateGoal, getAIPlans } from "@/lib/db";
+import { addGoal, deleteGoal, getGoals, updateGoal, getAIPlans, permanentDeleteGoal } from "@/lib/db";
 import { processGoals } from "@/lib/utils";
 import {
   Tooltip,
@@ -28,10 +28,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ProBadge } from "@/components/pro-badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 function GoalsPageContent() {
-  const [goals, setGoals] = useState<Goal[]>([]);
+  const [activeGoals, setActiveGoals] = useState<Goal[]>([]);
+  const [archivedGoals, setArchivedGoals] = useState<Goal[]>([]);
   const [aiPlans, setAiPlans] = useState<AIPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddGoalDialogOpen, setIsAddGoalDialogOpen] = useState(false);
@@ -42,14 +44,15 @@ function GoalsPageContent() {
   const router = useRouter();
 
   const goalLimit = 20;
-  const hasReachedGoalLimit = !isPro && goals.length >= goalLimit;
+  const hasReachedGoalLimit = !isPro && activeGoals.length >= goalLimit;
 
   const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const [dbGoals, dbAIPlans] = await Promise.all([
+      const [dbActiveGoals, dbArchivedGoals, dbAIPlans] = await Promise.all([
         getGoals('active'),
+        getGoals('archived'),
         getAIPlans(),
       ]);
 
@@ -61,9 +64,9 @@ function GoalsPageContent() {
           const parsedAdvice: Advice = JSON.parse(
             decodeURIComponent(adviceParam)
           );
-          const goalIndex = dbGoals.findIndex((g) => g.id === goalId);
+          const goalIndex = dbActiveGoals.findIndex((g) => g.id === goalId);
           if (goalIndex !== -1) {
-            dbGoals[goalIndex].advice = parsedAdvice;
+            dbActiveGoals[goalIndex].advice = parsedAdvice;
           }
         } catch (e) {
           console.error("Failed to parse advice from URL:", e);
@@ -77,8 +80,10 @@ function GoalsPageContent() {
         });
       }
 
-      const processed = processGoals(dbGoals as any[]);
-      setGoals(processed);
+      const processedActive = processGoals(dbActiveGoals as any[]);
+      const processedArchived = processGoals(dbArchivedGoals as any[]);
+      setActiveGoals(processedActive);
+      setArchivedGoals(processedArchived);
       setAiPlans(dbAIPlans as any[]);
     } catch (error) {
       console.error("Error fetching data: ", error);
@@ -102,10 +107,15 @@ function GoalsPageContent() {
     fetchData();
   };
 
-  const handleDeleteGoal = async (goalId: string) => {
+  const handleArchiveGoal = async (goalId: string) => {
     await deleteGoal(goalId);
     fetchData();
   };
+  
+  const handlePermanentDelete = async (goalId: string) => {
+    await permanentDeleteGoal(goalId);
+    fetchData();
+  }
 
   if(loading){
     return <div className="flex h-full w-full items-center justify-center"><Loader className="animate-spin" /></div>
@@ -154,11 +164,56 @@ function GoalsPageContent() {
             </div>
         )}
 
+        <Tabs defaultValue="active">
+            <TabsList className="mb-4">
+                <TabsTrigger value="active">Active ({activeGoals.length})</TabsTrigger>
+                <TabsTrigger value="archived">Archived ({archivedGoals.length})</TabsTrigger>
+            </TabsList>
+            <TabsContent value="active">
+                <GoalGrid goals={activeGoals} onEdit={setEditingGoal} formatCurrency={formatCurrency} />
+                 {activeGoals.length === 0 && !loading && (
+                    <div className="text-center py-12 text-muted-foreground">
+                        <h3 className="text-lg font-semibold">No Active Goals Yet!</h3>
+                        <p>Click "Add New Goal" to get started.</p>
+                    </div>
+                )}
+            </TabsContent>
+             <TabsContent value="archived">
+                <GoalGrid goals={archivedGoals} onEdit={setEditingGoal} formatCurrency={formatCurrency} isArchived />
+                 {archivedGoals.length === 0 && !loading && (
+                    <div className="text-center py-12 text-muted-foreground">
+                        <h3 className="text-lg font-semibold">No Archived Goals</h3>
+                        <p>When you delete a goal, it will appear here.</p>
+                    </div>
+                )}
+            </TabsContent>
+        </Tabs>
+      </div>
+      <AddGoalDialog
+        isOpen={isAddGoalDialogOpen}
+        onOpenChange={setIsAddGoalDialogOpen}
+        onAddGoal={handleAddGoal}
+        aiPlans={aiPlans}
+      />
+      <EditGoalDialog
+        goal={editingGoal}
+        isOpen={!!editingGoal}
+        onOpenChange={(isOpen) => !isOpen && setEditingGoal(null)}
+        onEditGoal={handleEditGoal}
+        onArchiveGoal={handleArchiveGoal}
+        onPermanentDelete={handlePermanentDelete}
+      />
+    </main>
+  );
+}
+
+function GoalGrid({ goals, onEdit, formatCurrency, isArchived = false }: { goals: Goal[], onEdit: (goal: Goal) => void, formatCurrency: (amount: number) => string, isArchived?: boolean }) {
+    return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {goals.map((goal) => {
-            const progress = (goal.current / goal.target) * 100;
+            const progress = goal.target > 0 ? (goal.current / goal.target) * 100 : 0;
             return (
-              <Card key={goal.id}>
+              <Card key={goal.id} className={isArchived ? "opacity-60" : ""}>
                 <CardHeader>
                   <CardTitle>{goal.title}</CardTitle>
                   <CardDescription>
@@ -185,45 +240,26 @@ function GoalsPageContent() {
                     variant="outline"
                     size="sm"
                     className="w-full"
-                    onClick={() => setEditingGoal(goal)}
+                    onClick={() => onEdit(goal)}
                   >
-                    Edit
+                    {isArchived ? "View/Restore" : "Edit"}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full"
-                    asChild
-                  >
-                    <Link href={`/dashboard/goals/${goal.id}`}>Details</Link>
-                  </Button>
+                  {!isArchived && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full"
+                        asChild
+                    >
+                        <Link href={`/dashboard/goals/${goal.id}`}>Details</Link>
+                    </Button>
+                  )}
                 </CardFooter>
               </Card>
             );
           })}
         </div>
-        {goals.length === 0 && !loading && (
-          <div className="text-center py-12 text-muted-foreground">
-              <h3 className="text-lg font-semibold">No Goals Yet!</h3>
-              <p>Click "Add New Goal" to get started.</p>
-          </div>
-        )}
-      </div>
-      <AddGoalDialog
-        isOpen={isAddGoalDialogOpen}
-        onOpenChange={setIsAddGoalDialogOpen}
-        onAddGoal={handleAddGoal}
-        aiPlans={aiPlans}
-      />
-      <EditGoalDialog
-        goal={editingGoal}
-        isOpen={!!editingGoal}
-        onOpenChange={(isOpen) => !isOpen && setEditingGoal(null)}
-        onEditGoal={handleEditGoal}
-        onDeleteGoal={handleDeleteGoal}
-      />
-    </main>
-  );
+    )
 }
 
 

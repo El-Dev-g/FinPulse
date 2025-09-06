@@ -20,18 +20,26 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Plus, Repeat, ArrowRightLeft, Loader } from "lucide-react";
+import { Plus, Repeat, Loader, MoreHorizontal } from "lucide-react";
 import { AddRecurringTransactionDialog } from "@/components/dashboard/add-recurring-transaction-dialog";
+import { EditRecurringTransactionDialog } from "@/components/dashboard/edit-recurring-transaction-dialog";
 import type { RecurringTransaction, ClientRecurringTransaction } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
-import { addRecurringTransaction, getRecurringTransactions } from "@/lib/db";
+import { addRecurringTransaction, getRecurringTransactions, updateRecurringTransaction, deleteRecurringTransaction } from "@/lib/db";
 import { processRecurringTransactions, getIconForCategory } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function RecurringPage() {
   const { user, formatCurrency } = useAuth();
   const [recurring, setRecurring] = useState<ClientRecurringTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<ClientRecurringTransaction | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -58,6 +66,19 @@ export default function RecurringPage() {
     await addRecurringTransaction(newTransaction);
     fetchData();
   };
+
+  const handleEditTransaction = async (
+    updatedTransaction: Omit<RecurringTransaction, 'Icon' | 'createdAt'>
+  ) => {
+    await updateRecurringTransaction(updatedTransaction.id, updatedTransaction);
+    fetchData();
+  };
+
+  const handleDeleteTransaction = async (transactionId: string) => {
+    await deleteRecurringTransaction(transactionId);
+    fetchData();
+  };
+
 
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
@@ -102,6 +123,7 @@ export default function RecurringPage() {
                   <TableHead>Frequency</TableHead>
                   <TableHead>Start Date</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -138,11 +160,31 @@ export default function RecurringPage() {
                         {transaction.amount > 0 ? "+" : ""}
                         {formatCurrency(transaction.amount)}
                       </TableCell>
+                       <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onSelect={() => setEditingTransaction(transaction)}>
+                              Edit
+                            </DropdownMenuItem>
+                             <DropdownMenuItem
+                              onSelect={() => handleDeleteTransaction(transaction.id)}
+                              className="text-destructive"
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
                     </TableRow>
                   )})
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center h-24">
+                    <TableCell colSpan={6} className="text-center h-24">
                       No recurring transactions found.
                     </TableCell>
                   </TableRow>
@@ -157,6 +199,13 @@ export default function RecurringPage() {
         isOpen={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onAddTransaction={handleAddTransaction}
+      />
+      <EditRecurringTransactionDialog
+        transaction={editingTransaction}
+        isOpen={!!editingTransaction}
+        onOpenChange={(isOpen) => !isOpen && setEditingTransaction(null)}
+        onEditTransaction={handleEditTransaction}
+        onDeleteTransaction={handleDeleteTransaction}
       />
     </main>
   );
