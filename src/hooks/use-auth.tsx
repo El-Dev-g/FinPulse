@@ -1,3 +1,4 @@
+
 // src/hooks/use-auth.tsx
 "use client";
 
@@ -55,6 +56,7 @@ const unprotectedRoutes = [
   "/policy/privacy",
   "/policy/terms",
   "/pricing",
+  "/faq",
 ];
 
 const isOnboardingRoute = (pathname: string) =>
@@ -123,7 +125,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (loading) return;
 
-    const isUnprotectedPage = unprotectedRoutes.includes(pathname);
+    const isUnprotectedPage = unprotectedRoutes.includes(pathname) || unprotectedRoutes.some(p => p !== '/' && pathname.startsWith(p + '/'));
     const isOnboardingPage = isOnboardingRoute(pathname);
 
     // If user is not logged in, redirect to signin page if route is protected

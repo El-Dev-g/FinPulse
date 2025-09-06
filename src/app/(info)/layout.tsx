@@ -5,8 +5,18 @@ import { Github, Linkedin, Twitter } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import content from "@/content/landing-page.json";
+import { useAuth } from "@/hooks/use-auth";
 
-export default function InfoPageLayout({
+function AuthAwareHomeButton() {
+    const { user } = useAuth();
+    return (
+        <Button asChild variant="ghost">
+          <Link href={user ? "/dashboard" : "/"}>Back to {user ? "Dashboard" : "Home"}</Link>
+        </Button>
+    )
+}
+
+function InfoPageLayoutContent({
   children,
 }: {
   children: React.ReactNode;
@@ -16,9 +26,7 @@ export default function InfoPageLayout({
     <div className="flex flex-col min-h-screen bg-background">
       <header className="container mx-auto px-4 h-20 flex items-center justify-between border-b">
         <Logo />
-        <Button asChild variant="ghost">
-          <Link href="/">Back to Home</Link>
-        </Button>
+        <AuthAwareHomeButton />
       </header>
       <main className="flex-grow container mx-auto px-4 py-12 md:py-20">
         <div className="max-w-4xl mx-auto">
@@ -62,4 +70,15 @@ export default function InfoPageLayout({
       </footer>
     </div>
   );
+}
+
+
+export default function InfoPageLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+    // This component is now client-side because of the useAuth hook,
+    // so we need to wrap the main content to avoid Client/Server mismatches
+    return <InfoPageLayoutContent>{children}</InfoPageLayoutContent>
 }
