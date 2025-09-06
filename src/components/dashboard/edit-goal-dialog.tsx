@@ -139,9 +139,9 @@ export function EditGoalDialog({
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Edit Financial Goal</DialogTitle>
+            <DialogTitle>{isArchived ? "Archived Goal" : "Edit Financial Goal"}</DialogTitle>
             <DialogDescription>
-              Update the details for your financial goal.
+              {isArchived ? "You can restore this goal or delete it permanently." : "Update the details for your financial goal."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
