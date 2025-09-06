@@ -44,12 +44,6 @@ export function Chatbot() {
   const chatWindowRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dragInfo = useRef({ isDragging: false, startX: 0, startY: 0, lastX: 0, lastY: 0 });
-
-  const commands = faqContent.faqs.map(faq => ({
-      name: `/${faq.question.toLowerCase().replace(/\s+/g, '-').replace('?', '')}`,
-      question: faq.question,
-      description: faq.answer.substring(0, 50) + "..."
-  }));
   
   const resetChat = useCallback(() => {
     setChatStage('collecting-name');
@@ -127,8 +121,16 @@ export function Chatbot() {
   };
   
   const handleCommandSelect = (question: string) => {
-      sendQuery(question);
-      inputRef.current?.focus();
+    const faq = faqContent.faqs.find(f => f.question === question);
+    if (!faq) return;
+
+    const userMessage: Message = { sender: "user", text: question };
+    const botMessage: Message = { sender: "bot", text: faq.answer };
+
+    setMessages(prev => [...prev, userMessage, botMessage]);
+    setShowCommands(false);
+    setInput("");
+    inputRef.current?.focus();
   }
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
