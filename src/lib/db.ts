@@ -3,6 +3,7 @@ import { db } from './firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy, setDoc } from 'firebase/firestore';
 import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category, AIPlan, UserProfile, Advice } from './types';
 import { auth } from './firebase';
+import { getFinancialAdvice } from './actions';
 
 const getUid = async (): Promise<string | null> => {
     // Wait for the auth state to be initialized
@@ -78,16 +79,24 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
 
 
 // --- Goals ---
-export const addGoal = (goal: Omit<Goal, 'id' | 'current' | 'createdAt' | 'status'>) => {
+export const addGoal = async (goal: Omit<Goal, 'id' | 'current' | 'createdAt' | 'status'>, autoGenerateAdvice: boolean = false) => {
     const goalData: { title: string; target: number; current: number; advice?: Advice, status: 'active' | 'archived' } = {
         title: goal.title,
         target: goal.target,
         current: 0,
         status: 'active'
     };
-    if (goal.advice) {
+
+    if (autoGenerateAdvice) {
+        // For free users, generate a simple advice plan automatically
+        const prompt = `I am creating a new financial goal to "${goal.title}" with a target of $${goal.target}. Please give me a simple, encouraging financial plan with 3-5 steps to help me get started.`;
+        const advice = await getFinancialAdvice(prompt);
+        goalData.advice = advice;
+    } else if (goal.advice) {
+        // For Pro users, use the advice they might have selected
         goalData.advice = goal.advice;
     }
+
     return addDataItem('goals', goalData);
 };
 export const getGoals = async (status: 'active' | 'archived' | 'all' = 'active') => {
