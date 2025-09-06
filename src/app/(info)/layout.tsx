@@ -1,4 +1,6 @@
 // src/app/(info)/layout.tsx
+"use client";
+
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Github, Linkedin, Twitter } from "lucide-react";
