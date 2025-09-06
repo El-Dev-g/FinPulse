@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, Settings, Trash, Upload, User, DollarSign, Crown } from "lucide-react";
+import { Loader, Settings, Trash, Upload, User, DollarSign, Crown, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
@@ -35,6 +35,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updateUserProfile } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 const currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "INR", "BRL", "NGN", "GHS"];
 
@@ -244,9 +245,16 @@ export default function SettingsPage() {
                     <p className="text-lg font-semibold">{isPro ? "Pro Plan" : "Free Plan"}</p>
                 </div>
                 {isPro ? (
-                    <Button variant="outline">Manage Subscription</Button>
+                    <Button asChild variant="outline">
+                      <Link href="/dashboard/billing">
+                        Manage Subscription
+                        <ExternalLink className="ml-2" />
+                      </Link>
+                    </Button>
                 ) : (
-                    <Button>Upgrade to Pro</Button>
+                    <Button asChild>
+                      <Link href="/dashboard/billing">Upgrade to Pro</Link>
+                    </Button>
                 )}
               </div>
             </CardContent>

@@ -20,6 +20,7 @@ import {
   Lightbulb,
   Bell,
   Sparkles,
+  FileText,
 } from "lucide-react";
 import {
   Sidebar,
@@ -61,6 +62,12 @@ const navItems = [
   { href: "/dashboard/calculator", icon: Calculator, label: "Calculator" },
   { href: "/dashboard/advisor", icon: Lightbulb, label: "AI Advisor", isPro: true },
 ];
+
+const settingsNavItems = [
+  { href: "/dashboard/settings", icon: Settings, label: "Settings" },
+  { href: "/dashboard/billing", icon: FileText, label: "Billing" },
+];
+
 
 function DashboardSidebar() {
   const pathname = usePathname();
@@ -149,19 +156,21 @@ function DashboardSidebar() {
       </SidebarContent>
       <SidebarFooter className="p-4">
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname === "/dashboard/settings"}
-              tooltip={{ children: "Settings" }}
-              onClick={handleLinkClick}
-            >
-              <Link href="/dashboard/settings">
-                <Settings />
-                <span>Settings</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {settingsNavItems.map((item) => (
+             <SidebarMenuItem key={item.href}>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === item.href}
+                tooltip={{ children: item.label }}
+                onClick={handleLinkClick}
+              >
+                <Link href={item.href}>
+                  <item.icon />
+                  <span>{item.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
           <SidebarMenuItem>
             <div className="flex items-center gap-3 w-full mt-4">
               <Avatar className="h-9 w-9">
