@@ -60,16 +60,18 @@ const navItems = [
   { href: "/dashboard/budgets", icon: Wallet, label: "Budgets" },
   { href: "/dashboard/reports", icon: PieChart, label: "Reports", isPro: true },
   { href: "/dashboard/goals", icon: Target, label: "Goals" },
-  { type: 'divider' },
-  { href: "/dashboard/alerts", icon: Bell, label: "Alerts", isPro: true },
-  { href: "/dashboard/advisor", icon: Lightbulb, label: "AI Advisor", isPro: true },
 ];
 
-const toolsSubMenu = [
+const productivitySubMenu = [
     { href: "/dashboard/organizer", icon: ClipboardList, label: "Organizer" },
     { href: "/dashboard/calculator", icon: Calculator, label: "Calculator" },
     { href: "/dashboard/catalog", icon: ListTree, label: "Categories" },
 ]
+
+const aiSubMenu = [
+   { href: "/dashboard/alerts", icon: Bell, label: "Alerts", isPro: true },
+  { href: "/dashboard/advisor", icon: Lightbulb, label: "AI Advisor", isPro: true },
+];
 
 const settingsNavItems = [
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
@@ -83,7 +85,9 @@ function DashboardSidebar() {
   const isCollapsed = !open;
   const { user, isPro } = useAuth();
   const router = useRouter();
-  const [isToolsOpen, setIsToolsOpen] = useState(false);
+  const [isProductivityOpen, setIsProductivityOpen] = useState(false);
+  const [isAiOpen, setIsAiOpen] = useState(false);
+
 
   const handleLinkClick = () => {
     if (isMobile) {
@@ -95,6 +99,38 @@ function DashboardSidebar() {
     await auth.signOut();
     router.push("/signin");
   };
+
+  const renderProFeature = (item: any) => {
+     const linkContent = (
+      <>
+        <item.icon />
+        <span>{item.label}</span>
+          {!isCollapsed && <ProBadge />}
+      </>
+    );
+     return (
+        <SidebarMenuItem key={item.href}>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                  <SidebarMenuButton
+                    asChild
+                    disabled
+                    className="cursor-not-allowed"
+                    tooltip={{ children: "Upgrade to Pro to access this feature" }}
+                  >
+                  <div>{linkContent}</div>
+                  </SidebarMenuButton>
+              </TooltipTrigger>
+                <TooltipContent side="right" className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <p>Upgrade to Pro to access this feature</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </SidebarMenuItem>
+      );
+  }
 
   return (
     <Sidebar
@@ -111,10 +147,7 @@ function DashboardSidebar() {
 
       <SidebarContent className="p-4">
         <SidebarMenu>
-          {navItems.map((item, index) => {
-            if (item.type === 'divider') {
-                return <Separator key={index} className="my-2 mx-2" />;
-            }
+          {navItems.map((item) => {
             const isProFeature = item.isPro && !isPro;
             const linkContent = (
               <>
@@ -125,28 +158,7 @@ function DashboardSidebar() {
             );
 
             if (isProFeature) {
-              return (
-                <SidebarMenuItem key={item.href}>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                         <SidebarMenuButton
-                            asChild
-                            disabled
-                            className="cursor-not-allowed"
-                            tooltip={{ children: "Upgrade to Pro to access this feature" }}
-                          >
-                           <div>{linkContent}</div>
-                          </SidebarMenuButton>
-                      </TooltipTrigger>
-                       <TooltipContent side="right" className="flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-primary" />
-                        <p>Upgrade to Pro to access this feature</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </SidebarMenuItem>
-              );
+              return renderProFeature(item);
             }
 
             return (
@@ -164,19 +176,22 @@ function DashboardSidebar() {
               </SidebarMenuItem>
             );
           })}
-           <Collapsible open={isToolsOpen} onOpenChange={setIsToolsOpen}>
+          
+          <Separator className="my-2 mx-2" />
+
+           <Collapsible open={isProductivityOpen} onOpenChange={setIsProductivityOpen}>
             <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip={{children: "Tools"}} className="w-full">
+                    <SidebarMenuButton tooltip={{children: "Productivity"}} className="w-full">
                         <GanttChartSquare />
-                        <span>Tools</span>
-                        <ChevronDown className={cn("ml-auto h-4 w-4 transition-transform", isToolsOpen && "rotate-180")} />
+                        <span>Productivity</span>
+                        <ChevronDown className={cn("ml-auto h-4 w-4 transition-transform", isProductivityOpen && "rotate-180")} />
                     </SidebarMenuButton>
                 </CollapsibleTrigger>
             </SidebarMenuItem>
             <CollapsibleContent>
                  <SidebarMenuSub>
-                    {toolsSubMenu.map((item) => (
+                    {productivitySubMenu.map((item) => (
                         <SidebarMenuSubItem key={item.href}>
                             <SidebarMenuSubButton asChild isActive={pathname.startsWith(item.href)}>
                                 <Link href={item.href} onClick={handleLinkClick}>
@@ -186,6 +201,60 @@ function DashboardSidebar() {
                             </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                     ))}
+                 </SidebarMenuSub>
+            </CollapsibleContent>
+           </Collapsible>
+           
+           <Collapsible open={isAiOpen} onOpenChange={setIsAiOpen}>
+            <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip={{children: "AI Tools"}} className="w-full">
+                        <Sparkles />
+                        <span>AI Tools</span>
+                        <ChevronDown className={cn("ml-auto h-4 w-4 transition-transform", isAiOpen && "rotate-180")} />
+                    </SidebarMenuButton>
+                </CollapsibleTrigger>
+            </SidebarMenuItem>
+            <CollapsibleContent>
+                 <SidebarMenuSub>
+                    {aiSubMenu.map((item) => {
+                      if (item.isPro && !isPro) {
+                          const linkContent = (
+                            <>
+                              <item.icon />
+                              <span>{item.label}</span>
+                              {!isCollapsed && <ProBadge />}
+                            </>
+                          );
+                          return (
+                            <SidebarMenuSubItem key={item.href}>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                      <SidebarMenuSubButton disabled className="cursor-not-allowed">
+                                          {linkContent}
+                                      </SidebarMenuSubButton>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="right" className="flex items-center gap-2">
+                                    <Sparkles className="h-4 w-4 text-primary" />
+                                    <p>Upgrade to Pro to access this feature</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </SidebarMenuSubItem>
+                          )
+                      }
+                      return (
+                        <SidebarMenuSubItem key={item.href}>
+                            <SidebarMenuSubButton asChild isActive={pathname.startsWith(item.href)}>
+                                <Link href={item.href} onClick={handleLinkClick}>
+                                    <item.icon />
+                                    <span>{item.label}</span>
+                                </Link>
+                            </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      )
+                    })}
                  </SidebarMenuSub>
             </CollapsibleContent>
            </Collapsible>
