@@ -17,6 +17,8 @@ type Message = {
   text: string;
 };
 
+type ChatStage = 'collecting-name' | 'collecting-email' | 'chatting';
+
 const CommandItem = ({ command, description, onSelect }: { command: string, description: string, onSelect: (command: string) => void }) => (
     <button 
         className="w-full text-left p-2 hover:bg-muted rounded-md"
@@ -35,6 +37,9 @@ export function Chatbot() {
   const [showCommands, setShowCommands] = useState(false);
   const [filteredCommands, setFilteredCommands] = useState(faqContent.faqs);
   
+  const [chatStage, setChatStage] = useState<ChatStage>('collecting-name');
+  const [userInfo, setUserInfo] = useState({ name: "", email: "" });
+
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const chatWindowRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -45,25 +50,27 @@ export function Chatbot() {
       question: faq.question,
       description: faq.answer.substring(0, 50) + "..."
   }));
+  
+  const resetChat = useCallback(() => {
+    setChatStage('collecting-name');
+    setMessages([
+        { sender: "bot", text: "Hello! Before we start, could I get your name?" }
+    ]);
+    setUserInfo({ name: "", email: "" });
+    setInput("");
+    setIsLoading(false);
+    setShowCommands(false);
+    if (chatWindowRef.current) {
+        chatWindowRef.current.style.transform = 'translate(0px, 0px)';
+    }
+    dragInfo.current = { isDragging: false, startX: 0, startY: 0, lastX: 0, lastY: 0 };
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
-        setMessages([
-            { sender: "bot", text: "Hello! I'm the FinPulse assistant. Type `/` to see what I can help with, or just ask a question." }
-        ]);
-        // Reset position when opening
-        if (chatWindowRef.current) {
-            chatWindowRef.current.style.transform = 'translate(0px, 0px)';
-        }
-        dragInfo.current = { isDragging: false, startX: 0, startY: 0, lastX: 0, lastY: 0 };
-    } else {
-        // Reset on close
-        setMessages([]);
-        setInput("");
-        setIsLoading(false);
-        setShowCommands(false);
+      resetChat();
     }
-  }, [isOpen]);
+  }, [isOpen, resetChat]);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -98,7 +105,25 @@ export function Chatbot() {
 
   const handleUserInput = async (e: React.FormEvent) => {
     e.preventDefault();
-    sendQuery(input);
+    if (!input.trim()) return;
+
+    if (chatStage === 'chatting') {
+        sendQuery(input);
+    } else {
+        const userMessage = { sender: "user" as const, text: input };
+        setMessages(prev => [...prev, userMessage]);
+        
+        if (chatStage === 'collecting-name') {
+            setUserInfo(prev => ({...prev, name: input}));
+            setChatStage('collecting-email');
+            setMessages(prev => [...prev, { sender: 'bot', text: `Thanks ${input}! What's your email address?` }]);
+        } else if (chatStage === 'collecting-email') {
+            setUserInfo(prev => ({...prev, email: input}));
+            setChatStage('chatting');
+            setMessages(prev => [...prev, { sender: 'bot', text: `Perfect. Thanks! I'm the FinPulse assistant. Type \`/\` to see what I can help with, or just ask a question.` }]);
+        }
+        setInput("");
+    }
   };
   
   const handleCommandSelect = (question: string) => {
@@ -109,7 +134,7 @@ export function Chatbot() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
       setInput(value);
-      if (value.startsWith('/')) {
+      if (value.startsWith('/') && chatStage === 'chatting') {
           setShowCommands(true);
           const searchTerm = value.substring(1).toLowerCase();
           setFilteredCommands(faqContent.faqs.filter(faq => 
@@ -162,6 +187,13 @@ export function Chatbot() {
     };
   }, [onMouseMove, onMouseUp]);
 
+  const getPlaceholderText = () => {
+    switch(chatStage) {
+        case 'collecting-name': return "Your name...";
+        case 'collecting-email': return "Your email...";
+        case 'chatting': return "Ask a question or type '/'...";
+    }
+  }
 
   return (
     <>
@@ -251,8 +283,9 @@ export function Chatbot() {
                   ref={inputRef}
                   value={input}
                   onChange={handleInputChange}
-                  placeholder="Ask a question or type '/'..."
+                  placeholder={getPlaceholderText()}
                   disabled={isLoading}
+                  autoFocus
                 />
                 <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
                   <Send />
