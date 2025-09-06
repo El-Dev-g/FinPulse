@@ -26,6 +26,7 @@ import { Logo } from "@/components/logo";
 import { Chatbot } from "./chatbot";
 import content from "@/content/landing-page.json";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "./theme-toggle";
 
 const icons: { [key: string]: React.ReactNode } = {
   Wallet: <Wallet className="h-8 w-8 text-primary" />,
@@ -41,16 +42,19 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="container mx-auto px-4 h-20 flex items-center justify-between">
-        <Logo />
-        <nav className="flex items-center gap-4">
-          <Button variant="ghost" asChild>
-            <Link href="/signin">Log In</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/signup">Sign Up</Link>
-          </Button>
-        </nav>
+      <header className="bg-primary text-primary-foreground">
+        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+            <Logo className="text-primary-foreground" />
+            <nav className="flex items-center gap-2">
+                <ThemeToggle />
+                <Button variant="ghost" asChild className="hover:bg-primary-foreground/10 hover:text-primary-foreground">
+                    <Link href="/signin">Log In</Link>
+                </Button>
+                <Button asChild variant="secondary">
+                    <Link href="/signup">Sign Up</Link>
+                </Button>
+            </nav>
+        </div>
       </header>
       <main className="flex-grow">
         <section className="container mx-auto px-4 py-20 md:py-32">
@@ -155,13 +159,8 @@ export default function LandingPage() {
                 </Card>
               ))}
             </div>
-            <div className="text-center mt-8">
-              <Button asChild variant="link">
-                <Link href="#pricing">
-                  Compare all features
-                  <ArrowRight className="ml-2"/>
-                </Link>
-              </Button>
+             <div className="text-center mt-12 text-sm text-muted-foreground">
+                <p>Have questions? <Link href="/contact" className="underline hover:text-primary">Contact our support team</Link>.</p>
             </div>
           </div>
         </section>

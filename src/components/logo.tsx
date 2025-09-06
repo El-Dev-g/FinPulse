@@ -15,9 +15,9 @@ export function Logo({
         className
       )}
     >
-      <div className="bg-primary-foreground/10 p-2 rounded-lg">
+      <div className={cn("bg-primary-foreground/10 p-2 rounded-lg", className ? "bg-primary-foreground/20" : "")}>
         <PiggyBank
-          className={`h-6 w-6 transition-all duration-300`}
+          className={cn(`h-6 w-6 transition-all duration-300`, className ? "text-primary-foreground" : "text-primary")}
         />
       </div>
       {!isCollapsed && (
