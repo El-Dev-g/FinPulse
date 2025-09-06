@@ -92,7 +92,7 @@ export function OverviewCards() {
           <>
             <Card><CardContent className="p-6 flex justify-center items-center h-[118px]"><Loader className="animate-spin" /></CardContent></Card>
             <Card><CardContent className="p-6 flex justify-center items-center h-[118px]"><Loader className="animate-spin" /></CardContent></Card>
-            <Card className="col-span-1 md:col-span-2 lg:col-span-2"><CardContent className="p-6 flex justify-center items-center h-[118px]"><Loader className="animate-spin" /></CardContent></Card>
+            <Card><CardContent className="p-6 flex justify-center items-center h-[118px]"><Loader className="animate-spin" /></CardContent></Card>
           </>
       )
   }
@@ -123,7 +123,7 @@ export function OverviewCards() {
           <p className="text-xs text-muted-foreground">{formatPercentage(overviewData.expenseChange)} from last month</p>
         </CardContent>
       </Card>
-      <Card className="col-span-1 md:col-span-2 lg:col-span-2">
+      <Card className="col-span-1 lg:col-span-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Net Worth</CardTitle>
           <Landmark className="h-4 w-4 text-muted-foreground" />
