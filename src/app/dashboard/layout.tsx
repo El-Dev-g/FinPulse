@@ -47,20 +47,16 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  {
-    href: "/dashboard/transactions",
-    icon: ArrowRightLeft,
-    label: "Expenses",
-  },
+  { href: "/dashboard/transactions", icon: ArrowRightLeft, label: "Transactions" },
   { href: "/dashboard/recurring", icon: Repeat, label: "Recurring" },
-  { href: "/dashboard/goals", icon: Target, label: "Goals" },
   { href: "/dashboard/budgets", icon: Wallet, label: "Budgets" },
   { href: "/dashboard/reports", icon: PieChart, label: "Reports", isPro: true },
+  { href: "/dashboard/goals", icon: Target, label: "Goals" },
   { href: "/dashboard/organizer", icon: ClipboardList, label: "Organizer" },
   { href: "/dashboard/alerts", icon: Bell, label: "Alerts", isPro: true },
-  { href: "/dashboard/catalog", icon: ListTree, label: "Categories" },
-  { href: "/dashboard/calculator", icon: Calculator, label: "Calculator" },
   { href: "/dashboard/advisor", icon: Lightbulb, label: "AI Advisor", isPro: true },
+  { href: "/dashboard/calculator", icon: Calculator, label: "Calculator" },
+  { href: "/dashboard/catalog", icon: ListTree, label: "Categories" },
 ];
 
 const settingsNavItems = [
