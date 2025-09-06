@@ -1,3 +1,4 @@
+
 // src/app/dashboard/settings/page.tsx
 "use client";
 
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, Settings, Trash, Upload, User, DollarSign } from "lucide-react";
+import { Loader, Settings, Trash, Upload, User, DollarSign, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
@@ -33,11 +34,12 @@ import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updateUserProfile } from "@/lib/db";
+import { Badge } from "@/components/ui/badge";
 
 const currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "INR", "BRL", "NGN", "GHS"];
 
 export default function SettingsPage() {
-  const { user, profile, loading: authLoading, currency, setCurrency, refreshProfile } = useAuth();
+  const { user, profile, loading: authLoading, currency, setCurrency, refreshProfile, isPro } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -227,6 +229,27 @@ export default function SettingsPage() {
                 </Button>
               </CardFooter>
             </form>
+          </Card>
+           <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Crown /> Subscription Plan</CardTitle>
+              <CardDescription>
+                Manage your subscription and billing details.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <div>
+                    <p className="text-sm text-muted-foreground">Your current plan</p>
+                    <p className="text-lg font-semibold">{isPro ? "Pro Plan" : "Free Plan"}</p>
+                </div>
+                {isPro ? (
+                    <Button variant="outline">Manage Subscription</Button>
+                ) : (
+                    <Button>Upgrade to Pro</Button>
+                )}
+              </div>
+            </CardContent>
           </Card>
           <Card>
             <CardHeader>
