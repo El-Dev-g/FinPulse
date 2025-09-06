@@ -11,9 +11,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { getBudgets, getTransactions } from '@/lib/db';
 import type { Budget, Transaction } from '@/lib/types';
 import { startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { AlertCircle } from 'lucide-react';
+import Link from 'next/link';
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, subscriptionStatus } = useAuth();
   const [alerts, setAlerts] = useState<AlertData[]>([]);
   const [loadingAlerts, setLoadingAlerts] = useState(true);
 
@@ -87,6 +91,21 @@ export default function DashboardPage() {
           </p>
         </div>
       </div>
+      
+      {subscriptionStatus === 'past_due' && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Your Payment is Past Due</AlertTitle>
+          <div className="flex items-center justify-between">
+            <AlertDescription>
+                Please update your payment information to keep your Pro account active.
+            </AlertDescription>
+            <Button asChild size="sm">
+                <Link href="/dashboard/billing">Update Billing</Link>
+            </Button>
+          </div>
+        </Alert>
+      )}
 
       <Alerts alerts={alerts} loading={loadingAlerts} />
 

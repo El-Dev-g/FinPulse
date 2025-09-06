@@ -31,6 +31,8 @@ function EmailSignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { setSubscriptionStatus } = useAuth();
+
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +40,10 @@ function EmailSignInForm() {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      // For prototype, if user logs in with Pro credentials, set status
+      if (email.toLowerCase() === 'pro@user.com') {
+          setSubscriptionStatus('active');
+      }
       // The useAuth hook will handle redirection
     } catch (err: any) {
       setError(err.message);
@@ -59,6 +65,7 @@ function EmailSignInForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+           <p className="text-xs text-muted-foreground">Test with `pro@user.com` and `password123` to log in as a pro user.</p>
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">

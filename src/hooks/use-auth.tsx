@@ -8,6 +8,7 @@ import React, {
   useState,
   ReactNode,
   useCallback,
+  useMemo,
 } from "react";
 import { User, onAuthStateChanged, getAuth } from "firebase/auth";
 import { app } from "@/lib/firebase";
@@ -15,14 +16,17 @@ import { useRouter, usePathname } from "next/navigation";
 import { getUserProfile, updateUserProfile } from "@/lib/db";
 import type { UserProfile } from "@/lib/types";
 
+type SubscriptionStatus = 'free' | 'active' | 'past_due';
+
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
   currency: string;
   isPro: boolean;
+  subscriptionStatus: SubscriptionStatus;
   setCurrency: (currency: string) => void;
-  setIsPro: (isPro: boolean) => void;
+  setSubscriptionStatus: (status: SubscriptionStatus) => void;
   formatCurrency: (amount: number) => string;
   refreshProfile: () => Promise<void>;
 }
@@ -33,8 +37,9 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   currency: "USD",
   isPro: false,
+  subscriptionStatus: 'free',
   setCurrency: () => {},
-  setIsPro: () => {},
+  setSubscriptionStatus: () => {},
   formatCurrency: (amount: number) => String(amount),
   refreshProfile: async () => {},
 });
@@ -49,6 +54,7 @@ const unprotectedRoutes = [
   "/contact",
   "/policy/privacy",
   "/policy/terms",
+  "/pricing",
 ];
 
 const isOnboardingRoute = (pathname: string) =>
@@ -59,10 +65,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [currency, setCurrencyState] = useState("USD");
-  const [isPro, setIsPro] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatusState] = useState<SubscriptionStatus>('free');
+
   const auth = getAuth(app);
   const router = useRouter();
   const pathname = usePathname();
+
+  const isPro = useMemo(() => subscriptionStatus === 'active' || subscriptionStatus === 'past_due', [subscriptionStatus]);
 
   const refreshProfile = useCallback(async () => {
     if (auth.currentUser) {
@@ -73,9 +82,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setCurrencyState(userProfile.currency);
             }
              // For prototype purposes, we check a local storage flag.
-            // In a real app, this would come from the userProfile.
-            const proStatus = localStorage.getItem('isPro') === 'true';
-            setIsPro(proStatus);
+            const proStatus = localStorage.getItem('subscriptionStatus') as SubscriptionStatus | null;
+            setSubscriptionStatusState(proStatus || 'free');
 
         } catch (err) {
             console.error("Error loading profile:", err);
@@ -95,12 +103,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setCurrencyState(userProfile.currency);
           }
            // For prototype purposes, we check a local storage flag.
-           // In a real app, this would come from the userProfile.
-           const proStatus = localStorage.getItem('isPro') === 'true';
-           setIsPro(proStatus);
+           const subStatus = localStorage.getItem('subscriptionStatus') as SubscriptionStatus | null;
+           setSubscriptionStatusState(subStatus || 'free');
         } else {
             setProfile(null);
-            setIsPro(false);
+            setSubscriptionStatusState('free');
         }
       } catch (err) {
         console.error("Error loading profile:", err);
@@ -143,11 +150,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [auth.currentUser]
   );
   
-  const handleSetIsPro = useCallback((proStatus: boolean) => {
-      setIsPro(proStatus);
-      // In a real app, this would also update the backend. For now, we use localStorage.
+  const handleSetSubscriptionStatus = useCallback((status: SubscriptionStatus) => {
+      setSubscriptionStatusState(status);
+      // In a real app, this would be handled by backend events. For now, we use localStorage.
       if (typeof window !== 'undefined') {
-          localStorage.setItem('isPro', String(proStatus));
+          if (status === 'free') {
+            localStorage.removeItem('subscriptionStatus');
+          } else {
+            localStorage.setItem('subscriptionStatus', status);
+          }
       }
   }, []);
 
@@ -163,7 +174,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, currency, isPro, setCurrency, setIsPro: handleSetIsPro, formatCurrency, refreshProfile }}
+      value={{ user, profile, loading, currency, isPro, subscriptionStatus, setCurrency, setSubscriptionStatus: handleSetSubscriptionStatus, formatCurrency, refreshProfile }}
     >
       {children}
     </AuthContext.Provider>

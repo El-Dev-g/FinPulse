@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CreditCard, Download, FileText, ExternalLink, Loader } from "lucide-react";
+import { CreditCard, Download, FileText, ExternalLink, Loader, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import {
@@ -36,6 +36,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from '@/lib/utils';
 
 const billingHistory = [
   {
@@ -64,6 +65,7 @@ function PaymentMethodForm() {
     const [cvc, setCvc] = useState("123");
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
+    const { setSubscriptionStatus, subscriptionStatus } = useAuth();
 
 
     const formatCardNumber = (value: string) => {
@@ -108,12 +110,22 @@ function PaymentMethodForm() {
         // Simulate API call
         setTimeout(() => {
             setLoading(false);
-            toast({
-                title: "Success!",
-                description: "Your payment method has been updated.",
-            });
+            if(subscriptionStatus === 'past_due') {
+                setSubscriptionStatus('active');
+                toast({
+                    title: "Payment Successful!",
+                    description: "Your subscription has been renewed.",
+                });
+            } else {
+                 toast({
+                    title: "Success!",
+                    description: "Your payment method has been updated.",
+                });
+            }
         }, 1500);
     }
+    
+    const isPastDue = subscriptionStatus === 'past_due';
 
     return (
         <form onSubmit={handleSubmit}>
@@ -135,9 +147,9 @@ function PaymentMethodForm() {
                         <Input id="cvc" value={cvc} onChange={handleCvcChange} placeholder="123" disabled={loading}/>
                     </div>
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className={cn("w-full", isPastDue && "bg-destructive hover:bg-destructive/90")} disabled={loading}>
                     {loading && <Loader className="mr-2 animate-spin" />}
-                    Update Payment Method
+                    {isPastDue ? "Pay Now & Renew Subscription" : "Update Payment Method"}
                 </Button>
             </div>
         </form>
@@ -146,7 +158,7 @@ function PaymentMethodForm() {
 
 
 export default function BillingPage() {
-  const { isPro, setIsPro, formatCurrency } = useAuth();
+  const { isPro, subscriptionStatus, setSubscriptionStatus, formatCurrency } = useAuth();
   const { toast } = useToast();
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   
@@ -158,7 +170,7 @@ export default function BillingPage() {
   }
 
   const handleCancelSubscription = () => {
-    setIsPro(false);
+    setSubscriptionStatus('free');
     toast({
         title: "Subscription Canceled",
         description: "Your Pro plan has been canceled. You've been downgraded to the Free plan.",
@@ -179,6 +191,20 @@ export default function BillingPage() {
             Manage your plan, payment methods, and view your billing history.
           </p>
         </div>
+        
+        {subscriptionStatus === 'past_due' && (
+             <Card className="border-destructive">
+                <CardHeader>
+                    <CardTitle className="text-destructive flex items-center gap-2">
+                        <AlertTriangle />
+                        Payment Method Action Required
+                    </CardTitle>
+                    <CardDescription>
+                        Your last payment for the Pro plan failed. Please update your payment method to continue enjoying Pro features and avoid account downgrade.
+                    </CardDescription>
+                </CardHeader>
+            </Card>
+        )}
 
         <Card>
           <CardHeader className="md:flex-row md:items-center md:justify-between">
@@ -195,9 +221,13 @@ export default function BillingPage() {
           </CardHeader>
           <CardContent>
             <div className="p-6 bg-muted/50 rounded-lg">
-                <p className="text-xl font-semibold">{isPro ? "FinPulse Pro" : "FinPulse Free"}</p>
+                <div className='flex justify-between items-center'>
+                     <p className="text-xl font-semibold">{isPro ? "FinPulse Pro" : "FinPulse Free"}</p>
+                     {subscriptionStatus === 'past_due' && <Badge variant="destructive">Past Due</Badge>}
+                     {subscriptionStatus === 'active' && <Badge variant="secondary">Active</Badge>}
+                </div>
                 <p className="text-muted-foreground text-sm mt-1">
-                    {isPro ? "Your subscription will renew on July 1, 2024." : "Upgrade to unlock powerful features."}
+                    {subscriptionStatus === 'active' ? "Your subscription will renew on July 1, 2024." : subscriptionStatus === 'past_due' ? "Your Pro features will be disabled soon." : "Upgrade to unlock powerful features."}
                 </p>
             </div>
           </CardContent>
@@ -251,15 +281,16 @@ export default function BillingPage() {
         </Card>
         
         {isPro && (
-            <Card className="border-destructive">
+             <Card>
                 <CardHeader>
-                    <CardTitle className="text-destructive">Cancel Subscription</CardTitle>
+                    <CardTitle>Prototype Controls</CardTitle>
                     <CardDescription>
-                        Canceling your Pro plan will downgrade you to the Free plan at the end of your current billing cycle. You will lose access to all Pro features.
+                        Use these buttons to simulate subscription states for testing purposes.
                     </CardDescription>
                 </CardHeader>
-                <CardFooter>
-                    <Button variant="destructive" onClick={() => setIsCancelDialogOpen(true)}>I understand, cancel my subscription</Button>
+                <CardFooter className='gap-4'>
+                    <Button variant="outline" onClick={() => setSubscriptionStatus('past_due')}>Simulate Failed Payment</Button>
+                    <Button variant="destructive" onClick={() => setIsCancelDialogOpen(true)}>Cancel Subscription</Button>
                 </CardFooter>
             </Card>
         )}
