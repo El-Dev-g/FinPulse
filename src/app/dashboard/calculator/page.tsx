@@ -388,18 +388,18 @@ function CalculatorPageContent() {
             </div>
         </div>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6">
+          <TabsList className="mb-6 grid w-full grid-cols-2">
             <TabsTrigger value="investment-savings">Investment & Savings</TabsTrigger>
             <TabsTrigger value="debt-currency">Debt & Currency</TabsTrigger>
           </TabsList>
           <TabsContent value="investment-savings">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                 <InvestmentCalculator values={investmentValues} setValues={setPartialState(setInvestmentValues)} onUseFutureValue={handleUseFutureValue} />
                 <SavingsGoalCalculator values={savingsValues} setValues={setPartialState(setSavingsValues)} onUseContribution={handleUseContribution} />
             </div>
           </TabsContent>
            <TabsContent value="debt-currency">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                 <DebtPayoffCalculator values={debtValues} setValues={setPartialState(setDebtValues)} onUsePayment={handleUsePayment} />
                 <CurrencyConverter values={currencyValues} setValues={setPartialState(setCurrencyValues)} onUseConversion={handleUseConversion} />
             </div>
