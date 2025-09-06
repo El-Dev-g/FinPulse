@@ -30,11 +30,26 @@ export async function getChatbotResponse(query: string) {
         return { answer: "Please ask a more specific question." };
     }
     
-    // Read the user guide documentation
+    // Read the user guide and FAQ documentation
     const guidePath = path.join(process.cwd(), 'USER_GUIDE.md');
-    const context = await fs.readFile(guidePath, 'utf-8');
+    const faqPath = path.join(process.cwd(), 'src/content/faq.json');
     
-    const response = await answerQuestion({ query, context });
+    const [guideContent, faqJson] = await Promise.all([
+        fs.readFile(guidePath, 'utf-8'),
+        fs.readFile(faqPath, 'utf-8'),
+    ]);
+
+    const faqData = JSON.parse(faqJson);
+    const faqText = faqData.faqs.map((faq: { question: string; answer: string; }) => 
+        `Q: ${faq.question}\nA: ${faq.answer}`
+    ).join('\n\n');
+
+    const fullContext = `${guideContent}\n\n---
+## Frequently Asked Questions
+${faqText}
+---`;
+    
+    const response = await answerQuestion({ query, context: fullContext });
     return response;
 }
 
