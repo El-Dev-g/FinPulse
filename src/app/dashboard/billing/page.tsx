@@ -187,7 +187,7 @@ export default function BillingPage() {
               <CardDescription>You are currently on the {isPro ? "Pro" : "Free"} Plan.</CardDescription>
             </div>
              <Button asChild>
-                <Link href="/#pricing">
+                <Link href="/pricing">
                   {isPro ? "Change Plan" : "Upgrade to Pro"}
                   <ExternalLink className="ml-2" />
                 </Link>

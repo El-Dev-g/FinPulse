@@ -11,6 +11,7 @@ import {
   Github,
   Linkedin,
   Check,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -138,7 +139,7 @@ export default function LandingPage() {
                   </CardHeader>
                   <CardContent className="flex-grow">
                     <ul className="space-y-3">
-                      {plan.features.map((feature, fIndex) => (
+                      {plan.features.slice(0, 4).map((feature, fIndex) => (
                         <li key={fIndex} className="flex items-center gap-3">
                           <Check className="h-5 w-5 text-primary" />
                           <span className="text-sm text-muted-foreground">{feature}</span>
@@ -153,6 +154,14 @@ export default function LandingPage() {
                   </CardFooter>
                 </Card>
               ))}
+            </div>
+            <div className="text-center mt-8">
+              <Button asChild variant="link">
+                <Link href="/pricing">
+                  Compare all features
+                  <ArrowRight className="ml-2"/>
+                </Link>
+              </Button>
             </div>
           </div>
         </section>

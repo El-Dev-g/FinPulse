@@ -55,7 +55,8 @@
           "Transaction Tracking",
           "Goal Setting (up to 20)",
           "Budgeting (up to 20)",
-          "Standard Reporting"
+          "Standard Reporting",
+          "Automatic AI Goal Advice"
         ],
         "buttonText": "Get Started Free"
       },
@@ -67,9 +68,10 @@
         "features": [
           "Everything in Free, plus:",
           "Unlimited Goals & Budgets",
-          "AI Financial Advisor",
+          "Full AI Financial Advisor",
           "Smart Alerts & Insights",
-          "Data Export (CSV)"
+          "Data Export (CSV)",
+          "Advanced Reporting"
         ],
         "buttonText": "Go Pro",
         "isFeatured": true
@@ -90,7 +92,8 @@
         "links": [
           { "text": "About Us", "href": "/about" },
           { "text": "Contact", "href": "/contact" },
-          { "text": "Features", "href": "/#features" }
+          { "text": "Features", "href": "/#features" },
+          { "text": "Pricing", "href": "/pricing"}
         ]
       },
       {
