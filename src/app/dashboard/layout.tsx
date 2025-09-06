@@ -21,6 +21,8 @@ import {
   Bell,
   Sparkles,
   FileText,
+  ChevronDown,
+  GanttChartSquare,
 } from "lucide-react";
 import {
   Sidebar,
@@ -34,6 +36,9 @@ import {
   SidebarInset,
   SidebarTrigger,
   useSidebar,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -43,6 +48,9 @@ import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { ProBadge } from "@/components/pro-badge";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 
 const navItems = [
@@ -52,12 +60,16 @@ const navItems = [
   { href: "/dashboard/budgets", icon: Wallet, label: "Budgets" },
   { href: "/dashboard/reports", icon: PieChart, label: "Reports", isPro: true },
   { href: "/dashboard/goals", icon: Target, label: "Goals" },
-  { href: "/dashboard/organizer", icon: ClipboardList, label: "Organizer" },
+  { type: 'divider' },
   { href: "/dashboard/alerts", icon: Bell, label: "Alerts", isPro: true },
   { href: "/dashboard/advisor", icon: Lightbulb, label: "AI Advisor", isPro: true },
-  { href: "/dashboard/calculator", icon: Calculator, label: "Calculator" },
-  { href: "/dashboard/catalog", icon: ListTree, label: "Categories" },
 ];
+
+const toolsSubMenu = [
+    { href: "/dashboard/organizer", icon: ClipboardList, label: "Organizer" },
+    { href: "/dashboard/calculator", icon: Calculator, label: "Calculator" },
+    { href: "/dashboard/catalog", icon: ListTree, label: "Categories" },
+]
 
 const settingsNavItems = [
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
@@ -71,6 +83,7 @@ function DashboardSidebar() {
   const isCollapsed = !open;
   const { user, isPro } = useAuth();
   const router = useRouter();
+  const [isToolsOpen, setIsToolsOpen] = useState(false);
 
   const handleLinkClick = () => {
     if (isMobile) {
@@ -98,7 +111,10 @@ function DashboardSidebar() {
 
       <SidebarContent className="p-4">
         <SidebarMenu>
-          {navItems.map((item) => {
+          {navItems.map((item, index) => {
+            if (item.type === 'divider') {
+                return <Separator key={index} className="my-2 mx-2" />;
+            }
             const isProFeature = item.isPro && !isPro;
             const linkContent = (
               <>
@@ -137,17 +153,42 @@ function DashboardSidebar() {
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname.startsWith(item.href) && item.href !== "/dashboard" || pathname === "/dashboard" && item.href === "/dashboard"}
+                  isActive={pathname.startsWith(item.href!) && item.href !== "/dashboard" || pathname === "/dashboard" && item.href === "/dashboard"}
                   tooltip={{ children: item.label }}
                   onClick={handleLinkClick}
                 >
-                  <Link href={item.href}>
+                  <Link href={item.href!}>
                     {linkContent}
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );
           })}
+           <Collapsible open={isToolsOpen} onOpenChange={setIsToolsOpen}>
+            <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip={{children: "Tools"}} className="w-full">
+                        <GanttChartSquare />
+                        <span>Tools</span>
+                        <ChevronDown className={cn("ml-auto h-4 w-4 transition-transform", isToolsOpen && "rotate-180")} />
+                    </SidebarMenuButton>
+                </CollapsibleTrigger>
+            </SidebarMenuItem>
+            <CollapsibleContent>
+                 <SidebarMenuSub>
+                    {toolsSubMenu.map((item) => (
+                        <SidebarMenuSubItem key={item.href}>
+                            <SidebarMenuSubButton asChild isActive={pathname.startsWith(item.href)}>
+                                <Link href={item.href} onClick={handleLinkClick}>
+                                    <item.icon />
+                                    <span>{item.label}</span>
+                                </Link>
+                            </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                    ))}
+                 </SidebarMenuSub>
+            </CollapsibleContent>
+           </Collapsible>
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-4">
