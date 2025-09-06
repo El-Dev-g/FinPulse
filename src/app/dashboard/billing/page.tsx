@@ -1,6 +1,7 @@
 // src/app/dashboard/billing/page.tsx
 "use client";
 
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -19,6 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { CreditCard, Download, FileText, ExternalLink } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
@@ -43,6 +46,74 @@ const billingHistory = [
     invoiceId: "inv_12343",
   },
 ];
+
+function PaymentMethodForm() {
+    const [cardNumber, setCardNumber] = useState("4242 4242 4242 4242");
+    const [expiry, setExpiry] = useState("12 / 26");
+    const [cvc, setCvc] = useState("123");
+
+    const formatCardNumber = (value: string) => {
+        const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+        const matches = v.match(/\d{4,16}/g);
+        const match = matches && matches[0] || '';
+        const parts = [];
+        for (let i=0, len=match.length; i<len; i+=4) {
+            parts.push(match.substring(i, i+4));
+        }
+        if (parts.length) {
+            return parts.join(' ');
+        } else {
+            return value;
+        }
+    };
+    
+    const formatExpiry = (value: string) => {
+        const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+        if (v.length >= 3) {
+            return `${v.slice(0, 2)} / ${v.slice(2, 4)}`;
+        }
+        return v;
+    }
+
+    const handleCardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setCardNumber(formatCardNumber(e.target.value));
+    };
+
+    const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setExpiry(formatExpiry(e.target.value));
+    };
+
+    const handleCvcChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const v = e.target.value.replace(/[^0-9]/gi, '');
+        setCvc(v.slice(0, 4));
+    }
+    
+
+    return (
+        <form>
+            <div className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="cardNumber">Card Number</Label>
+                    <div className="relative flex items-center">
+                        <CreditCard className="absolute left-3 h-5 w-5 text-muted-foreground" />
+                        <Input id="cardNumber" value={cardNumber} onChange={handleCardChange} placeholder="0000 0000 0000 0000" className="pl-10" />
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="expiry">Expiry</Label>
+                        <Input id="expiry" value={expiry} onChange={handleExpiryChange} placeholder="MM / YY" />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="cvc">CVC</Label>
+                        <Input id="cvc" value={cvc} onChange={handleCvcChange} placeholder="123" />
+                    </div>
+                </div>
+                <Button type="submit" className="w-full">Update Payment Method</Button>
+            </div>
+        </form>
+    );
+}
 
 
 export default function BillingPage() {
@@ -85,22 +156,14 @@ export default function BillingPage() {
         </Card>
 
          <Card>
-          <CardHeader className="md:flex-row md:items-center md:justify-between">
+          <CardHeader>
             <div>
               <CardTitle>Payment Method</CardTitle>
               <CardDescription>The card used for your subscription payments.</CardDescription>
             </div>
-             <Button variant="outline">Update Payment Method</Button>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-4 p-4 border rounded-lg">
-                <CreditCard className="h-8 w-8 text-muted-foreground" />
-                <div>
-                    <p className="font-medium">Visa ending in 1234</p>
-                    <p className="text-sm text-muted-foreground">Expires 12/2026</p>
-                </div>
-                <Badge variant="secondary" className="ml-auto">Primary</Badge>
-            </div>
+            <PaymentMethodForm />
           </CardContent>
         </Card>
 
