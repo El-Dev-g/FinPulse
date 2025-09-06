@@ -147,11 +147,22 @@ function EmailSignUpForm() {
 
         {error && <p className="text-sm text-destructive">{error}</p>}
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex flex-col gap-4">
         <Button type="submit" className="w-full" disabled={loading || !allRequirementsMet}>
           {loading ? <Loader className="animate-spin" /> : <UserPlus />}
           Create Account
         </Button>
+         <p className="px-6 text-center text-xs text-muted-foreground">
+            By creating an account, you agree to our{" "}
+            <Link href="/policy/terms" className="underline hover:text-primary">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link href="/policy/privacy" className="underline hover:text-primary">
+              Privacy Policy
+            </Link>
+            .
+        </p>
       </CardFooter>
     </form>
   );
