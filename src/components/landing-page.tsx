@@ -25,8 +25,16 @@ import {
 import { Logo } from "@/components/logo";
 import { Chatbot } from "./chatbot";
 import content from "@/content/landing-page.json";
+import faqContent from "@/content/faq.json";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "./ui/accordion";
+
 
 const icons: { [key: string]: React.ReactNode } = {
   Wallet: <Wallet className="h-8 w-8 text-primary" />,
@@ -39,6 +47,7 @@ const icons: { [key: string]: React.ReactNode } = {
 
 export default function LandingPage() {
   const { hero, features, pricing, cta, footer } = content;
+  const { faqs } = faqContent;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -163,6 +172,36 @@ export default function LandingPage() {
                 <p>Have questions? <Link href="/contact" className="underline hover:text-primary">Contact our support team</Link>.</p>
             </div>
           </div>
+        </section>
+
+        <section id="faq" className="container mx-auto px-4 py-20 md:py-28">
+           <div className="text-center max-w-3xl mx-auto mb-12">
+              <h2 className="text-3xl md:text-4xl font-headline font-bold">
+                {faqContent.title}
+              </h2>
+              <p className="text-lg mt-4 text-foreground/70">
+                {faqContent.description}
+              </p>
+            </div>
+            <div className="max-w-3xl mx-auto">
+                 <Accordion type="single" collapsible className="w-full">
+                    {faqs.slice(0, 4).map((faq, index) => (
+                    <AccordionItem value={`item-${index}`} key={index}>
+                        <AccordionTrigger className="text-left font-semibold hover:no-underline">
+                        {faq.question}
+                        </AccordionTrigger>
+                        <AccordionContent className="text-muted-foreground">
+                        {faq.answer}
+                        </AccordionContent>
+                    </AccordionItem>
+                    ))}
+                </Accordion>
+                <div className="text-center mt-8">
+                    <Button asChild variant="outline">
+                        <Link href="/faq">View All FAQs <ArrowRight className="ml-2" /></Link>
+                    </Button>
+                </div>
+            </div>
         </section>
 
         <section className="container mx-auto px-4 py-20 md:py-32">

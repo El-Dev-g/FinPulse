@@ -93,14 +93,15 @@
           { "text": "About Us", "href": "/about" },
           { "text": "Contact", "href": "/contact" },
           { "text": "Features", "href": "/#features" },
-          { "text": "Pricing", "href": "/#pricing"}
+          { "text": "Pricing", "href": "/pricing"}
         ]
       },
       {
         "title": "Legal",
         "links": [
           { "text": "Privacy Policy", "href": "/policy/privacy" },
-          { "text": "Terms of Service", "href": "/policy/terms" }
+          { "text": "Terms of Service", "href": "/policy/terms" },
+          { "text": "FAQ", "href": "/faq" }
         ]
       }
     ]

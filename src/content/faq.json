@@ -1,0 +1,34 @@
+{
+  "title": "Frequently Asked Questions",
+  "description": "Have questions? We've got answers. If you can't find what you're looking for, feel free to contact us.",
+  "faqs": [
+    {
+      "question": "Is FinPulse secure?",
+      "answer": "Yes, security is our top priority. We use bank-level encryption and secure protocols to protect your data. We never store your bank login credentials, and all sensitive information is handled with the utmost care."
+    },
+    {
+      "question": "What is the difference between the Free and Pro plan?",
+      "answer": "The Free plan covers all the basics of financial tracking, including manual transaction entries, budgeting, and goal setting. The Pro plan unlocks advanced features like our AI Financial Advisor, Smart Alerts, data export, and advanced reporting to give you a deeper understanding of your finances."
+    },
+    {
+      "question": "Can I import transactions from my bank?",
+      "answer": "Currently, FinPulse supports manual transaction entry to give you full control over your data. We are working on securely integrating with financial institutions for automatic transaction imports in a future update."
+    },
+    {
+      "question": "How does the AI Advisor work?",
+      "answer": "Our AI Advisor uses the financial information you provide—such as your goals, income, and spending habits—to generate a personalized financial plan. It identifies areas for improvement and provides actionable steps to help you reach your goals faster. This is a Pro feature."
+    },
+    {
+      "question": "Can I use FinPulse in a different currency?",
+      "answer": "Yes! You can set your preferred currency in the Settings page. All financial data throughout the app will be displayed in the currency you select."
+    },
+    {
+      "question": "Is my data private?",
+      "answer": "Absolutely. We are committed to protecting your privacy. We do not sell your data to third parties. For more details, please review our full Privacy Policy."
+    },
+    {
+      "question": "How do I cancel my Pro subscription?",
+      "answer": "You can manage your subscription, including canceling it, from the 'Billing' page in your dashboard settings. If you cancel, you will retain Pro access until the end of your current billing period."
+    }
+  ]
+}
