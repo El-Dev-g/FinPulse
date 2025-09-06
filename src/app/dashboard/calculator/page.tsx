@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -330,7 +331,7 @@ function CalculatorPageContent() {
   const [debtValues, setDebtValues] = useState({ debtAmount: "", interestRate: "", monthlyPayment: "" });
   const [currencyValues, setCurrencyValues] = useState({ amount: "1", fromCurrency: "USD", toCurrency: "EUR" });
   
-  const [activeTab, setActiveTab] = useState('investment');
+  const [activeTab, setActiveTab] = useState('investment-savings');
 
   const setPartialState = useCallback((setter: React.Dispatch<React.SetStateAction<any>>) => (newValues: object) => {
       setter((prev: object) => ({...prev, ...newValues}));
@@ -340,13 +341,16 @@ function CalculatorPageContent() {
   const handleUseFutureValue = (value: number, destination: 'savings' | 'debt') => {
       if (destination === 'savings') {
           setSavingsValues(prev => ({...prev, current: value.toFixed(2)}));
+          setActiveTab('investment-savings');
       } else {
           setDebtValues(prev => ({...prev, debtAmount: value.toFixed(2)}));
+          setActiveTab('debt-currency');
       }
   }
 
   const handleUseContribution = (value: number) => {
       setInvestmentValues(prev => ({...prev, contribution: value.toFixed(2)}));
+      setActiveTab('investment-savings');
   }
 
   const handleUsePayment = (value: string) => {
@@ -354,6 +358,7 @@ function CalculatorPageContent() {
       if (isNaN(numericValue)) return;
       setSavingsValues(prev => ({...prev, years: '5' })); // Default to 5 years
       handleUseContribution(numericValue);
+      setActiveTab('investment-savings');
   }
 
   const handleUseConversion = (value: number) => {
@@ -365,27 +370,41 @@ function CalculatorPageContent() {
 
 
   useEffect(() => {
-    if (tab) setActiveTab(tab);
+    if (tab === 'goals') setActiveTab('investment-savings');
   }, [tab]);
 
   return (
-    <main className="flex-1 p-4 md:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-            <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
-              <Calculator className="h-8 w-8" />
-              Financial Calculators
-            </h2>
-            <p className="text-muted-foreground">
-              Plan your financial future with these powerful tools.
-            </p>
+    <main className="flex-1 p-4 md:p-6 lg:p-8 flex flex-col">
+      <div className="max-w-7xl mx-auto w-full">
+        <div className="flex items-center justify-between mb-8">
+            <div>
+                <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
+                <Calculator className="h-8 w-8" />
+                Financial Calculators
+                </h2>
+                <p className="text-muted-foreground">
+                Plan your financial future with these powerful tools.
+                </p>
+            </div>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-            <InvestmentCalculator values={investmentValues} setValues={setPartialState(setInvestmentValues)} onUseFutureValue={handleUseFutureValue} />
-            <SavingsGoalCalculator values={savingsValues} setValues={setPartialState(setSavingsValues)} onUseContribution={handleUseContribution} />
-            <DebtPayoffCalculator values={debtValues} setValues={setPartialState(setDebtValues)} onUsePayment={handleUsePayment} />
-            <CurrencyConverter values={currencyValues} setValues={setPartialState(setCurrencyValues)} onUseConversion={handleUseConversion} />
-        </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="investment-savings">Investment & Savings</TabsTrigger>
+            <TabsTrigger value="debt-currency">Debt & Currency</TabsTrigger>
+          </TabsList>
+          <TabsContent value="investment-savings">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                <InvestmentCalculator values={investmentValues} setValues={setPartialState(setInvestmentValues)} onUseFutureValue={handleUseFutureValue} />
+                <SavingsGoalCalculator values={savingsValues} setValues={setPartialState(setSavingsValues)} onUseContribution={handleUseContribution} />
+            </div>
+          </TabsContent>
+           <TabsContent value="debt-currency">
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                <DebtPayoffCalculator values={debtValues} setValues={setPartialState(setDebtValues)} onUsePayment={handleUsePayment} />
+                <CurrencyConverter values={currencyValues} setValues={setPartialState(setCurrencyValues)} onUseConversion={handleUseConversion} />
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </main>
   );
