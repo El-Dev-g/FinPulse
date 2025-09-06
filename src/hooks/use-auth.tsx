@@ -91,8 +91,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setCurrencyState(userProfile.currency);
           }
            // In a real app, you'd check a subscription status field here.
-           // For this prototype, we'll hardcode it to false.
-           setIsPro(false);
+           // For this prototype, we'll hardcode it to true to simulate a pro user.
+           setIsPro(true);
         } else {
             setProfile(null);
             setIsPro(false);
