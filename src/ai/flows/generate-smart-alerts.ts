@@ -131,7 +131,7 @@ const smartAlertsFlow = ai.defineFlow(
     outputSchema: SmartAlertsResponseSchema,
   },
   async (input) => {
-    const { output } = await prompt(input, { model: 'googleai/gemini-pro' });
+    const { output } = await prompt(input, { model: 'googleai/gemini-1.5-flash' });
     return output!;
   }
 );
