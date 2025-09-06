@@ -23,6 +23,7 @@ import {
   FileText,
   ChevronDown,
   GanttChartSquare,
+  Lock,
 } from "lucide-react";
 import {
   Sidebar,
@@ -100,27 +101,30 @@ function DashboardSidebar() {
     router.push("/signin");
   };
 
-  const renderProFeature = (item: any) => {
+  const renderProFeature = (item: any, isSubItem = false) => {
      const linkContent = (
       <>
         <item.icon />
         <span>{item.label}</span>
-          {!isCollapsed && <ProBadge />}
+        {!isCollapsed && <Lock className="ml-auto" />}
       </>
     );
+
+    const ButtonComponent = isSubItem ? SidebarMenuSubButton : SidebarMenuButton;
+
      return (
         <SidebarMenuItem key={item.href}>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                  <SidebarMenuButton
+                  <ButtonComponent
                     asChild
                     disabled
-                    className="cursor-not-allowed"
+                    className="w-full cursor-not-allowed"
                     tooltip={{ children: "Upgrade to Pro to access this feature" }}
                   >
                   <div>{linkContent}</div>
-                  </SidebarMenuButton>
+                  </ButtonComponent>
               </TooltipTrigger>
                 <TooltipContent side="right" className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" />
@@ -227,11 +231,11 @@ function DashboardSidebar() {
                             </>
                           );
                           return (
-                            <SidebarMenuSubItem key={item.href}>
+                             <SidebarMenuSubItem key={item.href}>
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                      <SidebarMenuSubButton disabled className="cursor-not-allowed">
+                                      <SidebarMenuSubButton disabled className="cursor-not-allowed w-full">
                                           {linkContent}
                                       </SidebarMenuSubButton>
                                   </TooltipTrigger>

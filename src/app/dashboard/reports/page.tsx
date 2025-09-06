@@ -86,8 +86,12 @@ export default function ReportsPage() {
     }, [user]);
 
     useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+        if (isPro) {
+            fetchData();
+        } else {
+            setLoading(false);
+        }
+    }, [fetchData, isPro]);
 
 
     const {
@@ -170,7 +174,7 @@ export default function ReportsPage() {
                         <PieChartIcon className="h-8 w-8" />
                         Financial Reports
                     </h2>
-                    <ProBadge />
+                    {isPro && <ProBadge />}
                 </div>
                 <p className="text-muted-foreground">
                     Deep dive into your financial data with custom date ranges.

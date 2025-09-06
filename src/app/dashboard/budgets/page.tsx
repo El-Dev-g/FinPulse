@@ -17,6 +17,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import Link from "next/link";
+import { ProBadge } from "@/components/pro-badge";
 
 export default function BudgetsPage() {
   const { user, isPro } = useAuth();
@@ -108,6 +110,11 @@ export default function BudgetsPage() {
                     <Plus className="mr-2" />
                     Add Budget
                   </Button>
+                  {hasReachedBudgetLimit && (
+                    <div className="absolute -top-2 -right-2">
+                      <ProBadge />
+                    </div>
+                  )}
                 </div>
               </TooltipTrigger>
                {hasReachedBudgetLimit && (
@@ -121,7 +128,7 @@ export default function BudgetsPage() {
          {hasReachedBudgetLimit && (
             <div className="mb-6 p-4 bg-accent/30 border border-accent/50 rounded-lg text-center text-sm">
                 <p className="font-semibold text-accent-foreground">You've reached your budget limit!</p>
-                <p className="text-muted-foreground mt-1">The free plan allows for up to {budgetLimit} active budgets. Please upgrade to Pro to add more.</p>
+                <p className="text-muted-foreground mt-1">The free plan allows for up to {budgetLimit} active budgets. <Button variant="link" className="p-0 h-auto" asChild><Link href="/dashboard/billing">Upgrade to Pro</Link></Button> to add more.</p>
             </div>
         )}
         {loading ? (

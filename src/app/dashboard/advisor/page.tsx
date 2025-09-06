@@ -130,7 +130,7 @@ function AdvisorPageContent() {
               <Lightbulb className="h-8 w-8" />
               AI Financial Advisor
             </h2>
-            <ProBadge />
+            {isPro && <ProBadge />}
           </div>
           <p className="text-muted-foreground">
             Get a personalized financial plan based on your goals.

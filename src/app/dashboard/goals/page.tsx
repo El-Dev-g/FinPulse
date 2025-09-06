@@ -27,6 +27,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ProBadge } from "@/components/pro-badge";
 
 
 function GoalsPageContent() {
@@ -130,6 +131,11 @@ function GoalsPageContent() {
                       <Plus className="mr-2" />
                       Add New Goal
                     </Button>
+                    {hasReachedGoalLimit && (
+                        <div className="absolute -top-2 -right-2">
+                            <ProBadge />
+                        </div>
+                    )}
                 </div>
               </TooltipTrigger>
               {hasReachedGoalLimit && (
@@ -144,7 +150,7 @@ function GoalsPageContent() {
         {hasReachedGoalLimit && (
             <div className="mb-6 p-4 bg-accent/30 border border-accent/50 rounded-lg text-center text-sm">
                 <p className="font-semibold text-accent-foreground">You've reached your goal limit!</p>
-                <p className="text-muted-foreground mt-1">The free plan allows for up to {goalLimit} active goals. Please upgrade to Pro to add more.</p>
+                <p className="text-muted-foreground mt-1">The free plan allows for up to {goalLimit} active goals. <Button variant="link" className="p-0 h-auto" asChild><Link href="/dashboard/billing">Upgrade to Pro</Link></Button> to add more.</p>
             </div>
         )}
 

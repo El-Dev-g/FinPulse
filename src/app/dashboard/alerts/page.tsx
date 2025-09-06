@@ -97,7 +97,7 @@ export default function AlertsPage() {
                 <Bell className="h-8 w-8" />
                 Smart Alerts
               </h2>
-              <ProBadge />
+              {isPro && <ProBadge />}
             </div>
             <p className="text-muted-foreground">
               AI-powered insights to keep your finances on track.
