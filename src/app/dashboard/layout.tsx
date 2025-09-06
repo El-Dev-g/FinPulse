@@ -121,7 +121,6 @@ function DashboardSidebar() {
                     asChild
                     disabled
                     className="w-full cursor-not-allowed"
-                    tooltip={{ children: "Upgrade to Pro to access this feature" }}
                   >
                   <div>{linkContent}</div>
                   </ButtonComponent>
@@ -254,6 +253,7 @@ function DashboardSidebar() {
                                 <Link href={item.href} onClick={handleLinkClick}>
                                     <item.icon />
                                     <span>{item.label}</span>
+                                    {item.isPro && <ProBadge />}
                                 </Link>
                             </SidebarMenuSubButton>
                         </SidebarMenuSubItem>

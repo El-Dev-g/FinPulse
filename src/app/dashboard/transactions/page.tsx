@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ArrowRightLeft, Download, Plus, Loader } from "lucide-react";
+import { ArrowRightLeft, Download, Plus, Loader, Lock } from "lucide-react";
 import { AddTransactionDialog } from "@/components/dashboard/add-transaction-dialog";
 import type { ClientTransaction, Transaction } from "@/lib/types";
 import { addTransaction, getTransactions } from "@/lib/db";
@@ -135,7 +135,7 @@ export default function TransactionsPage() {
                 <TooltipTrigger asChild>
                   <div className="relative">
                     <Button variant="outline" onClick={handleExportCSV} disabled={!isPro}>
-                      <Download className="mr-2" />
+                      {!isPro ? <Lock className="mr-2" /> : <Download className="mr-2" />}
                       Export CSV
                        {!isPro && (
                         <div className="absolute -top-2 -right-2">

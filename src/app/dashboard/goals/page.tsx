@@ -128,7 +128,7 @@ function GoalsPageContent() {
               <TooltipTrigger asChild>
                  <div className="relative">
                     <Button onClick={() => setIsAddGoalDialogOpen(true)} disabled={hasReachedGoalLimit}>
-                      <Plus className="mr-2" />
+                      {hasReachedGoalLimit ? <Lock className="mr-2" /> : <Plus className="mr-2" />}
                       Add New Goal
                     </Button>
                     {hasReachedGoalLimit && (

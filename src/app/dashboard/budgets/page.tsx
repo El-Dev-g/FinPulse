@@ -107,7 +107,7 @@ export default function BudgetsPage() {
               <TooltipTrigger asChild>
                 <div className="relative">
                    <Button onClick={() => setIsAddBudgetDialogOpen(true)} disabled={hasReachedBudgetLimit}>
-                    <Plus className="mr-2" />
+                    {hasReachedBudgetLimit ? <Lock className="mr-2" /> : <Plus className="mr-2" />}
                     Add Budget
                   </Button>
                   {hasReachedBudgetLimit && (
