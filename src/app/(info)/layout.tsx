@@ -20,8 +20,8 @@ export default function InfoPageLayout({
           <Link href="/">Back to Home</Link>
         </Button>
       </header>
-      <main className="flex-grow container mx-auto px-4 py-12">
-        <div className="prose dark:prose-invert max-w-4xl mx-auto">
+      <main className="flex-grow container mx-auto px-4 py-12 md:py-20">
+        <div className="max-w-4xl mx-auto">
             {children}
         </div>
       </main>
