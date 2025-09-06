@@ -157,7 +157,7 @@ export default function LandingPage() {
             </div>
             <div className="text-center mt-8">
               <Button asChild variant="link">
-                <Link href="/pricing">
+                <Link href="#pricing">
                   Compare all features
                   <ArrowRight className="ml-2"/>
                 </Link>

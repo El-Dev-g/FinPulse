@@ -1,4 +1,6 @@
 // src/app/pricing/page.tsx
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,9 +15,22 @@ import { Check } from "lucide-react";
 import content from "@/content/landing-page.json";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/logo";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
+import { Loader } from "lucide-react";
 
 export default function PricingPage() {
   const { pricing } = content;
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  if (loading || !user) {
+     return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -62,7 +77,7 @@ export default function PricingPage() {
                   </CardContent>
                   <CardFooter>
                      <Button asChild className="w-full" size="lg" variant={plan.isFeatured ? 'default' : 'outline'}>
-                        <Link href="/signup">{plan.buttonText}</Link>
+                        <Link href="/dashboard/billing">{plan.buttonText}</Link>
                     </Button>
                   </CardFooter>
                 </Card>
