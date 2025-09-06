@@ -22,9 +22,20 @@ import {
 } from "@/components/ui/table";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CreditCard, Download, FileText, ExternalLink } from "lucide-react";
+import { CreditCard, Download, FileText, ExternalLink, Loader } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 const billingHistory = [
   {
@@ -51,6 +62,9 @@ function PaymentMethodForm() {
     const [cardNumber, setCardNumber] = useState("4242 4242 4242 4242");
     const [expiry, setExpiry] = useState("12 / 26");
     const [cvc, setCvc] = useState("123");
+    const [loading, setLoading] = useState(false);
+    const { toast } = useToast();
+
 
     const formatCardNumber = (value: string) => {
         const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
@@ -88,28 +102,43 @@ function PaymentMethodForm() {
         setCvc(v.slice(0, 4));
     }
     
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        // Simulate API call
+        setTimeout(() => {
+            setLoading(false);
+            toast({
+                title: "Success!",
+                description: "Your payment method has been updated.",
+            });
+        }, 1500);
+    }
 
     return (
-        <form>
+        <form onSubmit={handleSubmit}>
             <div className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="cardNumber">Card Number</Label>
                     <div className="relative flex items-center">
                         <CreditCard className="absolute left-3 h-5 w-5 text-muted-foreground" />
-                        <Input id="cardNumber" value={cardNumber} onChange={handleCardChange} placeholder="0000 0000 0000 0000" className="pl-10" />
+                        <Input id="cardNumber" value={cardNumber} onChange={handleCardChange} placeholder="0000 0000 0000 0000" className="pl-10" disabled={loading} />
                     </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="expiry">Expiry</Label>
-                        <Input id="expiry" value={expiry} onChange={handleExpiryChange} placeholder="MM / YY" />
+                        <Input id="expiry" value={expiry} onChange={handleExpiryChange} placeholder="MM / YY" disabled={loading}/>
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="cvc">CVC</Label>
-                        <Input id="cvc" value={cvc} onChange={handleCvcChange} placeholder="123" />
+                        <Input id="cvc" value={cvc} onChange={handleCvcChange} placeholder="123" disabled={loading}/>
                     </div>
                 </div>
-                <Button type="submit" className="w-full">Update Payment Method</Button>
+                <Button type="submit" className="w-full" disabled={loading}>
+                    {loading && <Loader className="mr-2 animate-spin" />}
+                    Update Payment Method
+                </Button>
             </div>
         </form>
     );
@@ -117,9 +146,28 @@ function PaymentMethodForm() {
 
 
 export default function BillingPage() {
-  const { isPro, formatCurrency } = useAuth();
+  const { isPro, setIsPro, formatCurrency } = useAuth();
+  const { toast } = useToast();
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   
+  const handleDownloadInvoice = (invoiceId: string) => {
+    toast({
+        title: "Feature Unavailable",
+        description: `In a real app, this would download invoice ${invoiceId}.`,
+    });
+  }
+
+  const handleCancelSubscription = () => {
+    setIsPro(false);
+    toast({
+        title: "Subscription Canceled",
+        description: "Your Pro plan has been canceled. You've been downgraded to the Free plan.",
+    });
+    setIsCancelDialogOpen(false);
+  }
+
   return (
+    <>
     <main className="flex-1 p-4 md:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="mb-8">
@@ -191,7 +239,7 @@ export default function BillingPage() {
                     <TableCell>{item.description}</TableCell>
                     <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" onClick={() => handleDownloadInvoice(item.invoiceId)}>
                         <Download className="h-4 w-4" />
                       </Button>
                     </TableCell>
@@ -202,18 +250,40 @@ export default function BillingPage() {
           </CardContent>
         </Card>
         
-        <Card className="border-destructive">
-            <CardHeader>
-                <CardTitle className="text-destructive">Cancel Subscription</CardTitle>
-                <CardDescription>
-                    Canceling your Pro plan will downgrade you to the Free plan at the end of your current billing cycle. You will lose access to all Pro features.
-                </CardDescription>
-            </CardHeader>
-            <CardFooter>
-                 <Button variant="destructive">I understand, cancel my subscription</Button>
-            </CardFooter>
-        </Card>
+        {isPro && (
+            <Card className="border-destructive">
+                <CardHeader>
+                    <CardTitle className="text-destructive">Cancel Subscription</CardTitle>
+                    <CardDescription>
+                        Canceling your Pro plan will downgrade you to the Free plan at the end of your current billing cycle. You will lose access to all Pro features.
+                    </CardDescription>
+                </CardHeader>
+                <CardFooter>
+                    <Button variant="destructive" onClick={() => setIsCancelDialogOpen(true)}>I understand, cancel my subscription</Button>
+                </CardFooter>
+            </Card>
+        )}
       </div>
     </main>
+    <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will immediately downgrade your account to the Free plan. You will lose access to all Pro features.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep My Plan</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelSubscription}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Yes, cancel my subscription
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

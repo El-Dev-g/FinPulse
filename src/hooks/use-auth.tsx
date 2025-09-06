@@ -22,6 +22,7 @@ interface AuthContextType {
   currency: string;
   isPro: boolean;
   setCurrency: (currency: string) => void;
+  setIsPro: (isPro: boolean) => void;
   formatCurrency: (amount: number) => string;
   refreshProfile: () => Promise<void>;
 }
@@ -33,6 +34,7 @@ const AuthContext = createContext<AuthContextType>({
   currency: "USD",
   isPro: false,
   setCurrency: () => {},
+  setIsPro: () => {},
   formatCurrency: (amount: number) => String(amount),
   refreshProfile: async () => {},
 });
@@ -70,9 +72,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (userProfile?.currency) {
                 setCurrencyState(userProfile.currency);
             }
-            // In a real app, you'd check a subscription status field here.
-            // For this prototype, we'll keep it simple.
-            // setIsPro(userProfile?.isSubscribed || false);
+             // For prototype purposes, we check a local storage flag.
+            // In a real app, this would come from the userProfile.
+            const proStatus = localStorage.getItem('isPro') === 'true';
+            setIsPro(proStatus);
+
         } catch (err) {
             console.error("Error loading profile:", err);
         }
@@ -90,9 +94,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (userProfile?.currency) {
             setCurrencyState(userProfile.currency);
           }
-           // In a real app, you'd check a subscription status field here.
-           // For this prototype, we'll hardcode it to true to simulate a pro user.
-           setIsPro(true);
+           // For prototype purposes, we check a local storage flag.
+           // In a real app, this would come from the userProfile.
+           const proStatus = localStorage.getItem('isPro') === 'true';
+           setIsPro(proStatus);
         } else {
             setProfile(null);
             setIsPro(false);
@@ -137,6 +142,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     },
     [auth.currentUser]
   );
+  
+  const handleSetIsPro = useCallback((proStatus: boolean) => {
+      setIsPro(proStatus);
+      // In a real app, this would also update the backend. For now, we use localStorage.
+      if (typeof window !== 'undefined') {
+          localStorage.setItem('isPro', String(proStatus));
+      }
+  }, []);
 
   const formatCurrency = useCallback(
     (amount: number) => {
@@ -150,7 +163,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, currency, isPro, setCurrency, formatCurrency, refreshProfile }}
+      value={{ user, profile, loading, currency, isPro, setCurrency, setIsPro: handleSetIsPro, formatCurrency, refreshProfile }}
     >
       {children}
     </AuthContext.Provider>
