@@ -105,7 +105,7 @@ export function Chatbot() {
 
   const handleUserInput = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || input.trim() === '/') return;
 
     if (chatStage === 'chatting') {
         sendQuery(input);
@@ -287,7 +287,7 @@ export function Chatbot() {
                   disabled={isLoading}
                   autoFocus
                 />
-                <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
+                <Button type="submit" size="icon" disabled={isLoading || !input.trim() || input.trim() === '/'}>
                   <Send />
                 </Button>
               </form>
