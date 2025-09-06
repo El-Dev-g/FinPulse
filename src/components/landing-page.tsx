@@ -53,7 +53,9 @@ export default function LandingPage() {
     <div className="flex flex-col min-h-screen">
       <header className="bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-            <Logo className="text-primary-foreground" />
+            <Link href="/">
+              <Logo className="text-primary-foreground" />
+            </Link>
             <nav className="flex items-center gap-2">
                 <ThemeToggle />
                 <Button variant="ghost" asChild className="hover:bg-primary-foreground/10 hover:text-primary-foreground">
@@ -83,8 +85,8 @@ export default function LandingPage() {
             </div>
             <div className="relative h-64 md:h-96 rounded-2xl overflow-hidden shadow-2xl">
               <Image
-                src={hero.imageUrl}
-                alt={hero.imageAlt}
+                src="https://picsum.photos/800/600"
+                alt="A person reviewing their finances on a laptop with charts and graphs."
                 fill
                 className="object-cover"
                 data-ai-hint="financial tracking"
@@ -222,7 +224,9 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 py-8">
             <div className="grid md:grid-cols-3 gap-8">
                 <div className="space-y-4">
-                    <Logo />
+                    <Link href="/">
+                      <Logo />
+                    </Link>
                     <p className="text-sm text-muted-foreground max-w-xs">{footer.description}</p>
                      <p className="text-sm text-muted-foreground">
                         © {new Date().getFullYear()} {footer.companyName}. All rights reserved.

@@ -44,7 +44,9 @@ export default function PricingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
        <header className="container mx-auto px-4 h-20 flex items-center justify-between border-b">
-        <Logo />
+        <Link href="/">
+          <Logo />
+        </Link>
         <Button asChild variant="ghost">
           <Link href={user ? "/dashboard" : "/"}>Back to {user ? "Dashboard" : "Home"}</Link>
         </Button>

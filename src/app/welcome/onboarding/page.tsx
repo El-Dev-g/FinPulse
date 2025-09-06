@@ -19,6 +19,7 @@ import { AddGoalDialog } from "@/components/dashboard/add-goal-dialog";
 import { AddBudgetDialog } from "@/components/dashboard/add-budget-dialog";
 import { addGoal, addBudget } from "@/lib/db";
 import type { Goal, Budget } from "@/lib/types";
+import Link from "next/link";
 
 export default function OnboardingPage() {
   const { user } = useAuth();
@@ -100,7 +101,9 @@ export default function OnboardingPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="absolute top-6 left-6">
-        <Logo />
+        <Link href="/">
+          <Logo />
+        </Link>
       </div>
       <div className="absolute top-6 right-6">
         <Button variant="ghost" onClick={handleSkipOnboarding}>Skip Onboarding</Button>

@@ -202,7 +202,9 @@ export default function SignUpPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-6">
         <div className="flex flex-col items-center text-center">
-          <Logo />
+          <Link href="/">
+            <Logo />
+          </Link>
            <h1 className="text-2xl font-semibold tracking-tight mt-6">
             Create an account
           </h1>

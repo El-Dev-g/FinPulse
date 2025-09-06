@@ -143,7 +143,9 @@ function DashboardSidebar() {
       onOpenChange={setOpen}
     >
       <SidebarHeader className="p-4">
-        <Logo isCollapsed={isCollapsed} />
+        <Link href="/dashboard">
+          <Logo isCollapsed={isCollapsed} />
+        </Link>
       </SidebarHeader>
 
       <Separator className="mx-4 mb-2 bg-border/80" />
@@ -345,7 +347,9 @@ export default function DashboardLayout({
             <SidebarTrigger>
               <PanelLeft />
             </SidebarTrigger>
-            <Logo />
+            <Link href="/dashboard">
+              <Logo />
+            </Link>
           </header>
           {children}
         </SidebarInset>

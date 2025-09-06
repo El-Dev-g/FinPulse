@@ -27,7 +27,9 @@ function InfoPageLayoutContent({
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="container mx-auto px-4 h-20 flex items-center justify-between border-b">
-        <Logo />
+        <Link href="/">
+          <Logo />
+        </Link>
         <AuthAwareHomeButton />
       </header>
       <main className="flex-grow container mx-auto px-4 py-12 md:py-20">
@@ -39,7 +41,9 @@ function InfoPageLayoutContent({
         <div className="container mx-auto px-4 py-8">
             <div className="grid md:grid-cols-3 gap-8">
                 <div className="space-y-4">
-                    <Logo />
+                    <Link href="/">
+                      <Logo />
+                    </Link>
                     <p className="text-sm text-muted-foreground max-w-xs">{footer.description}</p>
                      <p className="text-sm text-muted-foreground">
                         © {new Date().getFullYear()} {footer.companyName}. All rights reserved.
