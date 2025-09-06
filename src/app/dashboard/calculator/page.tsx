@@ -41,7 +41,7 @@ function InvestmentCalculator({ values, setValues, onUseFutureValue }: any) {
         <p className="text-muted-foreground text-sm">Project the future value of your investments.</p>
       </div>
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="initial">Initial Investment ($)</Label>
             <Input id="initial" type="number" value={initial} onChange={(e) => setValues({ initial: e.target.value })} placeholder="0"/>
@@ -51,7 +51,7 @@ function InvestmentCalculator({ values, setValues, onUseFutureValue }: any) {
             <Input id="contribution" type="number" value={contribution} onChange={(e) => setValues({ contribution: e.target.value })} placeholder="0"/>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="rate">Annual Return Rate (%)</Label>
             <Input id="rate" type="number" value={rate} onChange={(e) => setValues({ rate: e.target.value })} placeholder="0"/>
@@ -93,7 +93,7 @@ function SavingsGoalCalculator({ values, setValues, onUseContribution }: any) {
         if (currentParam) {
             setValues({ current: currentParam });
         }
-    }, [targetParam, currentParam]);
+    }, [targetParam, currentParam, setValues]);
 
 
     const monthlyContribution = useMemo(() => {
@@ -113,7 +113,7 @@ function SavingsGoalCalculator({ values, setValues, onUseContribution }: any) {
                 <p className="text-muted-foreground text-sm">Calculate how much you need to save to reach your goal.</p>
             </div>
             <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="target">Goal Amount ($)</Label>
                         <Input id="target" type="number" value={target} onChange={(e) => setValues({ target: e.target.value })} placeholder="0"/>
@@ -172,7 +172,7 @@ function DebtPayoffCalculator({ values, setValues, onUsePayment }: any) {
         <p className="text-muted-foreground text-sm">See how fast you can become debt-free.</p>
       </div>
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
                 <Label htmlFor="debtAmount">Total Debt ($)</Label>
                 <Input id="debtAmount" type="number" value={debtAmount} onChange={(e) => setValues({ debtAmount: e.target.value })} placeholder="0"/>
@@ -187,7 +187,7 @@ function DebtPayoffCalculator({ values, setValues, onUsePayment }: any) {
             <Input id="monthlyPayment" type="number" value={monthlyPayment} onChange={(e) => setValues({ monthlyPayment: e.target.value })} placeholder="0"/>
         </div>
       </div>
-       <div className="grid grid-cols-2 gap-4">
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-muted rounded-lg text-center">
                 <p className="text-muted-foreground text-sm">Payoff Time</p>
                 <p className="text-3xl font-bold text-primary">{payoffTime}</p>
@@ -268,7 +268,7 @@ function CurrencyConverter({ values, setValues, onUseConversion }: any) {
           <Label htmlFor="amount-converter">Amount</Label>
           <Input id="amount-converter" type="number" value={amount} onChange={(e) => setValues({ amount: e.target.value })} placeholder="0.00"/>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="from-currency">From</Label>
             <Select value={fromCurrency} onValueChange={(v) => setValues({ fromCurrency: v })}>
@@ -390,7 +390,7 @@ function CalculatorPageContent() {
         <Card>
           <CardContent className="p-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
                 <TabsTrigger value="investment">
                     <TrendingUp className="mr-2"/>
                     Investment
