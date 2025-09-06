@@ -23,6 +23,7 @@ import { Logo } from "@/components/logo";
 import { useAuth } from "@/hooks/use-auth";
 import { addCategory, updateUserProfile } from "@/lib/db";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 
 
 function PasswordRequirement({ met, label }: { met: boolean; label: string }) {
@@ -39,6 +40,7 @@ function EmailSignUpForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -58,6 +60,10 @@ function EmailSignUpForm() {
     e.preventDefault();
     if (!allRequirementsMet) {
       setError("Password does not meet all requirements.");
+      return;
+    }
+    if (!termsAccepted) {
+      setError("You must accept the terms and conditions.");
       return;
     }
     setLoading(true);
@@ -148,21 +154,27 @@ function EmailSignUpForm() {
         {error && <p className="text-sm text-destructive">{error}</p>}
       </CardContent>
       <CardFooter className="flex flex-col gap-4">
-        <Button type="submit" className="w-full" disabled={loading || !allRequirementsMet}>
+         <div className="flex items-center space-x-2">
+          <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(checked) => setTermsAccepted(Boolean(checked))} />
+            <label
+              htmlFor="terms"
+              className="text-sm text-muted-foreground"
+            >
+              I agree to the{" "}
+              <Link href="/policy/terms" className="underline hover:text-primary">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link href="/policy/privacy" className="underline hover:text-primary">
+                Privacy Policy
+              </Link>
+              .
+            </label>
+         </div>
+        <Button type="submit" className="w-full" disabled={loading || !allRequirementsMet || !termsAccepted}>
           {loading ? <Loader className="animate-spin" /> : <UserPlus />}
           Create Account
         </Button>
-         <p className="px-6 text-center text-xs text-muted-foreground">
-            By creating an account, you agree to our{" "}
-            <Link href="/policy/terms" className="underline hover:text-primary">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link href="/policy/privacy" className="underline hover:text-primary">
-              Privacy Policy
-            </Link>
-            .
-        </p>
       </CardFooter>
     </form>
   );
