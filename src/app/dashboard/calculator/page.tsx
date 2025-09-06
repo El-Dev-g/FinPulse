@@ -375,7 +375,7 @@ function CalculatorPageContent() {
 
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 flex flex-col">
-      <div className="max-w-7xl mx-auto w-full">
+      <div className="max-w-4xl mx-auto w-full">
         <div className="flex items-center justify-between mb-8">
             <div>
                 <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
@@ -393,16 +393,32 @@ function CalculatorPageContent() {
             <TabsTrigger value="debt-currency">Debt & Currency</TabsTrigger>
           </TabsList>
           <TabsContent value="investment-savings">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                <InvestmentCalculator values={investmentValues} setValues={setPartialState(setInvestmentValues)} onUseFutureValue={handleUseFutureValue} />
-                <SavingsGoalCalculator values={savingsValues} setValues={setPartialState(setSavingsValues)} onUseContribution={handleUseContribution} />
-            </div>
+            <Tabs defaultValue="investment">
+                <TabsList className="mb-4 grid w-full grid-cols-2">
+                    <TabsTrigger value="investment">Investment Growth</TabsTrigger>
+                    <TabsTrigger value="savings">Savings Goal</TabsTrigger>
+                </TabsList>
+                <TabsContent value="investment">
+                    <InvestmentCalculator values={investmentValues} setValues={setPartialState(setInvestmentValues)} onUseFutureValue={handleUseFutureValue} />
+                </TabsContent>
+                 <TabsContent value="savings">
+                    <SavingsGoalCalculator values={savingsValues} setValues={setPartialState(setSavingsValues)} onUseContribution={handleUseContribution} />
+                </TabsContent>
+            </Tabs>
           </TabsContent>
            <TabsContent value="debt-currency">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                <DebtPayoffCalculator values={debtValues} setValues={setPartialState(setDebtValues)} onUsePayment={handleUsePayment} />
-                <CurrencyConverter values={currencyValues} setValues={setPartialState(setCurrencyValues)} onUseConversion={handleUseConversion} />
-            </div>
+             <Tabs defaultValue="debt">
+                <TabsList className="mb-4 grid w-full grid-cols-2">
+                    <TabsTrigger value="debt">Debt Payoff</TabsTrigger>
+                    <TabsTrigger value="currency">Currency Converter</TabsTrigger>
+                </TabsList>
+                <TabsContent value="debt">
+                    <DebtPayoffCalculator values={debtValues} setValues={setPartialState(setDebtValues)} onUsePayment={handleUsePayment} />
+                </TabsContent>
+                 <TabsContent value="currency">
+                    <CurrencyConverter values={currencyValues} setValues={setPartialState(setCurrencyValues)} onUseConversion={handleUseConversion} />
+                </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </div>
