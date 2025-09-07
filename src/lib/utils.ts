@@ -75,6 +75,7 @@ export const formatTime = (timeString: string) => {
 // when fetching data in Next.js server components.
 
 export function processTransactions(transactions: Transaction[]): ClientTransaction[] {
+    if (!transactions) return [];
     return transactions.map(t => ({
         ...t,
         Icon: getIconForCategory(t.category),
@@ -83,12 +84,15 @@ export function processTransactions(transactions: Transaction[]): ClientTransact
 }
 
 export function processBudgets(budgets: Budget[], transactions: Transaction[]): ClientBudget[] {
+    if (!budgets) return [];
     const monthlySpending = new Map<string, number>();
-    transactions.forEach(t => {
-      if (t.amount < 0) {
-        monthlySpending.set(t.category, (monthlySpending.get(t.category) || 0) + Math.abs(t.amount));
-      }
-    });
+    if (transactions) {
+        transactions.forEach(t => {
+        if (t.amount < 0) {
+            monthlySpending.set(t.category, (monthlySpending.get(t.category) || 0) + Math.abs(t.amount));
+        }
+        });
+    }
 
     return budgets.map(b => ({
         ...b,
@@ -99,6 +103,7 @@ export function processBudgets(budgets: Budget[], transactions: Transaction[]): 
 }
 
 export function processRecurringTransactions(transactions: RecurringTransaction[]): ClientRecurringTransaction[] {
+    if (!transactions) return [];
     return transactions.map(t => ({
         ...t,
         Icon: getIconForCategory(t.category),
@@ -107,6 +112,7 @@ export function processRecurringTransactions(transactions: RecurringTransaction[
 }
 
 export function processTasks(tasks: FinancialTask[]): ClientFinancialTask[] {
+    if (!tasks) return [];
     return tasks.map(t => ({
         ...t,
         createdAt: t.createdAt.toDate(),
@@ -114,6 +120,7 @@ export function processTasks(tasks: FinancialTask[]): ClientFinancialTask[] {
 }
 
 export function processGoals(goals: Goal[]): ClientGoal[] {
+    if (!goals) return [];
     return goals.map(g => ({
         ...g,
         createdAt: g.createdAt.toDate(),

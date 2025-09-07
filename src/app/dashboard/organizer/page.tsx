@@ -23,8 +23,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { getTasks, getGoals, addTask, updateTask, deleteTask } from "@/lib/db";
-import { startOfToday, isBefore, isSameDay } from 'date-fns';
+import { startOfToday, isBefore, isSameDay, parseISO } from 'date-fns';
 import { formatTime } from "@/lib/utils";
+import Confetti from 'react-confetti';
 
 function CalendarView({ tasks, onEdit }: { tasks: FinancialTask[], onEdit: (task: FinancialTask) => void; }) {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -134,20 +135,48 @@ export default function OrganizerPage() {
   const [editingTask, setEditingTask] = useState<FinancialTask | null>(null);
   const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("board");
+  const [showConfetti, setShowConfetti] = useState(false);
 
+  const autoUpdateTasks = useCallback(async (tasksToUpdate: FinancialTask[]) => {
+    const today = startOfToday();
+    const tasksForDbUpdate = tasksToUpdate.filter(task => {
+        return task.status !== 'Done' && task.dueDate && isBefore(parseISO(task.dueDate), today);
+    });
+
+    if (tasksForDbUpdate.length > 0) {
+        const updates = tasksForDbUpdate.map(task => updateTask(task.id, { status: 'Done' }));
+        await Promise.all(updates);
+        return true; // Indicates updates were made
+    }
+    return false;
+  }, []);
+  
   const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
       const [dbTasks, dbGoals] = await Promise.all([getTasks(), getGoals()]);
-      setTasks(dbTasks as FinancialTask[]);
+      
+      const wereTasksUpdated = await autoUpdateTasks(dbTasks as FinancialTask[]);
+      
+      if (wereTasksUpdated) {
+        // Refetch tasks after auto-updating them
+        const refreshedTasks = await getTasks();
+        setTasks(refreshedTasks as FinancialTask[]);
+        setShowConfetti(true); // Trigger confetti
+        setTimeout(() => setShowConfetti(false), 5000); // Stop confetti after 5 seconds
+      } else {
+        setTasks(dbTasks as FinancialTask[]);
+      }
+
       setGoals(dbGoals as Goal[]);
+
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, autoUpdateTasks]);
 
   useEffect(() => {
     fetchData();
@@ -200,7 +229,8 @@ export default function OrganizerPage() {
   }, [tasks]);
 
   return (
-    <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8 flex flex-col">
+    <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8 flex flex-col relative">
+      {showConfetti && <Confetti recycle={false} numberOfPieces={200} />}
       <div className="max-w-7xl mx-auto w-full">
         <div className="flex items-center justify-between mb-8">
           <div>
