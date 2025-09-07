@@ -1,18 +1,19 @@
 // src/components/dashboard/printable-financial-plan.tsx
+import React from 'react';
 import { Advice } from "@/lib/types";
 import { Logo } from "../logo";
 import { format } from 'date-fns';
 import { Sparkles, CheckCircle2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "./card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 
 interface PrintableFinancialPlanProps {
     plan: Advice;
 }
 
-export function PrintableFinancialPlan({ plan }: PrintableFinancialPlanProps) {
+export const PrintableFinancialPlan = React.forwardRef<HTMLDivElement, PrintableFinancialPlanProps>(({ plan }, ref) => {
   return (
-    <div className="p-8 font-body">
+    <div ref={ref} className="p-8 font-body">
         <header className="flex justify-between items-center mb-8 pb-4 border-b">
             <Logo />
             <div>
@@ -61,4 +62,6 @@ export function PrintableFinancialPlan({ plan }: PrintableFinancialPlanProps) {
         </footer>
     </div>
   );
-}
+});
+
+PrintableFinancialPlan.displayName = 'PrintableFinancialPlan';

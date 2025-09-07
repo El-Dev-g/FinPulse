@@ -64,9 +64,9 @@ function UpgradeToPro() {
   );
 }
 
-function ReportToPrint({ metrics, timeSeriesData, categorySpendingData, formatCurrency, dateRange }: any) {
+const ReportToPrint = React.forwardRef<HTMLDivElement, any>(({ metrics, timeSeriesData, categorySpendingData, formatCurrency, dateRange }, ref) => {
   return (
-    <div className="p-8">
+    <div ref={ref} className="p-8">
         <header className="flex justify-between items-center mb-8 pb-4 border-b">
             <Logo />
             <div>
@@ -126,7 +126,8 @@ function ReportToPrint({ metrics, timeSeriesData, categorySpendingData, formatCu
         </footer>
     </div>
   );
-}
+});
+ReportToPrint.displayName = "ReportToPrint";
 
 
 export default function ReportsPage() {
@@ -343,15 +344,14 @@ export default function ReportsPage() {
         )}
       </div>
       <div className="hidden">
-        <div ref={componentRef}>
-           <ReportToPrint 
-                metrics={reportMetrics}
-                timeSeriesData={timeSeriesData}
-                categorySpendingData={categorySpendingData}
-                formatCurrency={formatCurrency}
-                dateRange={dateRange}
-           />
-        </div>
+        <ReportToPrint 
+            ref={componentRef}
+            metrics={reportMetrics}
+            timeSeriesData={timeSeriesData}
+            categorySpendingData={categorySpendingData}
+            formatCurrency={formatCurrency}
+            dateRange={dateRange}
+        />
       </div>
     </main>
   );

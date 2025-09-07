@@ -192,9 +192,7 @@ function AdvisorPageContent() {
                 </div>
                 <FinancialPlan plan={plan} />
                  <div className="hidden">
-                  <div ref={componentRef}>
-                    <PrintableFinancialPlan plan={plan} />
-                  </div>
+                    {plan && <PrintableFinancialPlan ref={componentRef} plan={plan} />}
                 </div>
               </>
             )}
