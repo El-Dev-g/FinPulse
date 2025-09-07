@@ -21,27 +21,28 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
     return { convertedAmount: amount };
   }
 
-  // NOTE: This uses a free, public API that does not require a private API key.
-  // This is a public demo key.
-  const apiKey = 'ec1b281989480a4242e85031';
-  const url = `https://v6.exchangerate-api.com/v6/${apiKey}/pair/${from}/${to}/${amount}`;
+  const apiKey = process.env.EXCHANGERATE_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("Currency conversion service is not configured. Missing API key.");
+  }
+  
+  const url = `https://api.exchangerate.host/convert?from=${from}&to=${to}&amount=${amount}&access_key=${apiKey}`;
 
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`API call failed with status: ${response.status}`);
+        const errorData = await response.json();
+        const errorMessage = errorData?.error?.info || `API call failed with status: ${response.status}`;
+        throw new Error(errorMessage);
     }
     const data = await response.json();
     
-    if (data.result === 'error') {
-      throw new Error(data['error-type'] || 'An unknown API error occurred.');
+    if (data.success !== true || typeof data.result !== 'number') {
+        throw new Error(data?.error?.info || "Could not retrieve converted amount from API response.");
     }
     
-    if (typeof data.conversion_result !== 'number') {
-        throw new Error("Could not retrieve converted amount from API response.");
-    }
-    
-    return { convertedAmount: data.conversion_result };
+    return { convertedAmount: data.result };
   } catch (error: any) {
     console.error("Currency conversion error:", error);
     throw new Error(error.message || "Failed to convert currency.");
