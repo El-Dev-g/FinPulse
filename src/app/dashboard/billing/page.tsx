@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CreditCard, Download, FileText, ExternalLink, Loader, AlertTriangle, Edit } from "lucide-react";
+import { CreditCard, Download, FileText, ExternalLink, Loader, AlertTriangle, Edit, Check } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import {
@@ -35,9 +35,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from '@/lib/utils';
-import { ChangePlanDialog } from '@/components/dashboard/change-plan-dialog';
+import content from "@/content/landing-page.json";
+
 
 const billingHistory = [
   {
@@ -142,7 +151,7 @@ function PaymentMethodForm() {
                     </div>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => setIsCardUpdated(false)}>
-                    <Edit className="mr-2" />
+                    <Edit className="mr-2 h-4 w-4" />
                     Change
                 </Button>
             </div>
@@ -170,11 +179,66 @@ function PaymentMethodForm() {
                     </div>
                 </div>
                 <Button type="submit" className={cn("w-full", isPastDue && "bg-destructive hover:bg-destructive/90")} disabled={loading}>
-                    {loading && <Loader className="mr-2 animate-spin" />}
+                    {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
                     {isPastDue ? "Pay Now & Renew Subscription" : "Update Payment Method"}
                 </Button>
             </div>
         </form>
+    );
+}
+
+function ChangePlanDropdown() {
+    const { setSubscriptionStatus, subscriptionStatus } = useAuth();
+    const { toast } = useToast();
+    const { pricing } = content;
+
+    const handlePlanSelection = (planTitle: string) => {
+        if (planTitle === "Pro") {
+            setSubscriptionStatus('active');
+            toast({
+                title: "Plan Changed!",
+                description: "You've successfully upgraded to the Pro plan."
+            });
+        } else {
+            setSubscriptionStatus('free');
+            toast({
+                title: "Plan Changed!",
+                description: "You've been downgraded to the Free plan."
+            });
+        }
+    };
+
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button>
+                    {subscriptionStatus !== 'free' ? "Change Plan" : "Upgrade to Pro"}
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuLabel>Available Plans</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {pricing.plans.map((plan) => {
+                    const isCurrentPlan = (plan.title === 'Pro' && subscriptionStatus !== 'free') || (plan.title === 'Free' && subscriptionStatus === 'free');
+                    return (
+                        <DropdownMenuItem
+                            key={plan.title}
+                            disabled={isCurrentPlan}
+                            onSelect={() => handlePlanSelection(plan.title)}
+                            className="p-3"
+                        >
+                            <div className="flex justify-between items-center w-full">
+                                <div>
+                                    <p className="font-semibold">{plan.title} - {plan.price}{plan.frequency}</p>
+                                    <p className="text-xs text-muted-foreground">{plan.description}</p>
+                                </div>
+                                {isCurrentPlan && <Check className="h-4 w-4 text-primary" />}
+                            </div>
+                        </DropdownMenuItem>
+                    );
+                })}
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 }
 
@@ -183,7 +247,6 @@ export default function BillingPage() {
   const { isPro, subscriptionStatus, setSubscriptionStatus, formatCurrency } = useAuth();
   const { toast } = useToast();
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [isChangePlanOpen, setIsChangePlanOpen] = useState(false);
   
   const handleDownloadInvoice = (invoiceId: string) => {
     toast({
@@ -235,16 +298,14 @@ export default function BillingPage() {
               <CardTitle>Your Current Plan</CardTitle>
               <CardDescription>You are currently on the {isPro ? "Pro" : "Free"} Plan.</CardDescription>
             </div>
-             <Button onClick={() => setIsChangePlanOpen(true)}>
-                {isPro ? "Change Plan" : "Upgrade to Pro"}
-             </Button>
+             <ChangePlanDropdown />
           </CardHeader>
           <CardContent>
             <div className="p-6 bg-muted/50 rounded-lg">
                 <div className='flex justify-between items-center'>
                      <p className="text-xl font-semibold">{isPro ? "FinPulse Pro" : "FinPulse Free"}</p>
-                     {subscriptionStatus === 'past_due' && <Badge variant="destructive">Past Due</Badge>}
                      {subscriptionStatus === 'active' && <Badge variant="secondary">Active</Badge>}
+                     {subscriptionStatus === 'past_due' && <Badge variant="destructive">Past Due</Badge>}
                 </div>
                 <p className="text-muted-foreground text-sm mt-1">
                     {subscriptionStatus === 'active' ? "Your subscription will renew on July 1, 2024." : subscriptionStatus === 'past_due' ? "Your Pro features will be disabled soon." : "Upgrade to unlock powerful features."}
@@ -335,10 +396,6 @@ export default function BillingPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <ChangePlanDialog 
-        isOpen={isChangePlanOpen}
-        onOpenChange={setIsChangePlanOpen}
-      />
     </>
   );
 }
