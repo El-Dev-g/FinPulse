@@ -1,7 +1,9 @@
+
 // src/app/dashboard/advisor/page.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useReactToPrint } from "react-to-print";
 import { AdvisorForm } from "@/components/dashboard/advisor-form";
 import { FinancialPlan } from "@/components/dashboard/financial-plan";
 import type { Advice, ClientAIPlan } from "@/lib/types";
@@ -14,7 +16,6 @@ import { PastPlansList } from "@/components/dashboard/past-plans-list";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import ReactToPrint from 'react-to-print';
 import { PrintableFinancialPlan } from "@/components/dashboard/printable-financial-plan";
 
 function UpgradeToPro() {
@@ -56,6 +57,11 @@ function AdvisorPageContent() {
   const { user, isPro } = useAuth();
   
   const componentRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+    documentTitle: `FinPulse AI Plan - ${plan?.title || 'Financial Advice'}`,
+  });
 
 
   const fetchPastPlans = useCallback(async () => {
@@ -177,16 +183,10 @@ function AdvisorPageContent() {
             {plan && !loading && (
               <>
                 <div className="text-right mt-4">
-                  <ReactToPrint
-                    trigger={() => (
-                      <Button variant="outline">
-                        <FileText className="mr-2" />
-                        Download PDF
-                      </Button>
-                    )}
-                    content={() => componentRef.current}
-                    documentTitle={`FinPulse AI Plan - ${plan?.title || 'Financial Advice'}`}
-                  />
+                  <Button variant="outline" onClick={handlePrint}>
+                    <FileText className="mr-2" />
+                    Download PDF
+                  </Button>
                 </div>
                 <FinancialPlan plan={plan} />
                  <div className="hidden">

@@ -1,8 +1,9 @@
+
 // src/app/dashboard/reports/page.tsx
 "use client";
 
 import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
-import ReactToPrint from "react-to-print";
+import { useReactToPrint } from "react-to-print";
 import {
   Card,
   CardContent,
@@ -140,6 +141,10 @@ export default function ReportsPage() {
     });
     
     const componentRef = useRef<HTMLDivElement>(null);
+    const handlePrint = useReactToPrint({
+      content: () => componentRef.current,
+      documentTitle: `FinPulse Report ${format(new Date(), "yyyy-MM-dd")}`,
+    });
 
     const fetchData = useCallback(async () => {
         if(!user) return;
@@ -248,16 +253,10 @@ export default function ReportsPage() {
             </div>
             {isPro && (
                 <div className="flex gap-2 items-center">
-                    <ReactToPrint
-                      trigger={() => (
-                        <Button variant="outline">
-                          <FileText className="mr-2" />
-                          Export to PDF
-                        </Button>
-                      )}
-                      content={() => componentRef.current}
-                      documentTitle={`FinPulse Report ${format(new Date(), "yyyy-MM-dd")}`}
-                    />
+                    <Button variant="outline" onClick={handlePrint}>
+                      <FileText className="mr-2" />
+                      Export to PDF
+                    </Button>
                     <DateRangePicker dateRange={dateRange} onDateChange={setDateRange} />
                 </div>
             )}
