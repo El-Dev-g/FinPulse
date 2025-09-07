@@ -158,7 +158,7 @@ function DashboardSidebar() {
               <>
                 <item.icon />
                 <span>{item.label}</span>
-                 {item.isPro && !isCollapsed && <ProBadge />}
+                 {isProFeature && !isCollapsed && <ProBadge />}
               </>
             );
 
@@ -223,7 +223,8 @@ function DashboardSidebar() {
             <CollapsibleContent>
                  <SidebarMenuSub>
                     {aiSubMenu.map((item) => {
-                      if (item.isPro && !isPro) {
+                      const isProFeatureLocked = item.isPro && !isPro;
+                      if (isProFeatureLocked) {
                           const linkContent = (
                             <>
                               <item.icon />
@@ -255,7 +256,6 @@ function DashboardSidebar() {
                                 <Link href={item.href} onClick={handleLinkClick}>
                                     <item.icon />
                                     <span>{item.label}</span>
-                                    {item.isPro && <ProBadge />}
                                 </Link>
                             </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
