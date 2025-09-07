@@ -74,7 +74,7 @@ function PaymentMethodForm() {
     const [expiry, setExpiry] = useState("12 / 26");
     const [cvc, setCvc] = useState("123");
     const [loading, setLoading] = useState(false);
-    const [isCardUpdated, setIsCardUpdated] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
     const { toast } = useToast();
     const { setSubscriptionStatus, subscriptionStatus } = useAuth();
 
@@ -121,7 +121,7 @@ function PaymentMethodForm() {
         // Simulate API call
         setTimeout(() => {
             setLoading(false);
-            setIsCardUpdated(true);
+            setIsEditing(false);
             if(subscriptionStatus === 'past_due') {
                 setSubscriptionStatus('active');
                 toast({
@@ -139,7 +139,7 @@ function PaymentMethodForm() {
     
     const isPastDue = subscriptionStatus === 'past_due';
 
-    if (isCardUpdated && !isPastDue) {
+    if (!isEditing) {
         const last4 = cardNumber.slice(-4);
         return (
             <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
@@ -150,7 +150,7 @@ function PaymentMethodForm() {
                         <p className="text-sm text-muted-foreground">Expires {expiry}</p>
                     </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => setIsCardUpdated(false)}>
+                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
                     <Edit className="mr-2 h-4 w-4" />
                     Change
                 </Button>
@@ -178,10 +178,13 @@ function PaymentMethodForm() {
                         <Input id="cvc" value={cvc} onChange={handleCvcChange} placeholder="123" disabled={loading}/>
                     </div>
                 </div>
-                <Button type="submit" className={cn("w-full", isPastDue && "bg-destructive hover:bg-destructive/90")} disabled={loading}>
-                    {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-                    {isPastDue ? "Pay Now & Renew Subscription" : "Update Payment Method"}
-                </Button>
+                 <div className="flex justify-end gap-2">
+                    <Button type="button" variant="ghost" onClick={() => setIsEditing(false)} disabled={loading}>Cancel</Button>
+                    <Button type="submit" className={cn(isPastDue && "bg-destructive hover:bg-destructive/90")} disabled={loading}>
+                        {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
+                        {isPastDue ? "Pay Now & Renew" : "Update Card"}
+                    </Button>
+                 </div>
             </div>
         </form>
     );
