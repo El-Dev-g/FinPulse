@@ -187,26 +187,9 @@ function PaymentMethodForm() {
     );
 }
 
-function ChangePlanDropdown() {
-    const { setSubscriptionStatus, subscriptionStatus } = useAuth();
-    const { toast } = useToast();
+function ChangePlanDropdown({ onPlanSelected }: { onPlanSelected: (planTitle: string) => void }) {
+    const { subscriptionStatus } = useAuth();
     const { pricing } = content;
-
-    const handlePlanSelection = (planTitle: string) => {
-        if (planTitle === "Pro") {
-            setSubscriptionStatus('active');
-            toast({
-                title: "Plan Changed!",
-                description: "You've successfully upgraded to the Pro plan."
-            });
-        } else {
-            setSubscriptionStatus('free');
-            toast({
-                title: "Plan Changed!",
-                description: "You've been downgraded to the Free plan."
-            });
-        }
-    };
 
     return (
         <DropdownMenu>
@@ -224,7 +207,7 @@ function ChangePlanDropdown() {
                         <DropdownMenuItem
                             key={plan.title}
                             disabled={isCurrentPlan}
-                            onSelect={() => handlePlanSelection(plan.title)}
+                            onSelect={() => onPlanSelected(plan.title)}
                             className="p-3"
                         >
                             <div className="flex justify-between items-center w-full">
@@ -247,6 +230,8 @@ export default function BillingPage() {
   const { isPro, subscriptionStatus, setSubscriptionStatus, formatCurrency } = useAuth();
   const { toast } = useToast();
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [isChangePlanDialogOpen, setIsChangePlanDialogOpen] = useState(false);
+  const [targetPlan, setTargetPlan] = useState<string | null>(null);
   
   const handleDownloadInvoice = (invoiceId: string) => {
     toast({
@@ -262,6 +247,31 @@ export default function BillingPage() {
         description: "Your Pro plan has been canceled. You've been downgraded to the Free plan.",
     });
     setIsCancelDialogOpen(false);
+  }
+  
+  const promptForPlanChange = (planTitle: string) => {
+    setTargetPlan(planTitle);
+    setIsChangePlanDialogOpen(true);
+  }
+
+  const confirmPlanChange = () => {
+    if (!targetPlan) return;
+    
+    if (targetPlan === "Pro") {
+      setSubscriptionStatus('active');
+      toast({
+        title: "Plan Changed!",
+        description: "You've successfully upgraded to the Pro plan."
+      });
+    } else {
+      setSubscriptionStatus('free');
+      toast({
+        title: "Plan Changed!",
+        description: "You've been downgraded to the Free plan."
+      });
+    }
+    setTargetPlan(null);
+    setIsChangePlanDialogOpen(false);
   }
 
   return (
@@ -298,7 +308,7 @@ export default function BillingPage() {
               <CardTitle>Your Current Plan</CardTitle>
               <CardDescription>You are currently on the {isPro ? "Pro" : "Free"} Plan.</CardDescription>
             </div>
-             <ChangePlanDropdown />
+             <ChangePlanDropdown onPlanSelected={promptForPlanChange} />
           </CardHeader>
           <CardContent>
             <div className="p-6 bg-muted/50 rounded-lg">
@@ -392,6 +402,24 @@ export default function BillingPage() {
               className="bg-destructive hover:bg-destructive/90"
             >
               Yes, cancel my subscription
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={isChangePlanDialogOpen} onOpenChange={setIsChangePlanDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to change your plan?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You are about to switch to the <strong>{targetPlan}</strong> plan. Please confirm this change.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmPlanChange}
+            >
+              Confirm Change
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
