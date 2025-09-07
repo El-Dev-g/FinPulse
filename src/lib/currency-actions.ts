@@ -28,8 +28,8 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
     throw new Error("Currency conversion service is not configured. Missing API key.");
   }
   
-  // Fetch live rates. Note: The free plan for exchangerate.host uses USD as the base currency.
-  const url = `http://api.exchangerate.host/live?access_key=${accessKey}&source=USD&currencies=${from},${to}`;
+  // Use the /convert endpoint for direct conversion.
+  const url = `http://api.exchangerate.host/convert?access_key=${accessKey}&from=${from}&to=${to}&amount=${amount}`;
 
   try {
     const response = await fetch(url);
@@ -40,23 +40,11 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
     }
     const data = await response.json();
     
-    if (!data.success || !data.quotes) {
-        throw new Error("Failed to retrieve valid exchange rates from API.");
+    if (!data.success || typeof data.result !== 'number') {
+        throw new Error("Failed to retrieve a valid conversion result from API.");
     }
     
-    const fromRate = data.quotes[`USD${from}`];
-    const toRate = data.quotes[`USD${to}`];
-    
-    if (typeof fromRate !== 'number' || typeof toRate !== 'number') {
-        throw new Error(`Could not find rates for ${from} or ${to}.`);
-    }
-
-    // Convert the amount from the 'from' currency to the base currency (USD),
-    // then convert from USD to the 'to' currency.
-    const amountInUsd = amount / fromRate;
-    const convertedAmount = amountInUsd * toRate;
-
-    return { convertedAmount };
+    return { convertedAmount: data.result };
   } catch (error: any) {
     console.error("Currency conversion error:", error);
     throw new Error(error.message || "Failed to convert currency.");
