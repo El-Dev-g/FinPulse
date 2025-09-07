@@ -1,3 +1,4 @@
+
 // src/lib/currency-actions.ts
 "use server";
 
@@ -27,7 +28,7 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
     throw new Error("Currency conversion service is not configured. Missing API key.");
   }
   
-  const url = `https://api.exchangerate.host/convert?from=${from}&to=${to}&amount=${amount}&access_key=${apiKey}`;
+  const url = `https://api.exchangerate.host/convert?access_key=${apiKey}&from=${from}&to=${to}&amount=${amount}`;
 
   try {
     const response = await fetch(url);
