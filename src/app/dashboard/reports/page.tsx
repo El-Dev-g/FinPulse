@@ -1,9 +1,8 @@
-
 // src/app/dashboard/reports/page.tsx
 "use client";
 
 import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
-import { useReactToPrint } from "react-to-print";
+import printJS from 'print-js';
 import {
   Card,
   CardContent,
@@ -64,9 +63,9 @@ function UpgradeToPro() {
   );
 }
 
-const ReportToPrint = React.forwardRef<HTMLDivElement, any>(({ metrics, timeSeriesData, categorySpendingData, formatCurrency, dateRange }, ref) => {
+const ReportToPrint = ({ id, metrics, timeSeriesData, categorySpendingData, formatCurrency, dateRange }: any) => {
   return (
-    <div ref={ref} className="p-8">
+    <div id={id} className="p-8">
         <header className="flex justify-between items-center mb-8 pb-4 border-b">
             <Logo />
             <div>
@@ -126,8 +125,7 @@ const ReportToPrint = React.forwardRef<HTMLDivElement, any>(({ metrics, timeSeri
         </footer>
     </div>
   );
-});
-ReportToPrint.displayName = "ReportToPrint";
+};
 
 
 export default function ReportsPage() {
@@ -140,12 +138,6 @@ export default function ReportsPage() {
         to: today,
     });
     
-    const componentRef = useRef<HTMLDivElement>(null);
-    const handlePrint = useReactToPrint({
-      content: () => componentRef.current,
-      documentTitle: `FinPulse Report ${format(new Date(), "yyyy-MM-dd")}`,
-    });
-
     const fetchData = useCallback(async () => {
         if(!user) return;
         setLoading(true);
@@ -253,7 +245,7 @@ export default function ReportsPage() {
             </div>
             {isPro && (
                 <div className="flex gap-2 items-center">
-                    <Button variant="outline" onClick={handlePrint}>
+                    <Button variant="outline" onClick={() => printJS('printable-report', 'html')}>
                       <FileText className="mr-2" />
                       Export to PDF
                     </Button>
@@ -342,7 +334,7 @@ export default function ReportsPage() {
       </div>
       <div className="hidden">
         <ReportToPrint 
-            ref={componentRef}
+            id="printable-report"
             metrics={reportMetrics}
             timeSeriesData={timeSeriesData}
             categorySpendingData={categorySpendingData}

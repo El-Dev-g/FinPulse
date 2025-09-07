@@ -9,11 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface PrintableFinancialPlanProps {
     plan: Advice;
+    id: string;
 }
 
-export const PrintableFinancialPlan = React.forwardRef<HTMLDivElement, PrintableFinancialPlanProps>(({ plan }, ref) => {
+export const PrintableFinancialPlan = ({ plan, id }: PrintableFinancialPlanProps) => {
   return (
-    <div ref={ref} className="p-8 font-body">
+    <div id={id} className="p-8 font-body">
         <header className="flex justify-between items-center mb-8 pb-4 border-b">
             <Logo />
             <div>
@@ -62,6 +63,6 @@ export const PrintableFinancialPlan = React.forwardRef<HTMLDivElement, Printable
         </footer>
     </div>
   );
-});
+};
 
 PrintableFinancialPlan.displayName = 'PrintableFinancialPlan';

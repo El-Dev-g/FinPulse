@@ -1,9 +1,8 @@
-
 // src/app/dashboard/advisor/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useReactToPrint } from "react-to-print";
+import React, "use strict", { useState, useEffect, useCallback, useRef } from "react";
+import printJS from "print-js";
 import { AdvisorForm } from "@/components/dashboard/advisor-form";
 import { FinancialPlan } from "@/components/dashboard/financial-plan";
 import type { Advice, ClientAIPlan } from "@/lib/types";
@@ -56,14 +55,6 @@ function AdvisorPageContent() {
   const router = useRouter();
   const { user, isPro } = useAuth();
   
-  const componentRef = useRef<HTMLDivElement>(null);
-
-  const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
-    documentTitle: `FinPulse AI Plan - ${plan?.title || 'Financial Advice'}`,
-  });
-
-
   const fetchPastPlans = useCallback(async () => {
     if (!user) return;
     try {
@@ -183,14 +174,14 @@ function AdvisorPageContent() {
             {plan && !loading && (
               <>
                 <div className="text-right mt-4">
-                  <Button variant="outline" onClick={handlePrint}>
-                    <FileText className="mr-2" />
-                    Download PDF
-                  </Button>
+                   <Button variant="outline" onClick={() => printJS('printable-plan', 'html')}>
+                      <FileText className="mr-2" />
+                      Download PDF
+                    </Button>
                 </div>
                 <FinancialPlan plan={plan} />
                  <div className="hidden">
-                    {plan && <PrintableFinancialPlan ref={componentRef} plan={plan} />}
+                    {plan && <PrintableFinancialPlan id="printable-plan" plan={plan} />}
                 </div>
               </>
             )}
