@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ArrowRightLeft, Download, Plus, Loader, Lock } from "lucide-react";
+import { ArrowRightLeft, Download, Plus, Loader, Lock, RefreshCcw } from "lucide-react";
 import { AddTransactionDialog } from "@/components/dashboard/add-transaction-dialog";
 import type { ClientTransaction, Transaction } from "@/lib/types";
 import { addTransaction, getTransactions } from "@/lib/db";
@@ -130,31 +130,13 @@ export default function TransactionsPage() {
             </p>
           </div>
           <div className="flex gap-2">
-             <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="relative">
-                    <Button variant="outline" onClick={handleExportCSV} disabled={!isPro}>
-                      {!isPro ? <Lock className="mr-2" /> : <Download className="mr-2" />}
-                      Export CSV
-                       {!isPro && (
-                        <div className="absolute -top-2 -right-2">
-                          <ProBadge />
-                        </div>
-                      )}
-                    </Button>
-                  </div>
-                </TooltipTrigger>
-                {!isPro && (
-                  <TooltipContent>
-                    <p>Upgrade to Pro to export your data.</p>
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            </TooltipProvider>
+            <Button variant="outline" onClick={fetchTransactions} disabled={loading}>
+                {loading ? <Loader className="mr-2 animate-spin" /> : <RefreshCcw className="mr-2" />}
+                Sync
+            </Button>
             <Button onClick={() => setIsAddTransactionDialogOpen(true)}>
               <Plus className="mr-2" />
-              Add Transaction
+              Add Manually
             </Button>
           </div>
         </div>
@@ -168,21 +150,45 @@ export default function TransactionsPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <Select
-                value={categoryFilter}
-                onValueChange={setCategoryFilter}
-              >
-                <SelectTrigger className="w-full md:w-[180px]">
-                  <SelectValue placeholder="Filter by category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category.charAt(0).toUpperCase() + category.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2 w-full md:w-auto">
+                <Select
+                  value={categoryFilter}
+                  onValueChange={setCategoryFilter}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Filter by category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                 <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="relative">
+                        <Button variant="outline" onClick={handleExportCSV} disabled={!isPro} className="w-full">
+                          {!isPro ? <Lock className="mr-2" /> : <Download className="mr-2" />}
+                          Export
+                          {!isPro && (
+                            <div className="absolute -top-2 -right-2">
+                              <ProBadge />
+                            </div>
+                          )}
+                        </Button>
+                      </div>
+                    </TooltipTrigger>
+                    {!isPro && (
+                      <TooltipContent>
+                        <p>Upgrade to Pro to export your data.</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </div>
           </CardHeader>
           <CardContent>

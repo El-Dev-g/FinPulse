@@ -19,8 +19,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Landmark, ArrowRight } from "lucide-react";
+import { Landmark, ArrowRight, Trash2, Banknote } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 const countries: { [key: string]: { name: string; provider: string; } } = {
     'us': { name: "United States", provider: "Plaid" },
@@ -32,6 +33,13 @@ const countries: { [key: string]: { name: string; provider: string; } } = {
     'za': { name: "South Africa", provider: "Mono" },
     'other': { name: "Other", provider: "Manual" }
 };
+
+// Mock data for connected accounts
+const connectedAccounts = [
+    { id: 'acc_1', name: 'Main Checking Account', bank: 'Chase Bank', last4: '...1234', type: 'Checking' },
+    { id: 'acc_2', name: 'High-Yield Savings', bank: 'Ally Bank', last4: '...5678', type: 'Savings' },
+    { id: 'acc_3', name: 'Travel Rewards Card', bank: 'Capital One', last4: '...9012', type: 'Credit' },
+];
 
 export default function LinkAccountPage() {
     const [selectedCountry, setSelectedCountry] = useState<string>('');
@@ -71,9 +79,37 @@ export default function LinkAccountPage() {
           </p>
         </div>
 
+         <Card>
+            <CardHeader>
+                <CardTitle>Connected Accounts</CardTitle>
+                <CardDescription>
+                    These are the accounts currently syncing with FinPulse.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+                {connectedAccounts.map(account => (
+                    <div key={account.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                            <Banknote className="h-5 w-5 text-muted-foreground" />
+                            <div>
+                                <p className="font-semibold">{account.name} <span className="text-muted-foreground">{account.last4}</span></p>
+                                <p className="text-sm text-muted-foreground">{account.bank}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                             <Badge variant="outline">{account.type}</Badge>
+                             <Button variant="ghost" size="icon" className="h-8 w-8">
+                                 <Trash2 className="h-4 w-4 text-destructive" />
+                             </Button>
+                        </div>
+                    </div>
+                ))}
+            </CardContent>
+        </Card>
+
         <Card>
             <CardHeader>
-                <CardTitle>Connect an Account</CardTitle>
+                <CardTitle>Connect a New Account</CardTitle>
                 <CardDescription>
                     Select your country to begin the secure connection process. We use trusted partners like Plaid and Mono to protect your data.
                 </CardDescription>
@@ -102,20 +138,6 @@ export default function LinkAccountPage() {
                     <ArrowRight className="ml-2" />
                 </Button>
             </CardFooter>
-        </Card>
-        
-         <Card>
-            <CardHeader>
-                <CardTitle>Is it secure?</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground space-y-2">
-                <p>
-                    Yes. FinPulse never sees or stores your bank login credentials. When you connect your account, you are using a secure portal from our trusted partners (like Plaid or Mono).
-                </p>
-                <p>
-                    We only receive read-only access to your transaction history and account balances.
-                </p>
-            </CardContent>
         </Card>
       </div>
     </main>
