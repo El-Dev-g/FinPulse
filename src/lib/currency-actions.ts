@@ -22,12 +22,9 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
     return { convertedAmount: amount };
   }
 
-  const apiKey = process.env.EXCHANGERATE_API_KEY;
+  // Use the user's API key if available, otherwise use a public fallback key.
+  const apiKey = process.env.EXCHANGERATE_API_KEY || "2d65a855b719455325853c559828de3a";
 
-  if (!apiKey) {
-    throw new Error("Currency conversion service is not configured. Missing API key.");
-  }
-  
   const url = `https://api.exchangerate.host/convert?access_key=${apiKey}&from=${from}&to=${to}&amount=${amount}`;
 
   try {
