@@ -32,7 +32,6 @@ import { DateRangePicker } from "@/components/dashboard/date-range-picker";
 import type { DateRange } from "react-day-picker";
 import { ReportMetrics } from "@/components/dashboard/report-metrics";
 import { Button } from "@/components/ui/button";
-import { ProBadge } from "@/components/pro-badge";
 import { Logo } from "@/components/logo";
 
 const COLORS = [
@@ -239,13 +238,10 @@ export default function ReportsPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>
-                 <div className="flex items-center gap-4">
-                     <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
-                        <PieChartIcon className="h-8 w-8" />
-                        Financial Reports
-                    </h2>
-                    {isPro && <ProBadge />}
-                </div>
+                <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
+                    <PieChartIcon className="h-8 w-8" />
+                    Financial Reports
+                </h2>
                 <p className="text-muted-foreground">
                     Deep dive into your financial data with custom date ranges.
                 </p>

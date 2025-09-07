@@ -21,7 +21,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ProBadge } from "@/components/pro-badge";
 
 const alertIcons: { [key in SmartAlert["severity"]]: LucideIcon } = {
   High: TriangleAlert,
@@ -92,13 +91,10 @@ export default function AlertsPage() {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <div className="flex items-center gap-4">
-               <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
-                <Bell className="h-8 w-8" />
-                Smart Alerts
-              </h2>
-              {isPro && <ProBadge />}
-            </div>
+            <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
+              <Bell className="h-8 w-8" />
+              Smart Alerts
+            </h2>
             <p className="text-muted-foreground">
               AI-powered insights to keep your finances on track.
             </p>
