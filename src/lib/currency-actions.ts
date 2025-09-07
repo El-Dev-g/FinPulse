@@ -22,7 +22,6 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
   }
 
   // NOTE: This uses a free, public API that does not require an API key.
-  // For production, consider a more robust, paid service.
   const url = `https://api.frankfurter.app/latest?amount=${amount}&from=${from}&to=${to}`;
 
   try {
