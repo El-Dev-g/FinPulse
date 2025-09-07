@@ -83,6 +83,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (userProfile?.currency) {
                 setCurrencyState(userProfile.currency);
             }
+            if (userProfile?.photoURL) {
+              // Update the user object as well, for consistency
+              if (auth.currentUser.photoURL !== userProfile.photoURL) {
+                 await auth.currentUser.reload();
+              }
+            }
              // For prototype purposes, we check a local storage flag.
             const proStatus = localStorage.getItem('subscriptionStatus') as SubscriptionStatus | null;
             setSubscriptionStatusState(proStatus || 'free');

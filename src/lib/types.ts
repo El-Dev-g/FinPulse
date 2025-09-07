@@ -4,6 +4,7 @@ import type { LucideIcon } from "lucide-react";
 
 export interface UserProfile {
   currency?: string;
+  photoURL?: string;
 }
 
 export interface Transaction {

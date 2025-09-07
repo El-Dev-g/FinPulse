@@ -38,7 +38,6 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
 const currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "INR", "BRL", "NGN", "GHS"];
-const AVATAR_STORAGE_KEY = 'finpulse_user_avatar';
 
 export default function SettingsPage() {
   const { user, profile, loading: authLoading, currency, setCurrency, refreshProfile, isPro } = useAuth();
@@ -60,9 +59,8 @@ export default function SettingsPage() {
   useEffect(() => {
     if (user) {
       setDisplayName(user.displayName || "");
-      // Load avatar from localStorage first, then fall back to user profile
-      const localAvatar = localStorage.getItem(AVATAR_STORAGE_KEY);
-      setPhotoURL(localAvatar || user.photoURL || "");
+      // The photoURL is now managed by the useAuth hook, which gets it from the profile
+      setPhotoURL(profile?.photoURL || user.photoURL || "");
     }
   }, [user, profile]);
 
@@ -108,24 +106,20 @@ export default function SettingsPage() {
         const dataUrl = event.target?.result as string;
         
         try {
-          // Save to localStorage for prototype persistence
-          localStorage.setItem(AVATAR_STORAGE_KEY, dataUrl);
-          setPhotoURL(dataUrl);
-
-          // In a real app, you'd upload the file to storage and save the URL
-          // For this prototype, we just update the UI state. We won't call updateProfile for this.
-          // await updateProfile(user, { photoURL: dataUrl });
+          // Save the new photoURL to the user's profile in Firestore
+          await updateUserProfile(user.uid, { photoURL: dataUrl });
 
           toast({
             title: "Success",
             description: "Profile picture updated.",
           });
+          // Refresh the profile from the database to get the new URL
           await refreshProfile();
         } catch (error: any) {
            toast({
             variant: "destructive",
             title: "Error",
-            description: "Failed to update profile picture.",
+            description: "Failed to update profile picture in database.",
           });
         } finally {
           setIsUploading(false);
@@ -142,8 +136,7 @@ export default function SettingsPage() {
     setIsDeleting(true);
     try {
       await deleteUser(user);
-      // Also clear local data
-      localStorage.removeItem(AVATAR_STORAGE_KEY);
+      // No need to clear local data as it's tied to the user session
       toast({
         title: "Account Deleted",
         description: "Your account has been permanently deleted.",
