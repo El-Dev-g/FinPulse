@@ -100,8 +100,7 @@
         "title": "Legal",
         "links": [
           { "text": "Privacy Policy", "href": "/policy/privacy" },
-          { "text": "Terms of Service", "href": "/policy/terms" },
-          { "text": "FAQ", "href": "/faq" }
+          { "text": "Terms of Service", "href": "/policy/terms" }
         ]
       }
     ]
