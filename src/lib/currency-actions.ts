@@ -17,13 +17,13 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
 
   const { from, to, amount } = parsedRequest.data;
   
-  if (amount === 0) {
-    return { convertedAmount: 0 };
+  if (amount === 0 || from === to) {
+    return { convertedAmount: amount };
   }
 
-  // NOTE: This uses a free, public API. For production, use a reliable paid service.
-  // This API does not require an API key.
-  const url = `https://api.exchangerate.host/convert?from=${from}&to=${to}&amount=${amount}`;
+  // NOTE: This uses a free, public API that does not require an API key.
+  // For production, consider a more robust, paid service.
+  const url = `https://api.frankfurter.app/latest?amount=${amount}&from=${from}&to=${to}`;
 
   try {
     const response = await fetch(url);
@@ -31,16 +31,12 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
       throw new Error(`API call failed with status: ${response.status}`);
     }
     const data = await response.json();
-
-    if (!data.success) {
-        throw new Error(`API Error: ${data.error?.info || 'Unknown error'}`);
-    }
     
-    if (typeof data.result !== 'number') {
+    if (!data.rates || typeof data.rates[to] !== 'number') {
         throw new Error("Could not retrieve converted amount from API response.");
     }
     
-    return { convertedAmount: data.result };
+    return { convertedAmount: data.rates[to] };
   } catch (error: any) {
     console.error("Currency conversion error:", error);
     throw new Error(error.message || "Failed to convert currency.");
