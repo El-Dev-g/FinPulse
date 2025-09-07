@@ -16,26 +16,32 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
   }
 
   const { from, to, amount } = parsedRequest.data;
-  
+
   if (amount === 0 || from === to) {
     return { convertedAmount: amount };
   }
 
-  // Using a free API that does not require an access key
-  const url = `https://api.frankfurter.app/latest?amount=${amount}&from=${from}&to=${to}`;
+  // Use the environment variable if available, otherwise use the provided fallback key.
+  const accessKey = process.env.EXCHANGERATE_API_KEY || "e6bfac69f7921744c90ae5232156c465";
+
+  if (!accessKey) {
+    throw new Error("Currency conversion service is not configured. Missing API key.");
+  }
+  
+  const url = `http://api.exchangerate.host/convert?access_key=${accessKey}&from=${from}&to=${to}&amount=${amount}&format=1`;
 
   try {
     const response = await fetch(url);
     if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = errorData?.message || `API call failed with status: ${response.status}`;
-        throw new Error(errorMessage);
+      const errorData = await response.json();
+      const errorMessage = errorData?.error?.info || errorData?.message || `API call failed with status: ${response.status}`;
+      throw new Error(errorMessage);
     }
     const data = await response.json();
     
-    const convertedAmount = data?.rates?.[to];
+    const convertedAmount = data?.result;
     if (typeof convertedAmount !== 'number') {
-        throw new Error("Could not retrieve converted amount from API response.");
+      throw new Error("Could not retrieve converted amount from API response.");
     }
     
     return { convertedAmount };
