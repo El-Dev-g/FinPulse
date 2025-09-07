@@ -235,34 +235,6 @@ export default function SettingsPage() {
               </CardFooter>
             </form>
           </Card>
-           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Crown /> Subscription Plan</CardTitle>
-              <CardDescription>
-                Manage your subscription and billing details.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-                <div>
-                    <p className="text-sm text-muted-foreground">Your current plan</p>
-                    <p className="text-lg font-semibold">{isPro ? "Pro Plan" : "Free Plan"}</p>
-                </div>
-                {isPro ? (
-                    <Button asChild variant="outline">
-                      <Link href="/dashboard/billing">
-                        Manage Subscription
-                        <ExternalLink className="ml-2" />
-                      </Link>
-                    </Button>
-                ) : (
-                    <Button asChild>
-                      <Link href="/dashboard/billing">Upgrade to Pro</Link>
-                    </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
           <Card>
             <CardHeader>
               <CardTitle>Appearance</CardTitle>
