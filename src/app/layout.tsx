@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
-import { AuthProvider } from "@/hooks/use-auth";
-import { ThemeProvider } from "@/hooks/use-theme";
+import { Providers } from "./providers";
+
 
 export const metadata: Metadata = {
   title: "FinPulse - Your Financial Health Companion",
@@ -35,16 +35,10 @@ export default function RootLayout({
         />
       </head>
       <body className={cn("font-body antialiased min-h-screen")}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-        >
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+        <Providers>
+          {children}
           <Toaster />
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );
