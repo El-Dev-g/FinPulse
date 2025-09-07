@@ -86,7 +86,7 @@ function DashboardSidebar() {
   const pathname = usePathname();
   const { open, setOpen, isMobile, setOpenMobile } = useSidebar();
   const isCollapsed = !open;
-  const { user, isPro } = useAuth();
+  const { user, isPro, profile } = useAuth();
   const router = useRouter();
   const [isProductivityOpen, setIsProductivityOpen] = useState(false);
   const [isAiOpen, setIsAiOpen] = useState(false);
@@ -289,7 +289,7 @@ function DashboardSidebar() {
             <div className="flex items-center gap-3 w-full mt-4">
               <Avatar className="h-9 w-9">
                 <AvatarImage
-                  src={user?.photoURL || "https://picsum.photos/100"}
+                  src={profile?.photoURL || user?.photoURL || "https://picsum.photos/100"}
                   alt={user?.displayName || "User"}
                   data-ai-hint="person avatar"
                 />

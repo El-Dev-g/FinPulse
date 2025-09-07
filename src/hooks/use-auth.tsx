@@ -77,43 +77,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshProfile = useCallback(async () => {
     if (auth.currentUser) {
-        try {
-            const userProfile = await getUserProfile(auth.currentUser.uid);
-            setProfile(userProfile);
-            if (userProfile?.currency) {
-                setCurrencyState(userProfile.currency);
-            }
-            if (userProfile?.photoURL) {
-              // Update the user object as well, for consistency
-              if (auth.currentUser.photoURL !== userProfile.photoURL) {
-                 await auth.currentUser.reload();
-              }
-            }
-             // For prototype purposes, we check a local storage flag.
-            const proStatus = localStorage.getItem('subscriptionStatus') as SubscriptionStatus | null;
-            setSubscriptionStatusState(proStatus || 'free');
-
-        } catch (err) {
-            console.error("Error loading profile:", err);
-        }
+        // Essential: reload the user from Firebase Auth first.
+        await auth.currentUser.reload();
+        // The onAuthStateChanged listener will handle the rest.
     }
-  }, [auth.currentUser]);
+  }, [auth]);
+
 
   // --- AUTH STATE LISTENER ---
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
-        setUser(user);
         if (user) {
+          // User is signed in, let's get their latest data.
+          // We set the user object from the listener, as it's the source of truth.
+          setUser(user);
+          
           const userProfile = await getUserProfile(user.uid);
           setProfile(userProfile);
+          
           if (userProfile?.currency) {
             setCurrencyState(userProfile.currency);
           }
            // For prototype purposes, we check a local storage flag.
            const subStatus = localStorage.getItem('subscriptionStatus') as SubscriptionStatus | null;
            setSubscriptionStatusState(subStatus || 'free');
+
         } else {
+            // User is signed out.
+            setUser(null);
             setProfile(null);
             setSubscriptionStatusState('free');
         }
