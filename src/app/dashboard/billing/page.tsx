@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CreditCard, Download, FileText, ExternalLink, Loader, AlertTriangle } from "lucide-react";
+import { CreditCard, Download, FileText, ExternalLink, Loader, AlertTriangle, Edit } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import {
@@ -65,6 +65,7 @@ function PaymentMethodForm() {
     const [expiry, setExpiry] = useState("12 / 26");
     const [cvc, setCvc] = useState("123");
     const [loading, setLoading] = useState(false);
+    const [isCardUpdated, setIsCardUpdated] = useState(false);
     const { toast } = useToast();
     const { setSubscriptionStatus, subscriptionStatus } = useAuth();
 
@@ -111,6 +112,7 @@ function PaymentMethodForm() {
         // Simulate API call
         setTimeout(() => {
             setLoading(false);
+            setIsCardUpdated(true);
             if(subscriptionStatus === 'past_due') {
                 setSubscriptionStatus('active');
                 toast({
@@ -127,6 +129,25 @@ function PaymentMethodForm() {
     }
     
     const isPastDue = subscriptionStatus === 'past_due';
+
+    if (isCardUpdated && !isPastDue) {
+        const last4 = cardNumber.slice(-4);
+        return (
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                    <CreditCard className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                        <p className="font-semibold">Card ending in {last4}</p>
+                        <p className="text-sm text-muted-foreground">Expires {expiry}</p>
+                    </div>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setIsCardUpdated(false)}>
+                    <Edit className="mr-2" />
+                    Change
+                </Button>
+            </div>
+        )
+    }
 
     return (
         <form onSubmit={handleSubmit}>
