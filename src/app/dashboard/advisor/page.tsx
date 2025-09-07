@@ -1,7 +1,8 @@
+
 // src/app/dashboard/advisor/page.tsx
 "use client";
 
-import React, "use strict", { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import printJS from "print-js";
 import { AdvisorForm } from "@/components/dashboard/advisor-form";
 import { FinancialPlan } from "@/components/dashboard/financial-plan";
