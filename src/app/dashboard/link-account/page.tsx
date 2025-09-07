@@ -1,7 +1,8 @@
+
 // src/app/dashboard/link-account/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -62,15 +63,44 @@ const initialAccounts = [
 
 type Account = typeof initialAccounts[0];
 
+const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
+
 export default function LinkAccountPage() {
     const [selectedCountry, setSelectedCountry] = useState<string>('');
     const { toast } = useToast();
-    const [accounts, setAccounts] = useState(initialAccounts);
+    const [accounts, setAccounts] = useState<Account[]>([]);
     const [viewingAccount, setViewingAccount] = useState<Account | null>(null);
     const [editingAccount, setEditingAccount] = useState<Account | null>(null);
     const [deletingAccount, setDeletingAccount] = useState<Account | null>(null);
     const [newName, setNewName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
+    // Load accounts from localStorage on component mount
+    useEffect(() => {
+        try {
+            const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (storedAccounts) {
+                setAccounts(JSON.parse(storedAccounts));
+            } else {
+                setAccounts(initialAccounts);
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initialAccounts));
+            }
+        } catch (error) {
+            console.error("Could not access localStorage:", error);
+            setAccounts(initialAccounts);
+        }
+    }, []);
+
+    // Save accounts to localStorage whenever they change
+    const updateAndPersistAccounts = (updatedAccounts: Account[]) => {
+        setAccounts(updatedAccounts);
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedAccounts));
+        } catch (error) {
+            console.error("Could not save to localStorage:", error);
+        }
+    }
+
 
     const handleConnect = () => {
         if (!selectedCountry) {
@@ -101,7 +131,8 @@ export default function LinkAccountPage() {
         setIsLoading(true);
         // Simulate API call
         setTimeout(() => {
-            setAccounts(accounts.map(acc => acc.id === editingAccount.id ? {...acc, name: newName} : acc));
+            const updatedAccounts = accounts.map(acc => acc.id === editingAccount.id ? {...acc, name: newName} : acc);
+            updateAndPersistAccounts(updatedAccounts);
             toast({
                 title: "Account Updated",
                 description: `The account "${editingAccount.bank}" has been renamed to "${newName}".`,
@@ -114,7 +145,8 @@ export default function LinkAccountPage() {
 
     const handleDeleteAccount = () => {
         if (!deletingAccount) return;
-        setAccounts(accounts.filter(acc => acc.id !== deletingAccount.id));
+        const updatedAccounts = accounts.filter(acc => acc.id !== deletingAccount.id);
+        updateAndPersistAccounts(updatedAccounts);
         toast({
             title: "Account Unlinked",
             description: `The account "${deletingAccount.name}" has been successfully unlinked.`,
@@ -270,3 +302,4 @@ export default function LinkAccountPage() {
     </>
   );
 }
+
