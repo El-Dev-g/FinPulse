@@ -93,7 +93,8 @@
           { "text": "About Us", "href": "/about" },
           { "text": "Contact", "href": "/contact" },
           { "text": "Features", "href": "/#features" },
-          { "text": "Pricing", "href": "/pricing"}
+          { "text": "Pricing", "href": "/pricing" },
+          { "text": "FAQ", "href": "/faq" }
         ]
       },
       {
