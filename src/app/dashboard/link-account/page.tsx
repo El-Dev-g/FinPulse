@@ -45,14 +45,19 @@ import { Badge } from "@/components/ui/badge";
 
 const countries: { [key: string]: { name: string; provider: string; } } = {
     'us': { name: "United States", provider: "Plaid" },
-    'gb': { name: "United Kingdom", provider: "Plaid" },
     'ca': { name: "Canada", provider: "Plaid" },
+    'gb': { name: "United Kingdom", provider: "Truelayer" },
+    'de': { name: "Germany", provider: "Truelayer" },
+    'fr': { name: "France", provider: "Truelayer" },
+    'es': { name: "Spain", provider: "Truelayer" },
+    'ie': { name: "Ireland", provider: "Truelayer" },
     'ng': { name: "Nigeria", provider: "Mono" },
     'gh': { name: "Ghana", provider: "Mono" },
     'ke': { name: "Kenya", provider: "Mono" },
     'za': { name: "South Africa", provider: "Mono" },
     'other': { name: "Other", provider: "Manual" }
 };
+
 
 // Mock data for connected accounts
 const initialAccounts = [
@@ -209,7 +214,7 @@ export default function LinkAccountPage() {
             <CardHeader>
                 <CardTitle>Connect a New Account</CardTitle>
                 <CardDescription>
-                    Select your country to begin the secure connection process. We use trusted partners like Plaid and Mono to protect your data.
+                    Select your country to begin the secure connection process. We use trusted partners like Plaid, Truelayer, and Mono to protect your data.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -227,7 +232,7 @@ export default function LinkAccountPage() {
                     </Select>
                  </div>
                  <p className="text-xs text-muted-foreground">
-                    Based on your selection, we will use the appropriate provider (e.g., Plaid for the US, Mono for Nigeria) to connect your account.
+                    Based on your selection, we will use the appropriate provider (e.g., Plaid for the US, Truelayer for Europe, Mono for Africa) to connect your account.
                  </p>
             </CardContent>
             <CardFooter>
@@ -302,4 +307,3 @@ export default function LinkAccountPage() {
     </>
   );
 }
-
