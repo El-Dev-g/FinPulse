@@ -25,16 +25,8 @@ import {
 import { Logo } from "@/components/logo";
 import { Chatbot } from "./chatbot";
 import content from "@/content/landing-page.json";
-import faqContent from "@/content/faq.json";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "./ui/accordion";
-
 
 const icons: { [key: string]: React.ReactNode } = {
   Wallet: <Wallet className="h-8 w-8 text-primary" />,
@@ -47,7 +39,6 @@ const icons: { [key: string]: React.ReactNode } = {
 
 export default function LandingPage() {
   const { hero, features, pricing, cta, footer } = content;
-  const { faqs } = faqContent;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -154,7 +145,7 @@ export default function LandingPage() {
                   </CardHeader>
                   <CardContent className="flex-grow">
                     <ul className="space-y-3">
-                      {plan.features.slice(0, 4).map((feature, fIndex) => (
+                      {plan.features.map((feature, fIndex) => (
                         <li key={fIndex} className="flex items-center gap-3">
                           <Check className="h-5 w-5 text-primary" />
                           <span className="text-sm text-muted-foreground">{feature}</span>
