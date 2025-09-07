@@ -15,7 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { ProBadge } from "@/components/pro-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useReactToPrint } from "react-to-print";
+import ReactToPrint from 'react-to-print';
 import { PrintableFinancialPlan } from "@/components/dashboard/printable-financial-plan";
 
 function UpgradeToPro() {
@@ -57,10 +57,6 @@ function AdvisorPageContent() {
   const { user, isPro } = useAuth();
   
   const componentRef = useRef<HTMLDivElement>(null);
-  const handlePrint = useReactToPrint({
-      content: () => componentRef.current,
-      documentTitle: `FinPulse AI Plan - ${plan?.title || 'Financial Advice'}`
-  });
 
 
   const fetchPastPlans = useCallback(async () => {
@@ -185,10 +181,16 @@ function AdvisorPageContent() {
             {plan && !loading && (
               <>
                 <div className="text-right mt-4">
-                  <Button variant="outline" onClick={handlePrint}>
-                    <FileText className="mr-2" />
-                    Download PDF
-                  </Button>
+                  <ReactToPrint
+                    trigger={() => (
+                      <Button variant="outline">
+                        <FileText className="mr-2" />
+                        Download PDF
+                      </Button>
+                    )}
+                    content={() => componentRef.current}
+                    documentTitle={`FinPulse AI Plan - ${plan?.title || 'Financial Advice'}`}
+                  />
                 </div>
                 <FinancialPlan plan={plan} />
                  <div className="hidden">
