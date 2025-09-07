@@ -10,6 +10,23 @@ import {
   CardTitle,
   CardFooter
 } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -19,7 +36,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Landmark, ArrowRight, Trash2, Banknote } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Landmark, ArrowRight, Trash2, Banknote, Pencil, Loader } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
@@ -35,15 +53,22 @@ const countries: { [key: string]: { name: string; provider: string; } } = {
 };
 
 // Mock data for connected accounts
-const connectedAccounts = [
+const initialAccounts = [
     { id: 'acc_1', name: 'Main Checking Account', bank: 'Chase Bank', last4: '...1234', type: 'Checking' },
     { id: 'acc_2', name: 'High-Yield Savings', bank: 'Ally Bank', last4: '...5678', type: 'Savings' },
     { id: 'acc_3', name: 'Travel Rewards Card', bank: 'Capital One', last4: '...9012', type: 'Credit' },
 ];
 
+type Account = typeof initialAccounts[0];
+
 export default function LinkAccountPage() {
     const [selectedCountry, setSelectedCountry] = useState<string>('');
     const { toast } = useToast();
+    const [accounts, setAccounts] = useState(initialAccounts);
+    const [editingAccount, setEditingAccount] = useState<Account | null>(null);
+    const [deletingAccount, setDeletingAccount] = useState<Account | null>(null);
+    const [newName, setNewName] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleConnect = () => {
         if (!selectedCountry) {
@@ -61,12 +86,42 @@ export default function LinkAccountPage() {
             title: `Connecting with ${provider}...`,
             description: "In a real application, this would open the secure connection flow for the selected financial provider.",
         });
-
-        // Here you would trigger the actual SDK for the provider (Plaid Link, Mono Connect, etc.)
+    };
+    
+    const handleOpenEditDialog = (account: Account) => {
+        setEditingAccount(account);
+        setNewName(account.name);
+    }
+    
+    const handleEditAccount = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingAccount) return;
+        setIsLoading(true);
+        // Simulate API call
+        setTimeout(() => {
+            setAccounts(accounts.map(acc => acc.id === editingAccount.id ? {...acc, name: newName} : acc));
+            toast({
+                title: "Account Updated",
+                description: `The account "${editingAccount.bank}" has been renamed to "${newName}".`,
+            });
+            setEditingAccount(null);
+            setNewName('');
+            setIsLoading(false);
+        }, 1000);
     }
 
+    const handleDeleteAccount = () => {
+        if (!deletingAccount) return;
+        setAccounts(accounts.filter(acc => acc.id !== deletingAccount.id));
+        toast({
+            title: "Account Unlinked",
+            description: `The account "${deletingAccount.name}" has been successfully unlinked.`,
+        });
+        setDeletingAccount(null);
+    }
 
   return (
+    <>
     <main className="flex-1 p-4 md:p-6 lg:p-8">
       <div className="max-w-2xl mx-auto space-y-8">
         <div className="mb-8">
@@ -87,7 +142,7 @@ export default function LinkAccountPage() {
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-                {connectedAccounts.map(account => (
+                {accounts.map(account => (
                     <div key={account.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center gap-3">
                             <Banknote className="h-5 w-5 text-muted-foreground" />
@@ -96,14 +151,20 @@ export default function LinkAccountPage() {
                                 <p className="text-sm text-muted-foreground">{account.bank}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
                              <Badge variant="outline">{account.type}</Badge>
-                             <Button variant="ghost" size="icon" className="h-8 w-8">
+                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenEditDialog(account)}>
+                                 <Pencil className="h-4 w-4" />
+                             </Button>
+                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDeletingAccount(account)}>
                                  <Trash2 className="h-4 w-4 text-destructive" />
                              </Button>
                         </div>
                     </div>
                 ))}
+                {accounts.length === 0 && (
+                    <p className="text-center text-muted-foreground py-8">No accounts connected yet.</p>
+                )}
             </CardContent>
         </Card>
 
@@ -141,5 +202,44 @@ export default function LinkAccountPage() {
         </Card>
       </div>
     </main>
+    {/* Edit Account Dialog */}
+    <Dialog open={!!editingAccount} onOpenChange={(isOpen) => !isOpen && setEditingAccount(null)}>
+        <DialogContent>
+            <form onSubmit={handleEditAccount}>
+                <DialogHeader>
+                    <DialogTitle>Edit Account Name</DialogTitle>
+                </DialogHeader>
+                <div className="py-4">
+                    <Label htmlFor="account-name">Account Nickname</Label>
+                    <Input id="account-name" value={newName} onChange={(e) => setNewName(e.target.value)} disabled={isLoading}/>
+                </div>
+                <DialogFooter>
+                    <Button type="button" variant="ghost" onClick={() => setEditingAccount(null)}>Cancel</Button>
+                    <Button type="submit" disabled={isLoading}>
+                        {isLoading && <Loader className="mr-2 animate-spin"/>}
+                        Save Changes
+                    </Button>
+                </DialogFooter>
+            </form>
+        </DialogContent>
+    </Dialog>
+    {/* Delete Account Dialog */}
+    <AlertDialog open={!!deletingAccount} onOpenChange={setDeletingAccount}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure you want to unlink this account?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This will stop syncing new transactions from "{deletingAccount?.name}". Existing transactions will not be deleted. You can always link it again later.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive hover:bg-destructive/90">
+                    Unlink Account
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
