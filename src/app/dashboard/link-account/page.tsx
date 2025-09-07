@@ -26,6 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,7 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Landmark, ArrowRight, Trash2, Banknote, Pencil, Loader } from "lucide-react";
+import { Landmark, ArrowRight, Trash2, Banknote, Pencil, Loader, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
@@ -54,9 +55,9 @@ const countries: { [key: string]: { name: string; provider: string; } } = {
 
 // Mock data for connected accounts
 const initialAccounts = [
-    { id: 'acc_1', name: 'Main Checking Account', bank: 'Chase Bank', last4: '...1234', type: 'Checking' },
-    { id: 'acc_2', name: 'High-Yield Savings', bank: 'Ally Bank', last4: '...5678', type: 'Savings' },
-    { id: 'acc_3', name: 'Travel Rewards Card', bank: 'Capital One', last4: '...9012', type: 'Credit' },
+    { id: 'acc_1', name: 'Main Checking Account', bank: 'Chase Bank', last4: '1234', type: 'Checking', accountNumber: '**** **** **** 1234', syncStatus: 'Syncing daily' },
+    { id: 'acc_2', name: 'High-Yield Savings', bank: 'Ally Bank', last4: '5678', type: 'Savings', accountNumber: '**** **** **** 5678', syncStatus: 'Syncing daily' },
+    { id: 'acc_3', name: 'Travel Rewards Card', bank: 'Capital One', last4: '9012', type: 'Credit', accountNumber: '**** **** **** 9012', syncStatus: 'Syncing daily' },
 ];
 
 type Account = typeof initialAccounts[0];
@@ -65,6 +66,7 @@ export default function LinkAccountPage() {
     const [selectedCountry, setSelectedCountry] = useState<string>('');
     const { toast } = useToast();
     const [accounts, setAccounts] = useState(initialAccounts);
+    const [viewingAccount, setViewingAccount] = useState<Account | null>(null);
     const [editingAccount, setEditingAccount] = useState<Account | null>(null);
     const [deletingAccount, setDeletingAccount] = useState<Account | null>(null);
     const [newName, setNewName] = useState('');
@@ -147,12 +149,15 @@ export default function LinkAccountPage() {
                         <div className="flex items-center gap-3">
                             <Banknote className="h-5 w-5 text-muted-foreground" />
                             <div>
-                                <p className="font-semibold">{account.name} <span className="text-muted-foreground">{account.last4}</span></p>
+                                <p className="font-semibold">{account.name} <span className="text-muted-foreground">...{account.last4}</span></p>
                                 <p className="text-sm text-muted-foreground">{account.bank}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-1">
                              <Badge variant="outline">{account.type}</Badge>
+                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setViewingAccount(account)}>
+                                 <Eye className="h-4 w-4" />
+                             </Button>
                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenEditDialog(account)}>
                                  <Pencil className="h-4 w-4" />
                              </Button>
@@ -202,6 +207,28 @@ export default function LinkAccountPage() {
         </Card>
       </div>
     </main>
+    {/* View Details Dialog */}
+     <Dialog open={!!viewingAccount} onOpenChange={(isOpen) => !isOpen && setViewingAccount(null)}>
+        <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{viewingAccount?.name}</DialogTitle>
+                    <DialogDescription>{viewingAccount?.bank} - {viewingAccount?.type} Account</DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4 text-sm">
+                    <div className="flex justify-between items-center">
+                        <p className="text-muted-foreground">Account Number</p>
+                        <p className="font-mono">{viewingAccount?.accountNumber}</p>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <p className="text-muted-foreground">Sync Status</p>
+                        <Badge variant="secondary">{viewingAccount?.syncStatus}</Badge>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setViewingAccount(null)}>Close</Button>
+                </DialogFooter>
+        </DialogContent>
+    </Dialog>
     {/* Edit Account Dialog */}
     <Dialog open={!!editingAccount} onOpenChange={(isOpen) => !isOpen && setEditingAccount(null)}>
         <DialogContent>
