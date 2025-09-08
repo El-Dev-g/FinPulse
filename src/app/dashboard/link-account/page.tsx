@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Landmark, ArrowRight, Trash2, Banknote, Pencil, Loader, Eye } from "lucide-react";
+import { Landmark, ArrowRight, Trash2, Banknote, Pencil, Loader, Eye, CheckCircle, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
@@ -79,6 +79,11 @@ export default function LinkAccountPage() {
     const [deletingAccount, setDeletingAccount] = useState<Account | null>(null);
     const [newName, setNewName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    
+    // State for permission dialog
+    const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
+    const [permissionProvider, setPermissionProvider] = useState('');
+
 
     // Load accounts from localStorage on component mount
     useEffect(() => {
@@ -118,12 +123,17 @@ export default function LinkAccountPage() {
         }
 
         const provider = countries[selectedCountry].provider;
-        
-        toast({
-            title: `Connecting with ${provider}...`,
-            description: "In a real application, this would open the secure connection flow for the selected financial provider.",
-        });
+        setPermissionProvider(provider);
+        setIsPermissionDialogOpen(true);
     };
+
+    const handlePermissionAllow = () => {
+        setIsPermissionDialogOpen(false);
+        toast({
+            title: "Permissions Granted",
+            description: `Connecting with ${permissionProvider}... In a real app, you would be redirected to your bank.`,
+        });
+    }
     
     const handleOpenEditDialog = (account: Account) => {
         setEditingAccount(account);
@@ -304,6 +314,47 @@ export default function LinkAccountPage() {
             </AlertDialogFooter>
         </AlertDialogContent>
     </AlertDialog>
+    {/* Permission Dialog */}
+    <Dialog open={isPermissionDialogOpen} onOpenChange={setIsPermissionDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle className="text-center">Connect with {permissionProvider}</DialogTitle>
+                <DialogDescription className="text-center pt-2">
+                    FinPulse uses {permissionProvider}, a secure third-party service, to connect to your bank.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+                <p className="font-semibold text-center">FinPulse is requesting permission to access:</p>
+                <ul className="space-y-3 text-sm text-muted-foreground p-4 border rounded-md">
+                    <li className="flex items-start gap-3">
+                        <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                        <span>
+                            <span className="font-semibold text-foreground">Account Details:</span> Account name, type, and currency.
+                        </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                        <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                         <span>
+                             <span className="font-semibold text-foreground">Account Balances:</span> Real-time balance information.
+                         </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                        <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                         <span>
+                            <span className="font-semibold text-foreground">Transaction History:</span> Up to 24 months of transaction data.
+                         </span>
+                    </li>
+                </ul>
+                <p className="text-xs text-muted-foreground text-center flex items-center gap-2 justify-center">
+                    <Lock className="h-4 w-4" /> Your credentials will not be shared with FinPulse.
+                </p>
+            </div>
+            <DialogFooter className="grid grid-cols-2 gap-4">
+                 <Button variant="outline" onClick={() => setIsPermissionDialogOpen(false)}>Deny</Button>
+                 <Button onClick={handlePermissionAllow}>Allow</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
     </>
   );
 }
