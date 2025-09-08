@@ -2,12 +2,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// This is a simulated function. In a real app, this would make a POST request to Truelayer's token endpoint.
+// This function simulates the server-side exchange of an authorization code for an access token.
 async function exchangeCodeForToken(code: string, redirectUri: string) {
     const clientId = process.env.TRUELAYER_CLIENT_ID;
     const clientSecret = process.env.TRUELAYER_CLIENT_SECRET;
 
-    console.log("---- Attempting to Exchange Code ----");
+    console.log("---- Attempting to Exchange Code for Token ----");
     console.log("Client ID:", clientId ? "Found" : "Missing");
     console.log("Client Secret:", clientSecret ? "Found" : "Missing");
     console.log("Redirect URI for token exchange:", redirectUri);
@@ -17,8 +17,7 @@ async function exchangeCodeForToken(code: string, redirectUri: string) {
         throw new Error("Truelayer client credentials are not configured on the server.");
     }
     
-    // In a real application, you would use `fetch` to make a POST request:
-    /*
+    // In a real application, you would use `fetch` to make this POST request.
     const response = await fetch('https://auth.truelayer-sandbox.com/connect/token', {
         method: 'POST',
         headers: {
@@ -35,16 +34,13 @@ async function exchangeCodeForToken(code: string, redirectUri: string) {
     
     if (!response.ok) {
         const errorBody = await response.text();
-        throw new Error(`Failed to exchange code for token: ${errorBody}`);
+        console.error("Truelayer API Error:", errorBody);
+        throw new Error(`Failed to exchange code for token. Status: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log("Successfully exchanged code for token:", data);
     return data.access_token;
-    */
-
-    // For this prototype, we'll just simulate success and return a mock token.
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-    return `mock_access_token_for_${code.slice(0, 8)}`;
 }
 
 export async function GET(request: NextRequest) {
@@ -52,31 +48,33 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code');
   const error = searchParams.get('error');
 
-  // This is where we want to send the user AFTER we've processed the callback.
+  // This is the final page the user will land on.
   const finalRedirectUrl = new URL('/dashboard/link-account', origin);
 
   if (error) {
+    console.error("Truelayer callback error:", error);
     finalRedirectUrl.searchParams.set('error', `truelayer_error_${error}`);
     return NextResponse.redirect(finalRedirectUrl);
   }
 
   if (!code) {
+    console.error("Missing authorization code from Truelayer.");
     finalRedirectUrl.searchParams.set('error', 'truelayer_missing_code');
     return NextResponse.redirect(finalRedirectUrl);
   }
 
   try {
-    // The redirect URI for the token exchange must match what was used in the initial auth URL.
+    // The redirect URI for the token exchange must EXACTLY match the one used in the initial auth URL.
     const redirectUriForToken = `${origin}/api/truelayer/callback`;
     
-    // Exchange the code for an access token from your backend.
     const accessToken = await exchangeCodeForToken(code, redirectUriForToken);
     
-    // In a real application, you would save this token securely to the database,
-    // associated with the currently logged-in user.
+    // In a real app, you would now save this `accessToken` securely to your database,
+    // associated with the currently logged-in user. You would then use it to fetch
+    // the user's account information and transactions.
     console.log(`Successfully obtained mock access token: ${accessToken}`);
     
-    // After successfully getting a token and storing it, redirect the user back.
+    // Redirect the user back to the linking page with a success message.
     finalRedirectUrl.searchParams.set('success', 'truelayer_connected');
     return NextResponse.redirect(finalRedirectUrl);
 
