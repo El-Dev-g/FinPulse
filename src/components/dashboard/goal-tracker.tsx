@@ -9,33 +9,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { getGoals } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import type { Goal } from "@/lib/types";
-import { Loader } from "lucide-react";
-import { processGoals } from "@/lib/utils";
 
-export function GoalTracker() {
-  const { user, formatCurrency } = useAuth();
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [loading, setLoading] = useState(true);
+interface GoalTrackerProps {
+  goals: Goal[];
+}
 
-  useEffect(() => {
-    const fetchGoals = async () => {
-      if (!user) return;
-      try {
-        const dbGoals = await getGoals();
-        const processed = processGoals(dbGoals as any[]);
-        setGoals(processed.slice(0, 3)); // Show top 3 goals
-      } catch (error) {
-        console.error("Error fetching goals: ", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchGoals();
-  }, [user]);
+export function GoalTracker({ goals }: GoalTrackerProps) {
+  const { formatCurrency } = useAuth();
+  
+  const topGoals = goals.slice(0, 3);
 
   return (
     <Card>
@@ -46,13 +31,9 @@ export function GoalTracker() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {loading ? (
-          <div className="flex justify-center items-center h-40">
-            <Loader className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : goals.length > 0 ? (
+        {topGoals.length > 0 ? (
           <div className="space-y-6">
-            {goals.map((goal) => {
+            {topGoals.map((goal) => {
               const progress = (goal.current / goal.target) * 100;
               return (
                 <div key={goal.id}>

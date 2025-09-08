@@ -1,7 +1,7 @@
 // src/components/dashboard/recent-transactions.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Card,
   CardContent,
@@ -19,41 +19,23 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { ClientTransaction, Transaction } from '@/lib/types';
-import { getTransactions } from '@/lib/db';
+import type { ClientTransaction } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
-import { processTransactions, getIconForCategory } from '@/lib/utils';
-import { Loader } from 'lucide-react';
+import { getIconForCategory } from '@/lib/utils';
 
 interface RecentTransactionsProps {
   title?: string;
   description?: string;
+  transactions: ClientTransaction[];
 }
 
 export function RecentTransactions({
   title = "Recent Transactions",
   description = "Here are your latest financial activities.",
+  transactions
 }: RecentTransactionsProps) {
-    const { user, formatCurrency } = useAuth();
-    const [transactions, setTransactions] = useState<ClientTransaction[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchRecentTransactions = async () => {
-            if (!user) return;
-            setLoading(true);
-            try {
-                const dbTransactions = await getTransactions();
-                const processed = processTransactions(dbTransactions as Transaction[]);
-                setTransactions(processed.slice(0, 5)); // Get 5 most recent
-            } catch (error) {
-                console.error("Error fetching recent transactions:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchRecentTransactions();
-    }, [user]);
+    const { formatCurrency } = useAuth();
+    const recentTransactions = transactions.slice(0, 5);
 
   return (
     <Card>
@@ -62,11 +44,7 @@ export function RecentTransactions({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        {loading ? (
-            <div className="flex justify-center items-center h-64">
-                <Loader className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        ) : transactions.length > 0 ? (
+        {recentTransactions.length > 0 ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -76,7 +54,7 @@ export function RecentTransactions({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactions.map((transaction) => {
+              {recentTransactions.map((transaction) => {
                 const Icon = getIconForCategory(transaction.category);
                 return (
                 <TableRow key={transaction.id}>

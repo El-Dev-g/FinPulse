@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { OverviewCards } from "@/components/dashboard/overview-cards";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { GoalTracker } from "@/components/dashboard/goal-tracker";
@@ -10,11 +10,47 @@ import { Alerts } from "@/components/dashboard/alerts";
 import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader } from 'lucide-react';
 import Link from 'next/link';
+import { getTransactions, getGoals } from '@/lib/db';
+import type { Goal, Transaction } from '@/lib/types';
+import { processGoals, processTransactions } from '@/lib/utils';
+
 
 export default function DashboardPage() {
   const { user, subscriptionStatus } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
+
+  const fetchData = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const [dbTransactions, dbGoals] = await Promise.all([
+        getTransactions(),
+        getGoals(),
+      ]);
+      setTransactions(processTransactions(dbTransactions as any[]));
+      setGoals(processGoals(dbGoals as any[]));
+    } catch (error) {
+      console.error("Failed to fetch dashboard data", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  if (loading) {
+    return (
+      <main className="flex-1 p-4 md:p-6 lg:p-8 flex items-center justify-center">
+         <Loader className="h-12 w-12 animate-spin text-primary" />
+      </main>
+    );
+  }
 
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
@@ -47,18 +83,18 @@ export default function DashboardPage() {
       <Alerts />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <OverviewCards />
+        <OverviewCards transactions={transactions} goals={goals} />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <SpendingChart />
+          <SpendingChart transactions={transactions} />
         </div>
         <div className="lg:col-span-1">
-          <GoalTracker />
+          <GoalTracker goals={goals} />
         </div>
       </div>
       <div>
-        <RecentTransactions />
+        <RecentTransactions transactions={transactions} />
       </div>
     </main>
   );
