@@ -129,10 +129,16 @@ export default function LinkAccountPage() {
 
     const handlePermissionAllow = () => {
         setIsPermissionDialogOpen(false);
-        toast({
-            title: "Permissions Granted",
-            description: `Connecting with ${permissionProvider}... In a real app, you would be redirected to your bank.`,
-        });
+        const truelayerUrl = 'https://auth.truelayer-sandbox.com/?response_type=code&client_id=sandbox-finpulse-0b40c2&scope=info%20accounts%20balance%20cards%20transactions%20direct_debits%20standing_orders%20offline_access&redirect_uri=https://console.truelayer.com/redirect-page&providers=uk-cs-mock%20uk-ob-all%20uk-oauth-all';
+
+        if (permissionProvider === 'Truelayer') {
+            window.open(truelayerUrl, '_blank');
+        } else {
+            toast({
+                title: "Permissions Granted",
+                description: `Connecting with ${permissionProvider}... In a real app, you would be redirected to your bank.`,
+            });
+        }
     }
     
     const handleOpenEditDialog = (account: Account) => {
@@ -345,6 +351,9 @@ export default function LinkAccountPage() {
                          </span>
                     </li>
                 </ul>
+                 <p className="text-xs text-muted-foreground text-center">
+                    You will be redirected to {permissionProvider} to securely log in to your bank.
+                </p>
                 <p className="text-xs text-muted-foreground text-center flex items-center gap-2 justify-center">
                     <Lock className="h-4 w-4" /> Your credentials will not be shared with FinPulse.
                 </p>
