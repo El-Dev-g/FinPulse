@@ -23,7 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, Trash, Archive } from "lucide-react";
+import { Loader, Trash, Archive, Undo } from "lucide-react";
 import type { Goal } from "@/lib/types";
 
 interface EditGoalDialogProps {
@@ -154,6 +154,7 @@ export function EditGoalDialog({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g., Save for Vacation"
+                disabled={isArchived}
               />
             </div>
             <div className="space-y-2">
@@ -166,6 +167,7 @@ export function EditGoalDialog({
                 value={current}
                 onChange={(e) => setCurrent(e.target.value)}
                 placeholder="e.g., 1500"
+                 disabled={isArchived}
               />
             </div>
             <div className="space-y-2">
@@ -178,6 +180,7 @@ export function EditGoalDialog({
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
                 placeholder="e.g., 5000"
+                 disabled={isArchived}
               />
             </div>
           </div>
@@ -196,7 +199,7 @@ export function EditGoalDialog({
             </div>
             <Button type="submit" disabled={loading}>
               {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-              {isArchived ? "Restore Goal" : "Save Changes"}
+              {isArchived ? <><Undo className="mr-2"/>Restore Goal</> : "Save Changes"}
             </Button>
           </DialogFooter>
         </form>
