@@ -3,6 +3,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -70,7 +71,8 @@ type Account = typeof initialAccounts[0];
 
 const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
 
-export default function LinkAccountPage() {
+
+function LinkAccountPageContent() {
     const [selectedCountry, setSelectedCountry] = useState<string>('');
     const { toast } = useToast();
     const [accounts, setAccounts] = useState<Account[]>([]);
@@ -83,6 +85,8 @@ export default function LinkAccountPage() {
     // State for permission dialog
     const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
     const [permissionProvider, setPermissionProvider] = useState('');
+    
+    const searchParams = useSearchParams();
 
 
     // Load accounts from localStorage on component mount
@@ -100,6 +104,25 @@ export default function LinkAccountPage() {
             setAccounts(initialAccounts);
         }
     }, []);
+    
+    useEffect(() => {
+        const success = searchParams.get('success');
+        const error = searchParams.get('error');
+
+        if (success === 'truelayer_connected') {
+            toast({
+                title: "Account Connected!",
+                description: "Your account has been successfully linked via Truelayer.",
+            });
+        }
+        if (error) {
+            toast({
+                variant: 'destructive',
+                title: "Connection Failed",
+                description: "There was an error connecting your account. Please try again.",
+            });
+        }
+    }, [searchParams, toast]);
 
     // Save accounts to localStorage whenever they change
     const updateAndPersistAccounts = (updatedAccounts: Account[]) => {
@@ -129,10 +152,10 @@ export default function LinkAccountPage() {
 
     const handlePermissionAllow = () => {
         setIsPermissionDialogOpen(false);
-        const truelayerUrl = 'https://auth.truelayer-sandbox.com/?response_type=code&client_id=sandbox-finpulse-0b40c2&scope=info%20accounts%20balance%20cards%20transactions%20direct_debits%20standing_orders%20offline_access&redirect_uri=https://console.truelayer.com/redirect-page&providers=uk-cs-mock%20uk-ob-all%20uk-oauth-all';
+        const truelayerUrl = `https://auth.truelayer-sandbox.com/?response_type=code&client_id=sandbox-finpulse-0b40c2&scope=info%20accounts%20balance%20cards%20transactions%20direct_debits%20standing_orders%20offline_access&redirect_uri=${window.location.origin}/api/truelayer/callback&providers=uk-cs-mock%20uk-ob-all%20uk-oauth-all`;
 
         if (permissionProvider === 'Truelayer') {
-            window.open(truelayerUrl, '_blank');
+            window.open(truelayerUrl, '_self');
         } else {
             toast({
                 title: "Permissions Granted",
@@ -366,4 +389,13 @@ export default function LinkAccountPage() {
     </Dialog>
     </>
   );
+}
+
+
+export default function LinkAccountPage() {
+    return (
+        <React.Suspense fallback={<div>Loading...</div>}>
+            <LinkAccountPageContent />
+        </React.Suspense>
+    )
 }
