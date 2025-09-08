@@ -13,13 +13,14 @@ import { getTransactions, getGoals } from '@/lib/db';
 import { useAuth } from '@/hooks/use-auth';
 import type { Transaction, Goal } from '@/lib/types';
 import { subDays, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
+import { processGoals } from '@/lib/utils';
 
 export function OverviewCards() {
   const { user, formatCurrency } = useAuth();
   const [overviewData, setOverviewData] = useState({
     income: 0,
     expenses: 0,
-    netWorth: 0, // Note: True net worth is complex. This is a simple calculation.
+    netWorth: 0,
     incomeChange: 0,
     expenseChange: 0,
   });
@@ -30,8 +31,12 @@ export function OverviewCards() {
       if (!user) return;
       setLoading(true);
       
-      const transactions = await getTransactions() as Transaction[];
-      const goals = await getGoals() as Goal[];
+      const [transactions, dbGoals] = await Promise.all([
+        getTransactions() as Promise<Transaction[]>,
+        getGoals() as Promise<Goal[]>,
+      ]);
+      
+      const goals = processGoals(dbGoals);
 
       const now = new Date();
       const currentMonthStart = startOfMonth(now);
@@ -62,10 +67,6 @@ export function OverviewCards() {
         totalAssets += g.current;
       });
       
-      // A simple net worth could be total saved in goals.
-      // A more complex one would involve assets - liabilities.
-      // We are only tracking savings goals as assets here.
-      
       const incomeChange = lastMonthIncome > 0 ? ((currentMonthIncome - lastMonthIncome) / lastMonthIncome) * 100 : currentMonthIncome > 0 ? 100 : 0;
       const expenseChange = lastMonthExpenses > 0 ? ((currentMonthExpenses - lastMonthExpenses) / lastMonthExpenses) * 100 : currentMonthExpenses > 0 ? 100 : 0;
 
@@ -83,6 +84,7 @@ export function OverviewCards() {
   }, [user]);
 
   const formatPercentage = (value: number) => {
+      if (!isFinite(value)) return "0.0%";
       const sign = value > 0 ? '+' : '';
       return `${sign}${value.toFixed(1)}%`;
   }
