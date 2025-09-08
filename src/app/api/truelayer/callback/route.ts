@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // The redirect URI for the token exchange must EXACTLY match the one used in the initial auth URL.
-    const redirectUriForToken = 'https://9000-firebase-studio-1756463262326.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev/api/truelayer/callback';
+    const redirectUriForToken = `https://9000-firebase-studio-1756463262326.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev/api/truelayer/callback`;
     
     const accessToken = await exchangeCodeForToken(code, redirectUriForToken);
     
@@ -85,4 +85,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(finalRedirectUrl);
   }
 }
-

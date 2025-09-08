@@ -1,3 +1,4 @@
+
 // src/app/dashboard/link-account/page.tsx
 "use client";
 
@@ -33,7 +34,9 @@ import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -43,20 +46,29 @@ import { Landmark, ArrowRight, Trash2, Banknote, Pencil, Loader, Eye, CheckCircl
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
-const countries: { [key: string]: { name: string; provider: string; } } = {
-    'us': { name: "United States", provider: "Plaid" },
-    'ca': { name: "Canada", provider: "Plaid" },
-    'gb': { name: "United Kingdom", provider: "Truelayer" },
-    'de': { name: "Germany", provider: "Truelayer" },
-    'fr': { name: "France", provider: "Truelayer" },
-    'es': { name: "Spain", provider: "Truelayer" },
-    'ie': { name: "Ireland", provider: "Truelayer" },
-    'ng': { name: "Nigeria", provider: "Mono" },
-    'gh': { name: "Ghana", provider: "Mono" },
-    'ke': { name: "Kenya", provider: "Mono" },
-    'za': { name: "South Africa", provider: "Mono" },
-    'other': { name: "Other", provider: "Manual" }
+const countries: { [key: string]: { name: string; provider: string; continent: string } } = {
+    'us': { name: "United States", provider: "Plaid", continent: "North America" },
+    'ca': { name: "Canada", provider: "Plaid", continent: "North America" },
+    'gb': { name: "United Kingdom", provider: "Truelayer", continent: "Europe" },
+    'de': { name: "Germany", provider: "Truelayer", continent: "Europe" },
+    'fr': { name: "France", provider: "Truelayer", continent: "Europe" },
+    'es': { name: "Spain", provider: "Truelayer", continent: "Europe" },
+    'ie': { name: "Ireland", provider: "Truelayer", continent: "Europe" },
+    'ng': { name: "Nigeria", provider: "Mono", continent: "Africa" },
+    'gh': { name: "Ghana", provider: "Mono", continent: "Africa" },
+    'ke': { name: "Kenya", provider: "Mono", continent: "Africa" },
+    'za': { name: "South Africa", provider: "Mono", continent: "Africa" },
+    'other': { name: "Other", provider: "Manual", continent: "Other" }
 };
+
+const groupedCountries = Object.entries(countries).reduce((acc, [code, data]) => {
+    const { continent } = data;
+    if (!acc[continent]) {
+        acc[continent] = [];
+    }
+    acc[continent].push({ code, ...data });
+    return acc;
+}, {} as { [key: string]: (typeof countries[string] & { code: string })[] });
 
 
 // Mock data for connected accounts
@@ -154,7 +166,7 @@ function LinkAccountPageContent() {
         
         if (permissionProvider === 'Truelayer') {
             // This must point to our own backend callback handler.
-            const redirectUri = 'https://9000-firebase-studio-1756463262326.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev/api/truelayer/callback';
+            const redirectUri = `https://9000-firebase-studio-1756463262326.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev/api/truelayer/callback`;
             const authUrl = `https://auth.truelayer-sandbox.com/?response_type=code&client_id=sandbox-finpulse-0b40c2&scope=info%20accounts%20balance%20cards%20transactions%20direct_debits%20standing_orders%20offline_access&redirect_uri=${encodeURIComponent(redirectUri)}&providers=uk-cs-mock%20uk-ob-all%20uk-oauth-all`;
             
             window.open(authUrl, '_self');
@@ -266,8 +278,13 @@ function LinkAccountPageContent() {
                             <SelectValue placeholder="Choose a country..." />
                         </SelectTrigger>
                         <SelectContent>
-                            {Object.entries(countries).map(([code, { name }]) => (
-                                <SelectItem key={code} value={code}>{name}</SelectItem>
+                             {Object.entries(groupedCountries).map(([continent, continentCountries]) => (
+                                <SelectGroup key={continent}>
+                                    <SelectLabel>{continent}</SelectLabel>
+                                    {continentCountries.map(({ code, name }) => (
+                                        <SelectItem key={code} value={code}>{name}</SelectItem>
+                                    ))}
+                                </SelectGroup>
                             ))}
                         </SelectContent>
                     </Select>
