@@ -42,7 +42,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Landmark, ArrowRight, Trash2, Banknote, Pencil, Loader, Eye, CheckCircle, Lock, User } from "lucide-react";
+import { Landmark, ArrowRight, Trash2, Banknote, Pencil, Loader, Eye, CheckCircle, Lock, User, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
@@ -412,6 +412,12 @@ function LinkAccountPageContent() {
                         <span>
                             <span className="font-semibold text-foreground">Account Details:</span> Account name, type, and currency.
                         </span>
+                    </li>
+                     <li className="flex items-start gap-3">
+                        <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                         <span>
+                             <span className="font-semibold text-foreground">Card Details:</span> Card numbers, limits, and transaction history.
+                         </span>
                     </li>
                     <li className="flex items-start gap-3">
                         <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
