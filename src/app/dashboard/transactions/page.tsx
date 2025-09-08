@@ -1,3 +1,4 @@
+
 // src/app/dashboard/transactions/page.tsx
 "use client";
 
@@ -26,10 +27,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ArrowRightLeft, Download, Plus, Loader, Lock, RefreshCcw } from "lucide-react";
+import { ArrowRightLeft, Download, Plus, Loader, Lock, RefreshCcw, MoreHorizontal, Trash2 } from "lucide-react";
 import { AddTransactionDialog } from "@/components/dashboard/add-transaction-dialog";
 import type { ClientTransaction, Transaction } from "@/lib/types";
-import { addTransaction, getTransactions } from "@/lib/db";
+import { addTransaction, getTransactions, deleteTransaction } from "@/lib/db";
 import { processTransactions, getIconForCategory } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { ProBadge } from "@/components/pro-badge";
@@ -39,6 +40,22 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 
 
@@ -50,6 +67,7 @@ export default function TransactionsPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isAddTransactionDialogOpen, setIsAddTransactionDialogOpen] =
     useState(false);
+  const [deletingTransaction, setDeletingTransaction] = useState<ClientTransaction | null>(null);
   const { user, formatCurrency, isPro } = useAuth();
   const { toast } = useToast();
   
@@ -165,8 +183,31 @@ export default function TransactionsPage() {
     link.click();
     document.body.removeChild(link);
   };
+  
+  const handleDeleteTransaction = async () => {
+    if (!deletingTransaction) return;
+    try {
+      await deleteTransaction(deletingTransaction.id);
+      toast({
+        title: "Transaction Deleted",
+        description: `The transaction "${deletingTransaction.description}" has been deleted.`,
+      });
+      fetchTransactions();
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+       toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete the transaction.",
+      });
+    } finally {
+      setDeletingTransaction(null);
+    }
+  }
+
 
   return (
+    <>
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
@@ -253,6 +294,7 @@ export default function TransactionsPage() {
                   <TableHead>Date</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -288,11 +330,26 @@ export default function TransactionsPage() {
                         {transaction.amount > 0 ? "+" : ""}
                         {formatCurrency(transaction.amount)}
                       </TableCell>
+                       <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onSelect={() => setDeletingTransaction(transaction)} className="text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4"/>
+                                Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
                     </TableRow>
                   )})
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center h-24">
+                    <TableCell colSpan={5} className="text-center h-24">
                       No transactions found.
                     </TableCell>
                   </TableRow>
@@ -309,5 +366,28 @@ export default function TransactionsPage() {
         onAddTransaction={handleAddTransaction}
       />
     </main>
+      <AlertDialog
+        open={!!deletingTransaction}
+        onOpenChange={() => setDeletingTransaction(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the transaction for "{deletingTransaction?.description}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteTransaction}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Yes, delete transaction
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

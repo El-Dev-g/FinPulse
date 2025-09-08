@@ -1,3 +1,4 @@
+
 // src/lib/db.ts
 import { db } from './firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy, setDoc } from 'firebase/firestore';
@@ -156,6 +157,7 @@ export const deleteBudget = (id: string) => deleteDataItem('budgets', id);
 // --- Transactions ---
 export const addTransaction = (transaction: Omit<Transaction, 'id' | 'Icon'>) => addDataItem<Omit<Transaction, 'id' | 'Icon'>>('transactions', transaction);
 export const getTransactions = () => getData<Transaction>('transactions');
+export const deleteTransaction = (id: string) => deleteDataItem('transactions', id);
 
 // --- Tasks ---
 export const addTask = (task: Omit<FinancialTask, 'id'>) => addDataItem<Omit<FinancialTask, 'id'>>('tasks', task);
