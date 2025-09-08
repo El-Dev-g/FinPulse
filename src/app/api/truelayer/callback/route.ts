@@ -3,10 +3,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // This is a simulated function. In a real app, this would make a POST request to Truelayer's token endpoint.
-async function exchangeCodeForToken(code: string) {
+async function exchangeCodeForToken(code: string, origin: string) {
     const clientId = process.env.TRUELAYER_CLIENT_ID;
     const clientSecret = process.env.TRUELAYER_CLIENT_SECRET;
-    const redirectUri = `${new URL('/api/truelayer/callback', 'http://localhost').origin}/api/truelayer/callback`; // The base URL doesn't matter here, we just need the origin + path
+    const redirectUri = `${origin}/api/truelayer/callback`; 
 
     console.log("---- Attempting to Exchange Code ----");
     console.log("Client ID:", clientId ? "Found" : "Missing");
@@ -49,11 +49,11 @@ async function exchangeCodeForToken(code: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
   const error = searchParams.get('error');
 
-  const redirectUrl = new URL('/dashboard/link-account', request.url);
+  const redirectUrl = new URL('/dashboard/link-account', origin);
 
   if (error) {
     redirectUrl.searchParams.set('error', `truelayer_error_${error}`);
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Exchange the code for an access token from your backend.
-    const accessToken = await exchangeCodeForToken(code);
+    const accessToken = await exchangeCodeForToken(code, origin);
     
     // In a real application, you would save this token securely to the database,
     // associated with the currently logged-in user.
