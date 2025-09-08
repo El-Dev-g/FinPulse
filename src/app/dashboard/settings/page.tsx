@@ -33,7 +33,7 @@ import {
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { updateUserProfile } from "@/lib/db";
+import { updateUserProfile, deleteUserData } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
@@ -135,14 +135,19 @@ export default function SettingsPage() {
 
     setIsDeleting(true);
     try {
+      // Step 1: Delete all user data from Firestore
+      await deleteUserData(user.uid);
+      
+      // Step 2: Delete the user from Firebase Auth
       await deleteUser(user);
-      // No need to clear local data as it's tied to the user session
+
       toast({
         title: "Account Deleted",
-        description: "Your account has been permanently deleted.",
+        description: "Your account and all associated data have been permanently deleted.",
       });
       router.push("/signup");
     } catch (error: any) {
+      console.error("Account deletion error:", error);
       toast({
         variant: "destructive",
         title: "Error",

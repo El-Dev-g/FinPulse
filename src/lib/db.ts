@@ -1,7 +1,7 @@
 
 // src/lib/db.ts
 import { db } from './firebase';
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy, setDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy, setDoc, writeBatch } from 'firebase/firestore';
 import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category, AIPlan, UserProfile, Advice } from './types';
 import { auth } from './firebase';
 import { getFinancialAdvice } from './actions';
@@ -77,6 +77,46 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
     }
     return null;
 }
+
+// --- User Data Deletion ---
+export const deleteUserData = async (uid: string): Promise<void> => {
+    if (!uid) throw new Error("UID is required to delete user data.");
+
+    console.log(`Starting data deletion for user: ${uid}`);
+
+    const collectionsToDelete = [
+        'transactions',
+        'recurring',
+        'goals',
+        'budgets',
+        'tasks',
+        'categories',
+        'ai_plans',
+        'profile' // This will also delete the profile/settings doc
+    ];
+
+    const batch = writeBatch(db);
+
+    for (const collectionName of collectionsToDelete) {
+        const collectionRef = collection(db, `users/${uid}/${collectionName}`);
+        const querySnapshot = await getDocs(collectionRef);
+        
+        if (!querySnapshot.empty) {
+            console.log(`Deleting ${querySnapshot.docs.length} documents from '${collectionName}'...`);
+            querySnapshot.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+        }
+    }
+    
+    // The top-level user document might not exist if it was never explicitly created,
+    // but we can try to delete it if it does.
+    const userDocRef = doc(db, 'users', uid);
+    batch.delete(userDocRef);
+
+    await batch.commit();
+    console.log(`Data deletion completed for user: ${uid}`);
+};
 
 
 // --- Goals ---
