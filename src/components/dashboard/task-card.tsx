@@ -8,6 +8,12 @@ import { FinancialTask, Goal, TaskStatus } from "@/lib/types";
 import { GripVertical, Pencil, Target, Check, Circle } from "lucide-react";
 import { cn, formatTime } from "@/lib/utils";
 import { Button } from "../ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface TaskCardProps {
   task: FinancialTask;
@@ -74,10 +80,19 @@ export function TaskCard({ task, goal, onEdit, onStatusChange, isOverdue = false
                     </div>
                     )}
                     {goal && (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Target className="h-3 w-3 text-primary/70"/>
-                            <p>{goal.title}</p>
-                        </div>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-default">
+                                        <Target className="h-3 w-3 text-primary/70"/>
+                                        <p className="max-w-[120px] truncate">{goal.title}</p>
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Goal: {goal.title}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     )}
                 </div>
             </div>

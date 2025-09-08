@@ -136,39 +136,13 @@ export default function OrganizerPage() {
   const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("board");
   const [showConfetti, setShowConfetti] = useState(false);
-
-  const autoUpdateTasks = useCallback(async (tasksToUpdate: FinancialTask[]) => {
-    const today = startOfToday();
-    const tasksForDbUpdate = tasksToUpdate.filter(task => {
-        return task.status !== 'Done' && task.dueDate && isBefore(parseISO(task.dueDate), today);
-    });
-
-    if (tasksForDbUpdate.length > 0) {
-        const updates = tasksForDbUpdate.map(task => updateTask(task.id, { status: 'Done' }));
-        await Promise.all(updates);
-        return true; // Indicates updates were made
-    }
-    return false;
-  }, []);
   
   const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
       const [dbTasks, dbGoals] = await Promise.all([getTasks(), getGoals()]);
-      
-      const wereTasksUpdated = await autoUpdateTasks(dbTasks as FinancialTask[]);
-      
-      if (wereTasksUpdated) {
-        // Refetch tasks after auto-updating them
-        const refreshedTasks = await getTasks();
-        setTasks(refreshedTasks as FinancialTask[]);
-        setShowConfetti(true); // Trigger confetti
-        setTimeout(() => setShowConfetti(false), 5000); // Stop confetti after 5 seconds
-      } else {
-        setTasks(dbTasks as FinancialTask[]);
-      }
-
+      setTasks(dbTasks as FinancialTask[]);
       setGoals(dbGoals as Goal[]);
 
     } catch (error) {
@@ -176,7 +150,7 @@ export default function OrganizerPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, autoUpdateTasks]);
+  }, [user]);
 
   useEffect(() => {
     fetchData();
@@ -193,6 +167,10 @@ export default function OrganizerPage() {
   };
 
   const handleUpdateTaskStatus = async (taskId: string, status: TaskStatus) => {
+    if (status === 'Done') {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 5000);
+    }
     await updateTask(taskId, { status });
     fetchData();
   };
@@ -220,9 +198,9 @@ export default function OrganizerPage() {
     const notDone = tasks.filter(t => t.status !== 'Done');
 
     return {
-      overdueTasks: notDone.filter(t => t.dueDate && isBefore(new Date(t.dueDate + "T23:59:59"), today)),
-      todayTasks: notDone.filter(t => t.dueDate && isSameDay(new Date(t.dueDate + "T00:00:00"), today)),
-      upcomingTasks: notDone.filter(t => t.dueDate && isBefore(today, new Date(t.dueDate + "T00:00:00"))),
+      overdueTasks: notDone.filter(t => t.dueDate && isBefore(parseISO(t.dueDate), today)),
+      todayTasks: notDone.filter(t => t.dueDate && isSameDay(parseISO(t.dueDate), today)),
+      upcomingTasks: notDone.filter(t => t.dueDate && isBefore(today, parseISO(t.dueDate))),
       otherTasks: notDone.filter(t => !t.dueDate),
       doneTasks: done,
     };
