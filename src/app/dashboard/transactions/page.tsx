@@ -39,16 +39,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
 
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<ClientTransaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isAddTransactionDialogOpen, setIsAddTransactionDialogOpen] =
     useState(false);
   const { user, formatCurrency, isPro } = useAuth();
+  const { toast } = useToast();
   
   const fetchTransactions = React.useCallback(async () => {
     if (!user) return;
@@ -88,6 +91,52 @@ export default function TransactionsPage() {
     await addTransaction(newTransaction);
     fetchTransactions(); // Refetch
   };
+
+  const handleSyncTransactions = async () => {
+    setIsSyncing(true);
+    // Simulate fetching new transactions from a linked bank account
+    const newMockTransactions: Omit<Transaction, "id" | "Icon" | "createdAt">[] = [
+      {
+        description: 'Monthly Salary',
+        amount: 5000,
+        date: new Date().toISOString().split("T")[0],
+        category: 'Income',
+      },
+      {
+        description: 'Starbucks Coffee',
+        amount: -5.75,
+        date: new Date().toISOString().split("T")[0],
+        category: 'Dining Out',
+      }
+    ];
+
+    try {
+      // Add each new transaction to the database
+      for (const t of newMockTransactions) {
+        await addTransaction(t);
+      }
+      
+      // Show a success message
+      toast({
+        title: "Sync Complete!",
+        description: `${newMockTransactions.length} new transactions have been added.`,
+      });
+
+      // Refresh the transaction list from the database
+      await fetchTransactions();
+
+    } catch (error) {
+      console.error("Error syncing transactions:", error);
+      toast({
+        variant: "destructive",
+        title: "Sync Failed",
+        description: "Could not add new transactions from your bank.",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
 
   const handleExportCSV = () => {
     if (!isPro) return; // This should be redundant due to the button being disabled, but it's good practice.
@@ -130,8 +179,8 @@ export default function TransactionsPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={fetchTransactions} disabled={loading}>
-                {loading ? <Loader className="mr-2 animate-spin" /> : <RefreshCcw className="mr-2" />}
+            <Button variant="outline" onClick={handleSyncTransactions} disabled={isSyncing || loading}>
+                {isSyncing ? <Loader className="mr-2 animate-spin" /> : <RefreshCcw className="mr-2" />}
                 Sync
             </Button>
             <Button onClick={() => setIsAddTransactionDialogOpen(true)}>
