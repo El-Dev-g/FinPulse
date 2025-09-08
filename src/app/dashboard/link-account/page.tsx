@@ -42,7 +42,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Landmark, ArrowRight, Trash2, Banknote, Pencil, Loader, Eye, CheckCircle, Lock } from "lucide-react";
+import { Landmark, ArrowRight, Trash2, Banknote, Pencil, Loader, Eye, CheckCircle, Lock, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
@@ -73,9 +73,9 @@ const groupedCountries = Object.entries(countries).reduce((acc, [code, data]) =>
 
 // Mock data for connected accounts
 const initialAccounts = [
-    { id: 'acc_1', name: 'Main Checking Account', bank: 'Chase Bank', last4: '1234', type: 'Checking', accountNumber: '**** **** **** 1234', syncStatus: 'Syncing daily' },
-    { id: 'acc_2', name: 'High-Yield Savings', bank: 'Ally Bank', last4: '5678', type: 'Savings', accountNumber: '**** **** **** 5678', syncStatus: 'Syncing daily' },
-    { id: 'acc_3', name: 'Travel Rewards Card', bank: 'Capital One', last4: '9012', type: 'Credit', accountNumber: '**** **** **** 9012', syncStatus: 'Syncing daily' },
+    { id: 'acc_1', name: 'Main Checking Account', bank: 'Chase Bank', last4: '1234', type: 'Checking', accountNumber: '**** **** **** 1234', syncStatus: 'Syncing daily', bankUserName: 'user_a' },
+    { id: 'acc_2', name: 'High-Yield Savings', bank: 'Ally Bank', last4: '5678', type: 'Savings', accountNumber: '**** **** **** 5678', syncStatus: 'Syncing daily', bankUserName: 'user_b' },
+    { id: 'acc_3', name: 'Travel Rewards Card', bank: 'Capital One', last4: '9012', type: 'Credit', accountNumber: '**** **** **** 9012', syncStatus: 'Syncing daily', bankUserName: 'user_c' },
 ];
 
 type Account = typeof initialAccounts[0];
@@ -145,6 +145,7 @@ function LinkAccountPageContent() {
                 type: 'Checking',
                 accountNumber: `**** **** **** ${Math.floor(1000 + Math.random() * 9000).toString()}`,
                 syncStatus: 'Syncing daily',
+                bankUserName: 'user_d'
             };
             
             // Using a function with setAccounts to ensure we have the latest state
@@ -338,6 +339,10 @@ function LinkAccountPageContent() {
                     <DialogDescription>{viewingAccount?.bank} - {viewingAccount?.type} Account</DialogDescription>
                 </DialogHeader>
                 <div className="py-4 space-y-4 text-sm">
+                    <div className="flex justify-between items-center">
+                        <p className="text-muted-foreground flex items-center gap-2"><User className="h-4 w-4" /> Bank User Name</p>
+                        <p className="font-mono">{viewingAccount?.bankUserName}</p>
+                    </div>
                     <div className="flex justify-between items-center">
                         <p className="text-muted-foreground">Account Number</p>
                         <p className="font-mono">{viewingAccount?.accountNumber}</p>
