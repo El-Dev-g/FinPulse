@@ -72,13 +72,9 @@ const groupedCountries = Object.entries(countries).reduce((acc, [code, data]) =>
 
 
 // Mock data for connected accounts
-const initialAccounts = [
-    { id: 'acc_1', name: 'Main Checking Account', bank: 'Chase Bank', last4: '1234', type: 'Checking', accountNumber: '**** **** **** 1234', syncStatus: 'Syncing daily', bankUserName: 'user_a' },
-    { id: 'acc_2', name: 'High-Yield Savings', bank: 'Ally Bank', last4: '5678', type: 'Savings', accountNumber: '**** **** **** 5678', syncStatus: 'Syncing daily', bankUserName: 'user_b' },
-    { id: 'acc_3', name: 'Travel Rewards Card', bank: 'Capital One', last4: '9012', type: 'Credit', accountNumber: '**** **** **** 9012', syncStatus: 'Syncing daily', bankUserName: 'user_c' },
-];
+const initialAccounts: Account[] = [];
 
-type Account = typeof initialAccounts[0];
+type Account = { id: string; name: string; bank: string; last4: string; type: string; accountNumber: string; syncStatus: string; bankUserName: string };
 
 const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
 
@@ -117,6 +113,7 @@ function LinkAccountPageContent() {
             if (storedAccounts) {
                 setAccounts(JSON.parse(storedAccounts));
             } else {
+                // For a new user, the list will be empty
                 setAccounts(initialAccounts);
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initialAccounts));
             }
