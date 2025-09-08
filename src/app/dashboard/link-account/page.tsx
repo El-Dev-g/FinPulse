@@ -151,15 +151,11 @@ function LinkAccountPageContent() {
 
     const handlePermissionAllow = () => {
         setIsPermissionDialogOpen(false);
-        const truelayerUrl = `https://auth.truelayer-sandbox.com/?response_type=code&client_id=sandbox-finpulse-0b40c2&scope=info%20accounts%20balance%20cards%20transactions%20direct_debits%20standing_orders%20offline_access&redirect_uri=${window.location.origin}/api/truelayer/callback&providers=uk-cs-mock%20uk-ob-all%20uk-oauth-all`;
-
+        
         if (permissionProvider === 'Truelayer') {
-             // For the sandbox, Truelayer expects a specific pre-registered redirect URI.
-            const sandboxRedirectUri = 'https://console.truelayer.com/redirect-page';
-            const authUrl = `https://auth.truelayer-sandbox.com/?response_type=code&client_id=sandbox-finpulse-0b40c2&scope=info%20accounts%20balance%20cards%20transactions%20direct_debits%20standing_orders%20offline_access&redirect_uri=${sandboxRedirectUri}&providers=uk-cs-mock%20uk-ob-all%20uk-oauth-all`;
-            
-            // We'll store our *actual* callback URL in localStorage to use after the redirect.
-            localStorage.setItem('truelayer_final_redirect', `${window.location.origin}/dashboard/link-account?success=truelayer_connected`);
+            // This is the full URL to our backend endpoint that will handle the callback.
+            const redirectUri = `${window.location.origin}/api/truelayer/callback`;
+            const authUrl = `https://auth.truelayer-sandbox.com/?response_type=code&client_id=sandbox-finpulse-0b40c2&scope=info%20accounts%20balance%20cards%20transactions%20direct_debits%20standing_orders%20offline_access&redirect_uri=${encodeURIComponent(redirectUri)}&providers=uk-cs-mock%20uk-ob-all%20uk-oauth-all`;
             
             window.open(authUrl, '_self');
         } else {

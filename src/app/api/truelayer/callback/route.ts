@@ -3,12 +3,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // This is a simulated function. In a real app, this would make a POST request to Truelayer's token endpoint.
-async function exchangeCodeForToken(code: string, origin: string) {
+async function exchangeCodeForToken(code: string, redirectUri: string) {
     const clientId = process.env.TRUELAYER_CLIENT_ID;
     const clientSecret = process.env.TRUELAYER_CLIENT_SECRET;
-    // The redirect URI for the token exchange must match what was used in the initial auth URL.
-    // For the Truelayer Sandbox, this is a static URL.
-    const redirectUri = 'https://console.truelayer.com/redirect-page';
 
     console.log("---- Attempting to Exchange Code ----");
     console.log("Client ID:", clientId ? "Found" : "Missing");
@@ -69,8 +66,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // The redirect URI for the token exchange must match what was used in the initial auth URL.
+    const redirectUriForToken = `${origin}/api/truelayer/callback`;
+    
     // Exchange the code for an access token from your backend.
-    const accessToken = await exchangeCodeForToken(code, origin);
+    const accessToken = await exchangeCodeForToken(code, redirectUriForToken);
     
     // In a real application, you would save this token securely to the database,
     // associated with the currently logged-in user.
