@@ -2,6 +2,52 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+// This is a simulated function. In a real app, this would make a POST request to Truelayer's token endpoint.
+async function exchangeCodeForToken(code: string) {
+    const clientId = process.env.TRUELAYER_CLIENT_ID;
+    const clientSecret = process.env.TRUELAYER_CLIENT_SECRET;
+    const redirectUri = `${new URL('/api/truelayer/callback', 'http://localhost').origin}/api/truelayer/callback`; // The base URL doesn't matter here, we just need the origin + path
+
+    console.log("---- Attempting to Exchange Code ----");
+    console.log("Client ID:", clientId ? "Found" : "Missing");
+    console.log("Client Secret:", clientSecret ? "Found" : "Missing");
+    console.log("Redirect URI:", redirectUri);
+    console.log("Authorization Code:", code);
+    
+    if (!clientId || !clientSecret) {
+        throw new Error("Truelayer client credentials are not configured on the server.");
+    }
+    
+    // In a real application, you would use `fetch` to make a POST request:
+    /*
+    const response = await fetch('https://auth.truelayer-sandbox.com/connect/token', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            grant_type: 'authorization_code',
+            client_id: clientId,
+            client_secret: clientSecret,
+            redirect_uri: redirectUri,
+            code: code,
+        }),
+    });
+    
+    if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`Failed to exchange code for token: ${errorBody}`);
+    }
+
+    const data = await response.json();
+    return data.access_token;
+    */
+
+    // For this prototype, we'll just simulate success and return a mock token.
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+    return `mock_access_token_for_${code.slice(0, 8)}`;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
@@ -10,29 +56,30 @@ export async function GET(request: NextRequest) {
   const redirectUrl = new URL('/dashboard/link-account', request.url);
 
   if (error) {
-    // Handle cases where the user denies permission or an error occurs
     redirectUrl.searchParams.set('error', `truelayer_error_${error}`);
     return NextResponse.redirect(redirectUrl);
   }
 
-
   if (!code) {
-    // Handle cases where the code is missing
     redirectUrl.searchParams.set('error', 'truelayer_missing_code');
     return NextResponse.redirect(redirectUrl);
   }
 
-  // In a real application, you would exchange this code for an access token
-  // with the Truelayer API from your backend.
-  console.log(`Received Truelayer auth code: ${code}`);
-  console.log('Simulating token exchange...');
-  // const accessToken = await exchangeCodeForToken(code);
-  // await saveTokenToDatabase(userId, accessToken);
+  try {
+    // Exchange the code for an access token from your backend.
+    const accessToken = await exchangeCodeForToken(code);
+    
+    // In a real application, you would save this token securely to the database,
+    // associated with the currently logged-in user.
+    console.log(`Successfully obtained mock access token: ${accessToken}`);
+    
+    // After successfully getting a token and storing it, redirect the user back.
+    redirectUrl.searchParams.set('success', 'truelayer_connected');
+    return NextResponse.redirect(redirectUrl);
 
-
-  // After successfully getting a token and storing it,
-  // redirect the user back to the accounts page with a success message.
-  redirectUrl.searchParams.set('success', 'truelayer_connected');
-  
-  return NextResponse.redirect(redirectUrl);
+  } catch (e: any) {
+    console.error("Token exchange failed:", e.message);
+    redirectUrl.searchParams.set('error', 'truelayer_token_exchange_failed');
+    return NextResponse.redirect(redirectUrl);
+  }
 }
