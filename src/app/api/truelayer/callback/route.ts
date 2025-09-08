@@ -6,12 +6,14 @@ import type { NextRequest } from 'next/server';
 async function exchangeCodeForToken(code: string, origin: string) {
     const clientId = process.env.TRUELAYER_CLIENT_ID;
     const clientSecret = process.env.TRUELAYER_CLIENT_SECRET;
-    const redirectUri = `${origin}/api/truelayer/callback`; 
+    // The redirect URI for the token exchange must match what was used in the initial auth URL.
+    // For the Truelayer Sandbox, this is a static URL.
+    const redirectUri = 'https://console.truelayer.com/redirect-page';
 
     console.log("---- Attempting to Exchange Code ----");
     console.log("Client ID:", clientId ? "Found" : "Missing");
     console.log("Client Secret:", clientSecret ? "Found" : "Missing");
-    console.log("Redirect URI:", redirectUri);
+    console.log("Redirect URI for token exchange:", redirectUri);
     console.log("Authorization Code:", code);
     
     if (!clientId || !clientSecret) {
@@ -53,16 +55,17 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code');
   const error = searchParams.get('error');
 
-  const redirectUrl = new URL('/dashboard/link-account', origin);
+  // This is where we want to send the user AFTER we've processed the callback.
+  const finalRedirectUrl = new URL('/dashboard/link-account', origin);
 
   if (error) {
-    redirectUrl.searchParams.set('error', `truelayer_error_${error}`);
-    return NextResponse.redirect(redirectUrl);
+    finalRedirectUrl.searchParams.set('error', `truelayer_error_${error}`);
+    return NextResponse.redirect(finalRedirectUrl);
   }
 
   if (!code) {
-    redirectUrl.searchParams.set('error', 'truelayer_missing_code');
-    return NextResponse.redirect(redirectUrl);
+    finalRedirectUrl.searchParams.set('error', 'truelayer_missing_code');
+    return NextResponse.redirect(finalRedirectUrl);
   }
 
   try {
@@ -74,12 +77,12 @@ export async function GET(request: NextRequest) {
     console.log(`Successfully obtained mock access token: ${accessToken}`);
     
     // After successfully getting a token and storing it, redirect the user back.
-    redirectUrl.searchParams.set('success', 'truelayer_connected');
-    return NextResponse.redirect(redirectUrl);
+    finalRedirectUrl.searchParams.set('success', 'truelayer_connected');
+    return NextResponse.redirect(finalRedirectUrl);
 
   } catch (e: any) {
     console.error("Token exchange failed:", e.message);
-    redirectUrl.searchParams.set('error', 'truelayer_token_exchange_failed');
-    return NextResponse.redirect(redirectUrl);
+    finalRedirectUrl.searchParams.set('error', 'truelayer_token_exchange_failed');
+    return NextResponse.redirect(finalRedirectUrl);
   }
 }
