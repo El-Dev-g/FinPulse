@@ -154,7 +154,7 @@ function LinkAccountPageContent() {
         
         if (permissionProvider === 'Truelayer') {
             // This must point to our own backend callback handler.
-            const redirectUri = `${window.location.origin}/api/truelayer/callback`;
+            const redirectUri = 'https://9000-firebase-studio-1756463262326.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev/api/truelayer/callback';
             const authUrl = `https://auth.truelayer-sandbox.com/?response_type=code&client_id=sandbox-finpulse-0b40c2&scope=info%20accounts%20balance%20cards%20transactions%20direct_debits%20standing_orders%20offline_access&redirect_uri=${encodeURIComponent(redirectUri)}&providers=uk-cs-mock%20uk-ob-all%20uk-oauth-all`;
             
             window.open(authUrl, '_self');
