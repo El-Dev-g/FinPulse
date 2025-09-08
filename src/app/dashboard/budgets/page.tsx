@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Plus, Wallet, ArrowRightLeft, Loader, Lock } from "lucide-react";
 import { BudgetCard } from "@/components/dashboard/budget-card";
 import { AddBudgetDialog } from "@/components/dashboard/add-budget-dialog";
+import { EditBudgetDialog } from "@/components/dashboard/edit-budget-dialog";
 import { SweepToGoalDialog } from "@/components/dashboard/sweep-to-goal-dialog";
 import { useAuth } from "@/hooks/use-auth";
-import { getBudgets, getGoals, getTransactions, addBudget, updateGoal, addTransaction } from "@/lib/db";
+import { getBudgets, getGoals, getTransactions, addBudget, updateGoal, addTransaction, updateBudget, deleteBudget } from "@/lib/db";
 import { processBudgets, processGoals, processTransactions } from "@/lib/utils";
 import {
   Tooltip,
@@ -26,6 +27,7 @@ export default function BudgetsPage() {
   const [goals, setGoals] = useState<ClientGoal[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddBudgetDialogOpen, setIsAddBudgetDialogOpen] = useState(false);
+  const [editingBudget, setEditingBudget] = useState<ClientBudget | null>(null);
   const [sweepingBudget, setSweepingBudget] = useState<ClientBudget | null>(null);
 
   const budgetLimit = 20;
@@ -58,6 +60,16 @@ export default function BudgetsPage() {
     await addBudget(newBudget);
     fetchData();
   };
+  
+  const handleEditBudget = async (id: string, updatedData: Partial<Omit<Budget, "id" | "createdAt">>) => {
+    await updateBudget(id, updatedData);
+    fetchData();
+  }
+
+  const handleDeleteBudget = async (id: string) => {
+    await deleteBudget(id);
+    fetchData();
+  }
 
   const handleSweepToGoal = async (budget: ClientBudget, goal: Goal) => {
     const remaining = budget.limit - budget.spent;
@@ -138,7 +150,12 @@ export default function BudgetsPage() {
         ) : budgets.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {budgets.map((budget) => (
-                <BudgetCard key={budget.id} budget={budget} onSweep={() => setSweepingBudget(budget)} />
+                <BudgetCard 
+                  key={budget.id} 
+                  budget={budget} 
+                  onSweep={() => setSweepingBudget(budget)}
+                  onEdit={() => setEditingBudget(budget)}
+                />
               ))}
             </div>
         ) : (
@@ -153,6 +170,13 @@ export default function BudgetsPage() {
         onOpenChange={setIsAddBudgetDialogOpen}
         onAddBudget={handleAddBudget}
         existingCategories={budgets.map(b => b.category)}
+      />
+       <EditBudgetDialog
+        budget={editingBudget}
+        isOpen={!!editingBudget}
+        onOpenChange={setEditingBudget}
+        onEditBudget={handleEditBudget}
+        onDeleteBudget={handleDeleteBudget}
       />
       <SweepToGoalDialog
         budget={sweepingBudget}
