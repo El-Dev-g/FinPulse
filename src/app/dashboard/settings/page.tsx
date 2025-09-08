@@ -298,10 +298,9 @@ export default function SettingsPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>Are you absolutely sure you want to delete your account?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              account and remove your data from our servers.
+              This is a permanent action and cannot be undone. All of your data, including transactions, goals, and budgets, will be lost forever.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -314,7 +313,7 @@ export default function SettingsPage() {
               {isDeleting ? (
                 <Loader className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              Yes, delete my account
+              Yes, delete my account permanently
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
