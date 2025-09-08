@@ -2,8 +2,8 @@
 // src/app/dashboard/link-account/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import React, { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -97,8 +97,18 @@ function LinkAccountPageContent() {
     const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
     const [permissionProvider, setPermissionProvider] = useState('');
     
+    const router = useRouter();
     const searchParams = useSearchParams();
 
+    // Save accounts to localStorage whenever they change
+    const updateAndPersistAccounts = useCallback((updatedAccounts: Account[]) => {
+        setAccounts(updatedAccounts);
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedAccounts));
+        } catch (error) {
+            console.error("Could not save to localStorage:", error);
+        }
+    }, []);
 
     // Load accounts from localStorage on component mount
     useEffect(() => {
@@ -125,25 +135,44 @@ function LinkAccountPageContent() {
                 title: "Account Connected!",
                 description: "Your account has been successfully linked via Truelayer.",
             });
+            
+            // --- ADD NEW MOCK ACCOUNT ---
+            const newAccount: Account = {
+                id: `acc_${new Date().getTime()}`,
+                name: 'Monzo Bank Account',
+                bank: 'Monzo Bank (via Truelayer)',
+                last4: Math.floor(1000 + Math.random() * 9000).toString(),
+                type: 'Checking',
+                accountNumber: `**** **** **** ${Math.floor(1000 + Math.random() * 9000).toString()}`,
+                syncStatus: 'Syncing daily',
+            };
+            
+            // Using a function with setAccounts to ensure we have the latest state
+            setAccounts(prevAccounts => {
+                const updatedAccounts = [...prevAccounts, newAccount];
+                // Also persist it immediately
+                 try {
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedAccounts));
+                } catch (error) {
+                    console.error("Could not save to localStorage:", error);
+                }
+                return updatedAccounts;
+            });
+
+            // Clean up the URL
+            router.replace('/dashboard/link-account');
         }
+
         if (error) {
             toast({
                 variant: 'destructive',
                 title: "Connection Failed",
                 description: `There was an error connecting your account. (${error})`,
             });
+             // Clean up the URL
+            router.replace('/dashboard/link-account');
         }
-    }, [searchParams, toast]);
-
-    // Save accounts to localStorage whenever they change
-    const updateAndPersistAccounts = (updatedAccounts: Account[]) => {
-        setAccounts(updatedAccounts);
-        try {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedAccounts));
-        } catch (error) {
-            console.error("Could not save to localStorage:", error);
-        }
-    }
+    }, [searchParams, toast, router]);
 
 
     const handleConnect = () => {
@@ -165,7 +194,6 @@ function LinkAccountPageContent() {
         setIsPermissionDialogOpen(false);
         
         if (permissionProvider === 'Truelayer') {
-            // This must point to our own backend callback handler.
             const redirectUri = `https://9000-firebase-studio-1756463262326.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev/api/truelayer/callback`;
             const authUrl = `https://auth.truelayer-sandbox.com/?response_type=code&client_id=sandbox-finpulse-0b40c2&scope=info%20accounts%20balance%20cards%20transactions%20direct_debits%20standing_orders%20offline_access&redirect_uri=${encodeURIComponent(redirectUri)}&providers=uk-cs-mock%20uk-ob-all%20uk-oauth-all`;
             
