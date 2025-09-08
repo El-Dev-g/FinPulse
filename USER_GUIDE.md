@@ -84,15 +84,14 @@ The dashboard is your financial command center. It provides a quick snapshot of 
   - Get a deep dive into your financial data.
   - **Custom Date Range**: Filter your reports by a specific date range or use presets like "Last 30 days".
   - **Income vs. Expense Chart**: A line chart that shows your income and expense trends over the selected period.
-  - **Expense Breakdown**: A pie chart that visualizes your spending by category.
+  - **Expense Breakdown**: A pie chart that a visualizes your spending by category.
 
 ### Financial Organizer
 - **Location**: `Dashboard > Organizer`
-- **Functionality**:
-  - Manage your financial to-do list.
-  - **Board View**: A Kanban-style board where tasks are organized into columns: "Overdue", "Today", "Upcoming", "Other", and "Done". You can drag and drop tasks between columns.
-  - **Calendar View**: A monthly calendar that shows your tasks based on their due dates.
-  - **Link to Goals**: Associate tasks with specific financial goals to keep your efforts aligned.
+- **Functionality**: Manage your financial to-do list to stay on top of bills, deadlines, and important actions.
+  - **Board View**: A Kanban-style board where tasks are organized into columns: "Overdue", "Today", "Upcoming", "Other", and "Done". You can drag and drop tasks between columns to update their status.
+  - **Calendar View**: A monthly calendar that shows your tasks based on their due dates, giving you a clear overview of your financial schedule.
+  - **Link to Goals**: Associate tasks with specific financial goals to keep your efforts aligned and organized. For example, you can create a "Make extra car payment" task and link it to your "Pay off car loan" goal.
 
 ### Category Manager
 - **Location**: `Dashboard > Categories`

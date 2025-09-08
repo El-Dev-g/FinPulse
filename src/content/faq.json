@@ -12,11 +12,15 @@
     },
     {
       "question": "Can I import transactions from my bank?",
-      "answer": "Currently, FinPulse supports manual transaction entry to give you full control over your data. We are working on securely integrating with financial institutions for automatic transaction imports in a future update."
+      "answer": "Yes! You can securely connect your bank account from the 'Link Account' page in your settings. This allows FinPulse to automatically sync your latest transactions, saving you time and giving you a real-time view of your finances."
     },
     {
       "question": "How does the AI Advisor work?",
       "answer": "Our AI Advisor uses the financial information you provide—such as your goals, income, and spending habits—to generate a personalized financial plan. It identifies areas for improvement and provides actionable steps to help you reach your goals faster. This is a Pro feature."
+    },
+    {
+      "question": "What is the Financial Organizer?",
+      "answer": "The Financial Organizer is a tool designed to help you manage your financial to-do list. You can create tasks for things like paying bills or making a savings deposit, set due dates, and even link them to your financial goals. You can view your tasks on a Kanban-style board or a monthly calendar."
     },
     {
       "question": "Can I use FinPulse in a different currency?",
