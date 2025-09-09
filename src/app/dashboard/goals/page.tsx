@@ -97,8 +97,8 @@ function GoalsPageContent() {
     fetchData();
   }, [fetchData]);
 
-  const handleAddGoal = async (newGoal: Omit<Goal, "id" | "current" | "createdAt" | "status">) => {
-    await addGoal({ ...newGoal, current: 0 }, !isPro);
+  const handleAddGoal = async (newGoal: Omit<Goal, "id" | "current" | "createdAt" | "status">, currentAmount = 0) => {
+    await addGoal({ ...newGoal, current: currentAmount }, !isPro);
     fetchData();
   };
 

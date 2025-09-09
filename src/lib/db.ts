@@ -120,11 +120,11 @@ export const deleteUserData = async (uid: string): Promise<void> => {
 
 
 // --- Goals ---
-export const addGoal = async (goal: Omit<Goal, 'id' | 'current' | 'createdAt' | 'status'>, autoGenerateAdvice: boolean = false) => {
+export const addGoal = async (goal: Omit<Goal, 'id' | 'current' | 'createdAt' | 'status'> & {current?: number}, autoGenerateAdvice: boolean = false) => {
     const goalData: { title: string; target: number; current: number; advice?: Advice, status: 'active' | 'archived' } = {
         title: goal.title,
         target: goal.target,
-        current: 0,
+        current: goal.current || 0,
         status: 'active'
     };
 
@@ -135,7 +135,7 @@ export const addGoal = async (goal: Omit<Goal, 'id' | 'current' | 'createdAt' | 
         goalData.advice = advice;
     } else if (goal.advice) {
         // For Pro users, use the advice they might have selected
-        goalData.advice = advice;
+        goalData.advice = goal.advice;
     }
 
     return addDataItem('goals', goalData);

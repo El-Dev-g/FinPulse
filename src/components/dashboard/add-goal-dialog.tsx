@@ -1,7 +1,7 @@
 // src/components/dashboard/add-goal-dialog.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader } from "lucide-react";
+import { Loader, Landmark } from "lucide-react";
 import type { Goal, AIPlan } from "@/lib/types";
 import {
   Select,
@@ -22,15 +22,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 
 interface AddGoalDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddGoal: (newGoal: Omit<Goal, "id" | "current" | "createdAt" | "status">) => Promise<void>;
+  onAddGoal: (newGoal: Omit<Goal, "id" | "current" | "createdAt" | "status">, current?: number) => Promise<void>;
   isSubmitting?: boolean;
   aiPlans?: AIPlan[];
 }
+
+type Account = { id: string; name: string; bank: string; last4: string; type: string; };
+const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
 
 export function AddGoalDialog({
   isOpen,
@@ -41,9 +45,45 @@ export function AddGoalDialog({
 }: AddGoalDialogProps) {
   const [title, setTitle] = useState("");
   const [target, setTarget] = useState("");
+  const [current, setCurrent] = useState("");
   const [adviceId, setAdviceId] = useState<string>("none");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    if (isOpen) {
+       try {
+            const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (storedAccounts) {
+                setAccounts(JSON.parse(storedAccounts));
+            }
+        } catch (error) {
+            console.error("Could not access localStorage:", error);
+            setAccounts([]);
+        }
+    }
+  }, [isOpen]);
+
+  const handleAccountLink = (accountId: string) => {
+    if (accountId === 'none') {
+        setCurrent("");
+        return;
+    }
+    const account = accounts.find(acc => acc.id === accountId);
+    if (account) {
+        // In a real app, you would fetch the account balance. Here, we'll use a mock balance.
+        const mockBalance = parseFloat((Math.random() * 5000 + 500).toFixed(2));
+        setCurrent(String(mockBalance));
+        toast({
+            title: "Balance Pre-filled",
+            description: `Current amount set to ${mockBalance} from ${account.name}.`
+        })
+    }
+  }
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,10 +95,17 @@ export function AddGoalDialog({
     }
 
     const targetAmount = parseFloat(target);
+    const currentAmount = parseFloat(current) || 0;
+    
     if (isNaN(targetAmount) || targetAmount <= 0) {
       setError("Please enter a valid target amount.");
       return;
     }
+     if (currentAmount > targetAmount) {
+      setError("Current amount cannot be greater than target amount.");
+      return;
+    }
+
 
     setLoading(true);
 
@@ -69,10 +116,11 @@ export function AddGoalDialog({
         title, 
         target: targetAmount,
         advice: selectedPlan ? selectedPlan.advice : undefined,
-      });
+      }, currentAmount);
       onOpenChange(false);
       setTitle("");
       setTarget("");
+      setCurrent("");
       setAdviceId("none");
     } catch (err) {
        setError("Failed to add goal. Please try again.");
@@ -86,6 +134,7 @@ export function AddGoalDialog({
       if (!open) {
         setTitle("");
         setTarget("");
+        setCurrent("");
         setAdviceId("none");
         setError(null);
       }
@@ -100,6 +149,28 @@ export function AddGoalDialog({
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+             {accounts.length > 0 && (
+                <div className="space-y-2">
+                    <Label htmlFor="linkedAccount">Seed With Account Balance (Optional)</Label>
+                    <Select onValueChange={handleAccountLink}>
+                        <SelectTrigger id="linkedAccount">
+                            <SelectValue placeholder="Select an account..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                             <SelectItem value="none">Don't link an account</SelectItem>
+                            {accounts.map((acc) => (
+                                <SelectItem key={acc.id} value={acc.id}>
+                                    <div className="flex items-center gap-2">
+                                        <Landmark className="h-4 w-4 text-muted-foreground" />
+                                        <span>{acc.name} (...{acc.last4})</span>
+                                    </div>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+             )}
+
             <div className="space-y-2">
               <Label htmlFor="title">
                 Goal Title
@@ -111,18 +182,34 @@ export function AddGoalDialog({
                 placeholder="e.g., Save for Vacation"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="target">
-                Target Amount
-              </Label>
-              <Input
-                id="target"
-                type="number"
-                value={target}
-                onChange={(e) => setTarget(e.target.value)}
-                placeholder="e.g., 5000"
-              />
+
+            <div className="grid grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                  <Label htmlFor="current">
+                    Current Amount
+                  </Label>
+                  <Input
+                    id="current"
+                    type="number"
+                    value={current}
+                    onChange={(e) => setCurrent(e.target.value)}
+                    placeholder="e.g., 0"
+                  />
+                </div>
+                 <div className="space-y-2">
+                  <Label htmlFor="target">
+                    Target Amount
+                  </Label>
+                  <Input
+                    id="target"
+                    type="number"
+                    value={target}
+                    onChange={(e) => setTarget(e.target.value)}
+                    placeholder="e.g., 5000"
+                  />
+                </div>
             </div>
+           
             {aiPlans.length > 0 && (
                 <div className="space-y-2">
                 <Label htmlFor="advice">Link an AI Plan (Optional)</Label>
