@@ -236,6 +236,7 @@ function LinkAccountPageContent() {
             description: `The account "${deletingAccount.name}" has been successfully unlinked.`,
         });
         setDeletingAccount(null);
+        router.push('/dashboard');
     }
 
   return (
