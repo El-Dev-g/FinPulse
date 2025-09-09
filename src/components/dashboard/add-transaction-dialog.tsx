@@ -137,6 +137,7 @@ export function AddTransactionDialog({
         amount: type === "expense" ? -transactionAmount : transactionAmount,
         category: type === "income" ? "Income" : category,
         date,
+        source: 'manual', // Manually added transactions
       });
       onOpenChange(false);
     } catch (err) {

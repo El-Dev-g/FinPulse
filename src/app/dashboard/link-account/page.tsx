@@ -45,6 +45,8 @@ import { Input } from "@/components/ui/input";
 import { Landmark, ArrowRight, Trash2, Banknote, Pencil, Loader, Eye, CheckCircle, Lock, User, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { addTransaction, deleteTransactionsBySource } from "@/lib/db";
+import { subDays, format } from 'date-fns';
 
 const countries: { [key: string]: { name: string; provider: string; continent: string } } = {
     'us': { name: "United States", provider: "Plaid", continent: "North America" },
@@ -126,25 +128,8 @@ function LinkAccountPageContent() {
     useEffect(() => {
         const success = searchParams.get('success');
         const error = searchParams.get('error');
-
-        if (success === 'truelayer_connected') {
-            toast({
-                title: "Account Connected!",
-                description: "Your account has been successfully linked via Truelayer.",
-            });
-            
-            // --- ADD NEW MOCK ACCOUNT ---
-            const newAccount: Account = {
-                id: `acc_${new Date().getTime()}`,
-                name: 'Monzo Bank Account',
-                bank: 'Monzo Bank (via Truelayer)',
-                last4: Math.floor(1000 + Math.random() * 9000).toString(),
-                type: 'Checking',
-                accountNumber: `**** **** **** ${Math.floor(1000 + Math.random() * 9000).toString()}`,
-                syncStatus: 'Syncing daily',
-                bankUserName: 'user_d'
-            };
-            
+        
+        const handleSuccess = async (newAccount: Account) => {
             // Using a function with setAccounts to ensure we have the latest state
             setAccounts(prevAccounts => {
                 const updatedAccounts = [...prevAccounts, newAccount];
@@ -156,7 +141,42 @@ function LinkAccountPageContent() {
                 }
                 return updatedAccounts;
             });
+            
+            // Add some mock transactions for this new account
+            const mockTransactions = [
+                { description: 'Grocery Store', amount: -75.42, category: 'Groceries' },
+                { description: 'Coffee Shop', amount: -5.50, category: 'Dining Out' },
+                { description: 'Gas Station', amount: -45.10, category: 'Transport' },
+                { description: 'Paycheck Deposit', amount: 2500, category: 'Income' },
+            ];
 
+            for (const trans of mockTransactions) {
+                await addTransaction({
+                    ...trans,
+                    date: subDays(new Date(), Math.floor(Math.random() * 30)).toISOString().split('T')[0],
+                    source: newAccount.id, // Tag with the account ID
+                });
+            }
+
+            toast({
+                title: "Account Connected!",
+                description: "Your account has been successfully linked via Truelayer.",
+            });
+        }
+
+
+        if (success === 'truelayer_connected') {
+            const newAccount: Account = {
+                id: `acc_truelayer_${new Date().getTime()}`,
+                name: 'Monzo Bank Account',
+                bank: 'Monzo Bank (via Truelayer)',
+                last4: Math.floor(1000 + Math.random() * 9000).toString(),
+                type: 'Checking',
+                accountNumber: `**** **** **** ${Math.floor(1000 + Math.random() * 9000).toString()}`,
+                syncStatus: 'Syncing daily',
+                bankUserName: 'user_d'
+            };
+            handleSuccess(newAccount);
             // Clean up the URL
             router.replace('/dashboard/link-account');
         }
@@ -227,13 +247,19 @@ function LinkAccountPageContent() {
         }, 1000);
     }
 
-    const handleDeleteAccount = () => {
+    const handleDeleteAccount = async () => {
         if (!deletingAccount) return;
+
+        // Delete associated transactions from Firestore
+        await deleteTransactionsBySource(deletingAccount.id);
+
+        // Remove account from local state/storage
         const updatedAccounts = accounts.filter(acc => acc.id !== deletingAccount.id);
         updateAndPersistAccounts(updatedAccounts);
+        
         toast({
             title: "Account Unlinked",
-            description: `The account "${deletingAccount.name}" has been successfully unlinked.`,
+            description: `The account "${deletingAccount.name}" and its associated transactions have been unlinked.`,
         });
         setDeletingAccount(null);
         router.push('/dashboard');
@@ -382,7 +408,7 @@ function LinkAccountPageContent() {
             <AlertDialogHeader>
                 <AlertDialogTitle>Are you sure you want to unlink this account?</AlertDialogTitle>
                 <AlertDialogDescription>
-                    This will stop syncing new transactions from "{deletingAccount?.name}". Existing transactions will not be deleted. You can always link it again later.
+                    This will stop syncing new transactions from "{deletingAccount?.name}". All transactions that were automatically added from this source will also be permanently deleted. This action cannot be undone.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

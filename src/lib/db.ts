@@ -198,6 +198,25 @@ export const deleteBudget = (id: string) => deleteDataItem('budgets', id);
 export const addTransaction = (transaction: Omit<Transaction, 'id' | 'Icon'>) => addDataItem<Omit<Transaction, 'id' | 'Icon'>>('transactions', transaction);
 export const getTransactions = () => getData<Transaction>('transactions');
 export const deleteTransaction = (id: string) => deleteDataItem('transactions', id);
+export const deleteTransactionsBySource = async (sourceId: string) => {
+    const uid = await getUid();
+    if (!uid) throw new Error("User not authenticated");
+
+    const q = query(collection(db, `users/${uid}/transactions`), where("source", "==", sourceId));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+        return; // No transactions to delete
+    }
+
+    const batch = writeBatch(db);
+    querySnapshot.forEach(doc => {
+        batch.delete(doc.ref);
+    });
+
+    await batch.commit();
+};
+
 
 // --- Tasks ---
 export const addTask = (task: Omit<FinancialTask, 'id'>) => addDataItem<Omit<FinancialTask, 'id'>>('tasks', task);

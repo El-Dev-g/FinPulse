@@ -15,6 +15,7 @@ export interface Transaction {
   category: string;
   goalId?: string;
   createdAt: any; // Firestore timestamp
+  source: 'manual' | string; // 'manual' or a linked account ID
 }
 
 export interface ClientTransaction extends Omit<Transaction, 'createdAt'>{
