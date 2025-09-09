@@ -45,7 +45,7 @@ import { Input } from "@/components/ui/input";
 import { Landmark, ArrowRight, Trash2, Banknote, Pencil, Loader, Eye, CheckCircle, Lock, User, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { addTransaction, deleteTransactionsBySource } from "@/lib/db";
+import { addOrUpdateTransaction, deleteTransactionsBySource } from "@/lib/db";
 import { subDays, format } from 'date-fns';
 
 const countries: { [key: string]: { name: string; provider: string; continent: string } } = {
@@ -144,14 +144,14 @@ function LinkAccountPageContent() {
             
             // Add some mock transactions for this new account
             const mockTransactions = [
-                { description: 'Grocery Store', amount: -75.42, category: 'Groceries' },
-                { description: 'Coffee Shop', amount: -5.50, category: 'Dining Out' },
-                { description: 'Gas Station', amount: -45.10, category: 'Transport' },
-                { description: 'Paycheck Deposit', amount: 2500, category: 'Income' },
+                { bankTransactionId: 'tx_grocery_1', description: 'Grocery Store', amount: -75.42, category: 'Groceries' },
+                { bankTransactionId: 'tx_coffee_1', description: 'Coffee Shop', amount: -5.50, category: 'Dining Out' },
+                { bankTransactionId: 'tx_gas_1', description: 'Gas Station', amount: -45.10, category: 'Transport' },
+                { bankTransactionId: 'tx_paycheck_1', description: 'Paycheck Deposit', amount: 2500, category: 'Income' },
             ];
 
             for (const trans of mockTransactions) {
-                await addTransaction({
+                await addOrUpdateTransaction({
                     ...trans,
                     date: subDays(new Date(), Math.floor(Math.random() * 30)).toISOString().split('T')[0],
                     source: newAccount.id, // Tag with the account ID

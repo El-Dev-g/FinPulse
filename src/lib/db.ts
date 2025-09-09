@@ -195,6 +195,34 @@ export const updateBudget = (id: string, budget: Partial<Budget>) => updateDataI
 export const deleteBudget = (id: string) => deleteDataItem('budgets', id);
 
 // --- Transactions ---
+export const addOrUpdateTransaction = async (transaction: Omit<Transaction, 'id' | 'Icon' | 'createdAt'>) => {
+    const uid = await getUid();
+    if (!uid) throw new Error("User not authenticated");
+
+    // If it's a manual transaction or doesn't have a unique bank ID, just add it.
+    if (transaction.source === 'manual' || !transaction.bankTransactionId) {
+        return addDataItem('transactions', transaction);
+    }
+    
+    // Check if a transaction with this bankTransactionId already exists for this source
+    const q = query(
+        collection(db, `users/${uid}/transactions`), 
+        where("bankTransactionId", "==", transaction.bankTransactionId),
+        where("source", "==", transaction.source)
+    );
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+        // Transaction exists, update it.
+        const existingDoc = querySnapshot.docs[0];
+        await updateDataItem('transactions', existingDoc.id, transaction);
+        return existingDoc.id;
+    } else {
+        // Transaction does not exist, add it.
+        return addDataItem('transactions', transaction);
+    }
+};
+
 export const addTransaction = (transaction: Omit<Transaction, 'id' | 'Icon'>) => addDataItem<Omit<Transaction, 'id' | 'Icon'>>('transactions', transaction);
 export const getTransactions = () => getData<Transaction>('transactions');
 export const deleteTransaction = (id: string) => deleteDataItem('transactions', id);

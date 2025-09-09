@@ -16,6 +16,7 @@ export interface Transaction {
   goalId?: string;
   createdAt: any; // Firestore timestamp
   source: 'manual' | string; // 'manual' or a linked account ID
+  bankTransactionId?: string; // Unique ID from the bank/aggregator
 }
 
 export interface ClientTransaction extends Omit<Transaction, 'createdAt'>{
