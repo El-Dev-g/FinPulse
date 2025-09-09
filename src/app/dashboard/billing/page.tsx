@@ -1,3 +1,4 @@
+
 // src/app/dashboard/billing/page.tsx
 "use client";
 
@@ -48,25 +49,8 @@ import { cn } from '@/lib/utils';
 import content from "@/content/landing-page.json";
 
 
-const billingHistory = [
-  {
-    date: "2024-06-01",
-    description: "Pro Plan - Monthly Subscription",
-    amount: 9.99,
-    invoiceId: "inv_12345",
-  },
-  {
-    date: "2024-05-01",
-    description: "Pro Plan - Monthly Subscription",
-    amount: 9.99,
-    invoiceId: "inv_12344",
-  },
-  {
-    date: "2024-04-01",
-    description: "Pro Plan - Monthly Subscription",
-    amount: 9.99,
-    invoiceId: "inv_12343",
-  },
+const billingHistory:any[] = [
+  // This is now empty. In a real app, this would be fetched from a payment provider's API.
 ];
 
 function PaymentMethodForm() {
@@ -357,18 +341,26 @@ export default function BillingPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {billingHistory.map((item) => (
-                  <TableRow key={item.invoiceId}>
-                    <TableCell>{item.date}</TableCell>
-                    <TableCell>{item.description}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => handleDownloadInvoice(item.invoiceId)}>
-                        <Download className="h-4 w-4" />
-                      </Button>
+                {billingHistory.length > 0 ? (
+                  billingHistory.map((item) => (
+                    <TableRow key={item.invoiceId}>
+                      <TableCell>{item.date}</TableCell>
+                      <TableCell>{item.description}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => handleDownloadInvoice(item.invoiceId)}>
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                      No billing history available.
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </CardContent>

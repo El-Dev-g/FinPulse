@@ -112,43 +112,20 @@ export default function TransactionsPage() {
 
   const handleSyncTransactions = async () => {
     setIsSyncing(true);
-    // Simulate fetching new transactions from a linked bank account
-    const newMockTransactions: Omit<Transaction, "id" | "Icon" | "createdAt">[] = [
-      {
-        description: 'Monthly Salary',
-        amount: 5000,
-        date: new Date().toISOString().split("T")[0],
-        category: 'Income',
-      },
-      {
-        description: 'Starbucks Coffee',
-        amount: -5.75,
-        date: new Date().toISOString().split("T")[0],
-        category: 'Dining Out',
-      }
-    ];
-
+    // In a real app, this would trigger a webhook or function to fetch from a bank API.
+    // For this prototype, we'll just re-fetch from our database to simulate a refresh.
     try {
-      // Add each new transaction to the database
-      for (const t of newMockTransactions) {
-        await addTransaction(t);
-      }
-      
-      // Show a success message
+      await fetchTransactions();
       toast({
         title: "Sync Complete!",
-        description: `${newMockTransactions.length} new transactions have been added.`,
+        description: "Your transactions are up-to-date.",
       });
-
-      // Refresh the transaction list from the database
-      await fetchTransactions();
-
     } catch (error) {
       console.error("Error syncing transactions:", error);
       toast({
         variant: "destructive",
         title: "Sync Failed",
-        description: "Could not add new transactions from your bank.",
+        description: "Could not refresh your transactions at this time.",
       });
     } finally {
       setIsSyncing(false);
