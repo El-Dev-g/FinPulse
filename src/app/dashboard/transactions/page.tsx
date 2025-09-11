@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 
+const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<ClientTransaction[]>([]);
@@ -111,9 +112,19 @@ export default function TransactionsPage() {
   };
 
   const handleSyncTransactions = async () => {
+    const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
+    const accounts = storedAccounts ? JSON.parse(storedAccounts) : [];
+    
+    if (accounts.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No Bank Connected",
+        description: "Please connect a bank account before syncing.",
+      });
+      return;
+    }
+    
     setIsSyncing(true);
-    // In a real app, this would trigger a webhook or function to fetch from a bank API.
-    // For this prototype, we'll just re-fetch from our database to simulate a refresh.
     try {
       await fetchTransactions();
       toast({
