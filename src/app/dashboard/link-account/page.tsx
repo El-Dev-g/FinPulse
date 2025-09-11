@@ -42,13 +42,14 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Landmark, ArrowRight, Trash2, Banknote, Pencil, Loader, Eye, CheckCircle, Lock, User, CreditCard } from "lucide-react";
+import { Landmark, ArrowRight, Trash2, Banknote, Pencil, Loader, Eye, CheckCircle, Lock, User, CreditCard, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { addOrUpdateTransaction, deleteTransactionsBySource } from "@/lib/db";
 import { subDays, format } from 'date-fns';
 import { SelectAccountsDialog } from "@/components/dashboard/select-accounts-dialog";
 import type { Account } from "@/lib/types";
+import { Alert, AlertTitle, AlertDescription as AlertDescriptionComponent } from "@/components/ui/alert";
 
 
 const countries: { [key: string]: { name: string; provider: string; continent: string } } = {
@@ -99,6 +100,7 @@ function LinkAccountPageContent() {
     
     const router = useRouter();
     const searchParams = useSearchParams();
+    const [connectionError, setConnectionError] = useState<string | null>(null);
 
     // Save accounts to localStorage whenever they change
     const updateAndPersistAccounts = useCallback((updatedAccounts: Account[]) => {
@@ -138,6 +140,7 @@ function LinkAccountPageContent() {
         }
 
         if (error) {
+            setConnectionError(`There was an error connecting your account. (${error})`);
             toast({
                 variant: 'destructive',
                 title: "Connection Failed",
@@ -168,10 +171,10 @@ function LinkAccountPageContent() {
         setIsPermissionDialogOpen(false);
         
         if (permissionProvider === 'Truelayer') {
-            const redirectUri = `https://9000-firebase-studio-1756463262326.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev/api/truelayer/callback`;
+            const redirectUri = new URL('/api/truelayer/callback', window.location.origin).toString();
             const authUrl = `https://auth.truelayer-sandbox.com/?response_type=code&client_id=sandbox-finpulse-0b40c2&scope=info%20accounts%20balance%20cards%20transactions%20direct_debits%20standing_orders%20offline_access&redirect_uri=${encodeURIComponent(redirectUri)}&providers=uk-cs-mock%20uk-ob-all%20uk-oauth-all`;
             
-            window.open(authUrl, '_self');
+            window.location.href = authUrl;
         } else {
             toast({
                 title: "Permissions Granted",
@@ -257,6 +260,16 @@ function LinkAccountPageContent() {
             Securely connect your bank accounts to automatically sync transactions.
           </p>
         </div>
+
+        {connectionError && (
+             <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Connection Failed</AlertTitle>
+                <AlertDescriptionComponent>
+                    {connectionError}
+                </AlertDescriptionComponent>
+             </Alert>
+        )}
 
          <Card>
             <CardHeader>
