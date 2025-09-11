@@ -13,15 +13,15 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, Loader } from 'lucide-react';
 import Link from 'next/link';
 import { getTransactions, getGoals } from '@/lib/db';
-import type { Goal, Transaction } from '@/lib/types';
+import type { Goal, Transaction, ClientGoal, ClientTransaction } from '@/lib/types';
 import { processGoals, processTransactions } from '@/lib/utils';
 
 
 export default function DashboardPage() {
   const { user, subscriptionStatus } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [goals, setGoals] = useState<Goal[]>([]);
+  const [transactions, setTransactions] = useState<ClientTransaction[]>([]);
+  const [goals, setGoals] = useState<ClientGoal[]>([]);
 
   const fetchData = useCallback(async () => {
     if (!user) return;

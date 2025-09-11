@@ -1,3 +1,4 @@
+
 // src/components/dashboard/spending-chart.tsx
 "use client";
 
@@ -16,11 +17,11 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { spendingChartConfig } from "@/lib/types";
-import type { Transaction } from "@/lib/types";
+import type { ClientTransaction } from "@/lib/types";
 import { startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 
 interface SpendingChartProps {
-    transactions: Transaction[];
+    transactions: ClientTransaction[];
 }
 
 export function SpendingChart({ transactions }: SpendingChartProps) {

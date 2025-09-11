@@ -1,3 +1,4 @@
+
 // src/components/dashboard/goal-tracker.tsx
 "use client";
 
@@ -11,10 +12,10 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/use-auth";
 import React from "react";
-import type { Goal } from "@/lib/types";
+import type { ClientGoal } from "@/lib/types";
 
 interface GoalTrackerProps {
-  goals: Goal[];
+  goals: ClientGoal[];
 }
 
 export function GoalTracker({ goals }: GoalTrackerProps) {

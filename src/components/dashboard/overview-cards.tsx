@@ -1,3 +1,4 @@
+
 // src/components/dashboard/overview-cards.tsx
 "use client";
 
@@ -10,12 +11,12 @@ import {
 } from "@/components/ui/card";
 import { Landmark, TrendingDown, TrendingUp } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
-import type { Transaction, Goal } from '@/lib/types';
+import type { ClientTransaction, ClientGoal } from '@/lib/types';
 import { subDays, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
 
 interface OverviewCardsProps {
-    transactions: Transaction[];
-    goals: Goal[];
+    transactions: ClientTransaction[];
+    goals: ClientGoal[];
 }
 
 export function OverviewCards({ transactions, goals }: OverviewCardsProps) {
