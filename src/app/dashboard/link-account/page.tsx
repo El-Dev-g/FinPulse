@@ -47,6 +47,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { addOrUpdateTransaction, deleteTransactionsBySource } from "@/lib/db";
 import { subDays, format } from 'date-fns';
+import { SelectAccountsDialog } from "@/components/dashboard/select-accounts-dialog";
+import type { Account } from "@/lib/types";
+
 
 const countries: { [key: string]: { name: string; provider: string; continent: string } } = {
     'us': { name: "United States", provider: "Plaid", continent: "North America" },
@@ -73,11 +76,7 @@ const groupedCountries = Object.entries(countries).reduce((acc, [code, data]) =>
 }, {} as { [key: string]: (typeof countries[string] & { code: string })[] });
 
 
-// Mock data for connected accounts
 const initialAccounts: Account[] = [];
-
-type Account = { id: string; name: string; bank: string; last4: string; type: string; accountNumber: string; syncStatus: string; bankUserName: string };
-
 const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
 
 
@@ -94,6 +93,9 @@ function LinkAccountPageContent() {
     // State for permission dialog
     const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
     const [permissionProvider, setPermissionProvider] = useState('');
+    
+    // State for account selection dialog
+    const [isSelectAccountsDialogOpen, setIsSelectAccountsDialogOpen] = useState(false);
     
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -115,7 +117,6 @@ function LinkAccountPageContent() {
             if (storedAccounts) {
                 setAccounts(JSON.parse(storedAccounts));
             } else {
-                // For a new user, the list will be empty
                 setAccounts(initialAccounts);
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initialAccounts));
             }
@@ -125,58 +126,13 @@ function LinkAccountPageContent() {
         }
     }, []);
     
+    // Handle the result of the OAuth flow from the bank
     useEffect(() => {
         const success = searchParams.get('success');
         const error = searchParams.get('error');
         
-        const handleSuccess = async (newAccount: Account) => {
-            // Using a function with setAccounts to ensure we have the latest state
-            setAccounts(prevAccounts => {
-                const updatedAccounts = [...prevAccounts, newAccount];
-                // Also persist it immediately
-                 try {
-                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedAccounts));
-                } catch (error) {
-                    console.error("Could not save to localStorage:", error);
-                }
-                return updatedAccounts;
-            });
-            
-            // Add some mock transactions for this new account
-            const mockTransactions = [
-                { bankTransactionId: 'tx_grocery_1', description: 'Grocery Store', amount: -75.42, category: 'Groceries' },
-                { bankTransactionId: 'tx_coffee_1', description: 'Coffee Shop', amount: -5.50, category: 'Dining Out' },
-                { bankTransactionId: 'tx_gas_1', description: 'Gas Station', amount: -45.10, category: 'Transport' },
-                { bankTransactionId: 'tx_paycheck_1', description: 'Paycheck Deposit', amount: 2500, category: 'Income' },
-            ];
-
-            for (const trans of mockTransactions) {
-                await addOrUpdateTransaction({
-                    ...trans,
-                    date: subDays(new Date(), Math.floor(Math.random() * 30)).toISOString().split('T')[0],
-                    source: newAccount.id, // Tag with the account ID
-                });
-            }
-
-            toast({
-                title: "Account Connected!",
-                description: "Your account has been successfully linked via Truelayer.",
-            });
-        }
-
-
         if (success === 'truelayer_connected') {
-            const newAccount: Account = {
-                id: `acc_truelayer_${new Date().getTime()}`,
-                name: 'Monzo Bank Account',
-                bank: 'Monzo Bank (via Truelayer)',
-                last4: Math.floor(1000 + Math.random() * 9000).toString(),
-                type: 'Checking',
-                accountNumber: `**** **** **** ${Math.floor(1000 + Math.random() * 9000).toString()}`,
-                syncStatus: 'Syncing daily',
-                bankUserName: 'user_d'
-            };
-            handleSuccess(newAccount);
+            setIsSelectAccountsDialogOpen(true);
             // Clean up the URL
             router.replace('/dashboard/link-account');
         }
@@ -223,6 +179,32 @@ function LinkAccountPageContent() {
             });
         }
     }
+
+    const handleAddAccounts = async (newAccounts: Account[]) => {
+        if (newAccounts.length === 0) return;
+
+        updateAndPersistAccounts([...accounts, ...newAccounts]);
+
+        // Add some mock transactions for each new account
+        for (const newAccount of newAccounts) {
+             const mockTransactions = [
+                { bankTransactionId: `tx_grocery_${newAccount.last4}`, description: 'Grocery Store', amount: -75.42, category: 'Groceries' },
+                { bankTransactionId: `tx_paycheck_${newAccount.last4}`, description: 'Paycheck Deposit', amount: 2500, category: 'Income' },
+            ];
+            for (const trans of mockTransactions) {
+                await addOrUpdateTransaction({
+                    ...trans,
+                    date: subDays(new Date(), Math.floor(Math.random() * 30)).toISOString().split('T')[0],
+                    source: newAccount.id,
+                });
+            }
+        }
+        
+        toast({
+            title: `${newAccounts.length} Account(s) Connected!`,
+            description: "Your new accounts have been successfully linked.",
+        });
+    };
     
     const handleOpenEditDialog = (account: Account) => {
         setEditingAccount(account);
@@ -233,7 +215,6 @@ function LinkAccountPageContent() {
         e.preventDefault();
         if (!editingAccount) return;
         setIsLoading(true);
-        // Simulate API call
         setTimeout(() => {
             const updatedAccounts = accounts.map(acc => acc.id === editingAccount.id ? {...acc, name: newName} : acc);
             updateAndPersistAccounts(updatedAccounts);
@@ -250,10 +231,8 @@ function LinkAccountPageContent() {
     const handleDeleteAccount = async () => {
         if (!deletingAccount) return;
 
-        // Delete associated transactions from Firestore
         await deleteTransactionsBySource(deletingAccount.id);
 
-        // Remove account from local state/storage
         const updatedAccounts = accounts.filter(acc => acc.id !== deletingAccount.id);
         updateAndPersistAccounts(updatedAccounts);
         
@@ -469,6 +448,12 @@ function LinkAccountPageContent() {
             </DialogFooter>
         </DialogContent>
     </Dialog>
+    {/* Select Accounts Dialog */}
+     <SelectAccountsDialog 
+        isOpen={isSelectAccountsDialogOpen}
+        onOpenChange={setIsSelectAccountsDialogOpen}
+        onAddAccounts={handleAddAccounts}
+     />
     </>
   );
 }

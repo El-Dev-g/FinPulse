@@ -1,3 +1,4 @@
+
 // src/lib/types.ts
 import type { ChartConfig } from "@/components/ui/chart";
 import type { LucideIcon } from "lucide-react";
@@ -6,6 +7,19 @@ export interface UserProfile {
   currency?: string;
   photoURL?: string;
 }
+
+export type Account = {
+  id: string;
+  name: string;
+  bank: string;
+  last4: string;
+  type: string;
+  accountNumber: string;
+  syncStatus: string;
+  bankUserName: string;
+  balance?: number; // Optional balance for mock data
+};
+
 
 export interface Transaction {
   id: string;
