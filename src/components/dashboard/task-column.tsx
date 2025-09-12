@@ -5,7 +5,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useDroppable } from "@d-kit/core";
+import { useDroppable } from "@dnd-kit/core";
 import { FinancialTask, TaskStatus, Goal } from "@/lib/types";
 import { TaskCard } from "./task-card";
 
@@ -14,9 +14,10 @@ interface TaskColumnProps {
   tasks: FinancialTask[];
   goals: Goal[];
   onEditTask: (task: FinancialTask) => void;
+  onStatusChange: (taskId: string, status: TaskStatus) => void;
 }
 
-export function TaskColumn({ status, tasks, goals, onEditTask }: TaskColumnProps) {
+export function TaskColumn({ status, tasks, goals, onEditTask, onStatusChange }: TaskColumnProps) {
   const { setNodeRef } = useDroppable({
     id: status,
     data: {
@@ -36,7 +37,7 @@ export function TaskColumn({ status, tasks, goals, onEditTask }: TaskColumnProps
           {tasks.map((task) => {
             const goal = task.goalId ? goals.find(g => g.id === task.goalId) : null;
             return (
-              <TaskCard key={task.id} task={task} goal={goal} onEdit={onEditTask} />
+              <TaskCard key={task.id} task={task} goal={goal} onEdit={onEditTask} onStatusChange={onStatusChange} />
             )
           })}
           {tasks.length === 0 && (

@@ -1,4 +1,3 @@
-
 // src/lib/types.ts
 import type { ChartConfig } from "@/components/ui/chart";
 import type { LucideIcon } from "lucide-react";
