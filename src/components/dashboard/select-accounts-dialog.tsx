@@ -57,6 +57,17 @@ const mockAccounts: Account[] = [
         syncStatus: 'Syncing daily',
         bankUserName: 'user_d',
         balance: -543.21,
+    },
+    { 
+        id: `acc_truelayer_${new Date().getTime()}_4`,
+        name: 'High-Yield Savings',
+        bank: 'Starling Bank (via Truelayer)',
+        last4: '4321',
+        type: 'Savings',
+        accountNumber: '**** **** **** 4321',
+        syncStatus: 'Syncing daily',
+        bankUserName: 'user_d',
+        balance: 25000.00,
     }
 ];
 
