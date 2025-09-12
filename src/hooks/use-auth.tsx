@@ -27,8 +27,8 @@ const getTruelayerAuthUrl = () => {
         return "";
     }
     const redirectUri = `${baseUrl}/api/truelayer/callback`;
-    const scopes = "info accounts balance transactions offline_access";
-    const providers = "uk-ob-all uk-oauth-all";
+    const scopes = "info accounts balance cards transactions direct_debits standing_orders offline_access";
+    const providers = "uk-cs-mock uk-ob-all uk-oauth-all";
 
     const params = new URLSearchParams({
         response_type: "code",
