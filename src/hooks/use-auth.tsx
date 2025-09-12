@@ -1,4 +1,3 @@
-
 // src/hooks/use-auth.tsx
 "use client";
 
@@ -19,6 +18,28 @@ import type { UserProfile } from "@/lib/types";
 
 type SubscriptionStatus = 'free' | 'active' | 'past_due';
 
+// Dynamically create the Truelayer Auth URL
+const getTruelayerAuthUrl = () => {
+    const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    if (!clientId || !baseUrl) {
+        console.error("Truelayer environment variables are not set.");
+        return "";
+    }
+    const redirectUri = `${baseUrl}/api/truelayer/callback`;
+    const scopes = "info accounts balance transactions offline_access";
+    const providers = "uk-ob-all uk-oauth-all";
+
+    const params = new URLSearchParams({
+        response_type: "code",
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        scope: scopes,
+        providers: providers,
+    });
+    return `https://auth.truelayer-sandbox.com/?${params.toString()}`;
+}
+
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
@@ -26,6 +47,7 @@ interface AuthContextType {
   currency: string;
   isPro: boolean;
   subscriptionStatus: SubscriptionStatus;
+  truelayerAuthUrl: string;
   setCurrency: (currency: string) => void;
   setSubscriptionStatus: (status: SubscriptionStatus) => void;
   formatCurrency: (amount: number) => string;
@@ -39,6 +61,7 @@ const AuthContext = createContext<AuthContextType>({
   currency: "USD",
   isPro: false,
   subscriptionStatus: 'free',
+  truelayerAuthUrl: "",
   setCurrency: () => {},
   setSubscriptionStatus: () => {},
   formatCurrency: (amount: number) => String(amount),
@@ -74,6 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
 
   const isPro = useMemo(() => subscriptionStatus === 'active' || subscriptionStatus === 'past_due', [subscriptionStatus]);
+  const truelayerAuthUrl = useMemo(() => getTruelayerAuthUrl(), []);
 
   const refreshProfile = useCallback(async () => {
     if (auth.currentUser) {
@@ -174,7 +198,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, currency, isPro, subscriptionStatus, setCurrency, setSubscriptionStatus: handleSetSubscriptionStatus, formatCurrency, refreshProfile }}
+      value={{ user, profile, loading, currency, isPro, subscriptionStatus, truelayerAuthUrl, setCurrency, setSubscriptionStatus: handleSetSubscriptionStatus, formatCurrency, refreshProfile }}
     >
       {children}
     </AuthContext.Provider>

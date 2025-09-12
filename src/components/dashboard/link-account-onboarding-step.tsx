@@ -22,6 +22,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { CheckCircle, Lock } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 const countries: { [key: string]: { name: string; provider: string; continent: string } } = {
     'us': { name: "United States", provider: "Plaid", continent: "North America" },
@@ -55,6 +56,7 @@ interface LinkAccountStepProps {
 export function LinkAccountStep({ onSkip }: LinkAccountStepProps) {
   const [selectedCountry, setSelectedCountry] = useState<string>("");
   const { toast } = useToast();
+  const { truelayerAuthUrl } = useAuth();
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
   const [permissionProvider, setPermissionProvider] = useState("");
   
@@ -77,9 +79,7 @@ export function LinkAccountStep({ onSkip }: LinkAccountStepProps) {
     setIsPermissionDialogOpen(false);
     
     if (permissionProvider === 'Truelayer') {
-        const authUrl = process.env.NEXT_PUBLIC_TRUELAYER_AUTH_URL;
-        
-        if (!authUrl) {
+        if (!truelayerAuthUrl) {
             toast({
                 variant: 'destructive',
                 title: "Configuration Error",
@@ -91,7 +91,7 @@ export function LinkAccountStep({ onSkip }: LinkAccountStepProps) {
         // This will redirect the main window to the Truelayer login page.
         // After auth, Truelayer will redirect back to our callback URL.
         // The callback logic should then redirect to the dashboard.
-        window.top!.location.href = authUrl;
+        window.top!.location.href = truelayerAuthUrl;
     } else {
         toast({
             title: "Connection Skipped",

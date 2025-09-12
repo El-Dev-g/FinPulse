@@ -68,12 +68,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Use the specific server-side environment variable for the redirect URI
-    const redirectUriForToken = process.env.TRUELAYER_REDIRECT_URI;
-
-    if (!redirectUriForToken) {
-        throw new Error('TRUELAYER_REDIRECT_URI is not set in environment variables.');
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    if (!baseUrl) {
+      throw new Error('NEXT_PUBLIC_BASE_URL is not set in environment variables.');
     }
+    // Use the base URL to construct the redirect URI for the token exchange
+    const redirectUriForToken = `${baseUrl}/api/truelayer/callback`;
     
     const accessToken = await exchangeCodeForToken(code, redirectUriForToken);
     

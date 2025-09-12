@@ -49,6 +49,7 @@ import { subDays, format } from 'date-fns';
 import { SelectAccountsDialog } from "@/components/dashboard/select-accounts-dialog";
 import type { Account } from "@/lib/types";
 import { Alert, AlertTitle, AlertDescription as AlertDescriptionComponent } from "@/components/ui/alert";
+import { useAuth } from "@/hooks/use-auth";
 
 
 const countries: { [key: string]: { name: string; provider: string; continent: string } } = {
@@ -83,6 +84,7 @@ const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
 function LinkAccountPageContent() {
     const [selectedCountry, setSelectedCountry] = useState<string>('');
     const { toast } = useToast();
+    const { truelayerAuthUrl } = useAuth();
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [viewingAccount, setViewingAccount] = useState<Account | null>(null);
     const [editingAccount, setEditingAccount] = useState<Account | null>(null);
@@ -170,9 +172,7 @@ function LinkAccountPageContent() {
         setIsPermissionDialogOpen(false);
         
         if (permissionProvider === 'Truelayer') {
-            const authUrl = process.env.NEXT_PUBLIC_TRUELAYER_AUTH_URL;
-            
-            if (!authUrl) {
+            if (!truelayerAuthUrl) {
                 toast({
                     variant: 'destructive',
                     title: "Configuration Error",
@@ -181,7 +181,7 @@ function LinkAccountPageContent() {
                 return;
             }
             
-            window.top!.location.href = authUrl;
+            window.top!.location.href = truelayerAuthUrl;
         } else {
             toast({
                 title: "Permissions Granted",
