@@ -22,13 +22,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Send, Wallet, Loader, Copy, Check, ArrowRight, ArrowLeftRight } from "lucide-react";
+import { Send, Wallet, Loader, Copy, Check, ArrowRight, ArrowLeftRight, RefreshCw } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import type { Account } from "@/lib/types";
-import { addTransaction } from "@/lib/db";
+import type { Account, Transaction } from "@/lib/types";
+import { addTransaction, getTransactions } from "@/lib/db";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getIconForCategory } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 const LOCAL_STORAGE_KEY = "finpulse_connected_accounts";
 
@@ -419,7 +422,12 @@ function NoAccountsMessage() {
 
 export default function TransferPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [key, setKey] = useState(0); // Used to force-rerender child components
+  const [refundCooldowns, setRefundCooldowns] = useState<Record<string, number>>({});
+  const { toast, formatCurrency } = useAuth();
+  
+  const COOLDOWN_SECONDS = 10;
 
   const fetchAccounts = () => {
     try {
@@ -435,15 +443,85 @@ export default function TransferPage() {
     }
   }
 
-  useEffect(() => {
-    fetchAccounts();
-  }, []);
+  const fetchTransactions = async () => {
+    try {
+        const dbTransactions = (await getTransactions()) as Transaction[];
+        setTransactions(dbTransactions.filter(t => t.category === 'Transfer' && t.amount < 0).slice(0, 5));
+    } catch (error) {
+        console.error("Could not fetch transactions:", error);
+    }
+  }
 
   const handleTransaction = () => {
     // Re-fetch accounts to update balances
     fetchAccounts();
+    fetchTransactions();
     // Force a re-render of children by changing the key
     setKey(prevKey => prevKey + 1);
+  }
+
+  useEffect(() => {
+    fetchAccounts();
+    fetchTransactions();
+  }, []);
+
+  const handleRefund = async (transaction: Transaction) => {
+    const refundAmount = Math.abs(transaction.amount);
+    const sourceAccount = accounts.find(acc => acc.id === transaction.source);
+
+    if (!sourceAccount) {
+      toast({ variant: 'destructive', title: 'Refund Failed', description: 'Source account not found.' });
+      return;
+    }
+    
+    // Set cooldown
+    setRefundCooldowns(prev => ({...prev, [transaction.id]: Date.now()}));
+
+    try {
+        // Create refund transaction
+        await addTransaction({
+            description: `Refund for: ${transaction.description}`,
+            amount: refundAmount,
+            category: 'Refund',
+            date: new Date().toISOString().split('T')[0],
+            source: transaction.source,
+        });
+
+        // Update local storage balance
+        const newBalance = (sourceAccount.balance || 0) + refundAmount;
+        const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
+        const allAccounts = storedAccounts ? JSON.parse(storedAccounts) : [];
+        const updatedAccounts = allAccounts.map((acc: Account) => 
+            acc.id === transaction.source ? { ...acc, balance: newBalance } : acc
+        );
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedAccounts));
+
+        handleTransaction();
+
+        toast({
+            title: "Refund Processed",
+            description: `${formatCurrency(refundAmount)} has been refunded to your account.`,
+        });
+
+    } catch (error) {
+        console.error("Refund failed:", error);
+        toast({ variant: 'destructive', title: 'Refund Failed', description: 'An error occurred while processing the refund.' });
+    }
+    
+    // Clear cooldown after timeout
+    setTimeout(() => {
+        setRefundCooldowns(prev => {
+            const newCooldowns = {...prev};
+            delete newCooldowns[transaction.id];
+            return newCooldowns;
+        });
+    }, COOLDOWN_SECONDS * 1000);
+  };
+  
+  const isTransactionOnCooldown = (transactionId: string) => {
+    const cooldownTime = refundCooldowns[transactionId];
+    if (!cooldownTime) return false;
+    return (Date.now() - cooldownTime) < COOLDOWN_SECONDS * 1000;
   }
 
   return (
@@ -496,6 +574,63 @@ export default function TransferPage() {
             <ReceiveMoneyDetails key={key} accounts={accounts} />
           </TabsContent>
         </Tabs>
+
+        <Card className="mt-8">
+            <CardHeader>
+                <CardTitle>Recent Outgoing Transfers</CardTitle>
+                <CardDescription>Request a refund for a mistaken transfer.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Details</TableHead>
+                            <TableHead className="text-right">Amount</TableHead>
+                            <TableHead className="text-right">Action</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {transactions.length > 0 ? transactions.map(t => {
+                            const Icon = getIconForCategory(t.category);
+                            return (
+                            <TableRow key={t.id}>
+                                <TableCell>
+                                    <div className="flex items-center gap-3">
+                                        <div className="bg-muted p-2 rounded-md">
+                                            <Icon className="h-4 w-4 text-muted-foreground" />
+                                        </div>
+                                        <div>
+                                            <p className="font-medium">{t.description}</p>
+                                            <p className="text-sm text-muted-foreground">{new Date(t.date).toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                </TableCell>
+                                <TableCell className={cn("text-right font-medium", "text-foreground")}>
+                                    {formatCurrency(t.amount)}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <Button 
+                                        size="sm" 
+                                        variant="outline" 
+                                        onClick={() => handleRefund(t)}
+                                        disabled={isTransactionOnCooldown(t.id)}
+                                    >
+                                        <RefreshCw className="mr-2" />
+                                        {isTransactionOnCooldown(t.id) ? "Pending" : "Request Refund"}
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        )}) : (
+                            <TableRow>
+                                <TableCell colSpan={3} className="h-24 text-center">
+                                    No recent transfers found.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
       </div>
     </main>
   );
