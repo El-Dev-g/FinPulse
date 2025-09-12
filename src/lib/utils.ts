@@ -18,7 +18,8 @@ import {
   Ticket,
   Wrench,
   Receipt,
-  GraduationCap
+  GraduationCap,
+  Send
 } from "lucide-react";
 import type { ClientTransaction, Transaction, ClientBudget, Budget, ClientRecurringTransaction, RecurringTransaction, ClientFinancialTask, FinancialTask, ClientGoal, Goal } from "./types";
 
@@ -44,6 +45,7 @@ const categoryIcons: { [key: string]: LucideIcon } = {
   'Utilities': Wrench,
   'Taxes': Receipt,
   'Education': GraduationCap,
+  'Transfer': Send,
   Default: Wallet
 };
 

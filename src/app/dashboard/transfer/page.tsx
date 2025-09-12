@@ -1,0 +1,327 @@
+// src/app/dashboard/transfer/page.tsx
+"use client";
+
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Send, Wallet, Loader, Copy, Check, ArrowRight } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import type { Account } from "@/lib/types";
+import { addTransaction } from "@/lib/db";
+import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+const LOCAL_STORAGE_KEY = "finpulse_connected_accounts";
+
+function SendMoneyForm({ accounts, onTransaction: onTransactionSent }: { accounts: Account[]; onTransaction: () => void }) {
+  const { formatCurrency } = useAuth();
+  const { toast } = useToast();
+  const [fromAccountId, setFromAccountId] = useState<string>("");
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientAccount, setRecipientAccount] = useState("");
+  const [amount, setAmount] = useState("");
+  const [reference, setReference] = useState("");
+  const [loading, setLoading] = useState(false);
+  
+  const selectedAccount = accounts.find((acc) => acc.id === fromAccountId);
+
+  const handleSendMoney = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedAccount || !recipientName || !recipientAccount || !amount) {
+      toast({ variant: 'destructive', title: 'Missing Information', description: 'Please fill out all required fields.' });
+      return;
+    }
+
+    const sendAmount = parseFloat(amount);
+    if (isNaN(sendAmount) || sendAmount <= 0) {
+      toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Please enter a valid amount to send.' });
+      return;
+    }
+    
+    if (selectedAccount.balance && sendAmount > selectedAccount.balance) {
+        toast({ variant: 'destructive', title: 'Insufficient Funds', description: `You do not have enough funds in your ${selectedAccount.name} account.` });
+        return;
+    }
+
+    setLoading(true);
+
+    try {
+      // 1. Simulate sending money by creating a transaction
+      await addTransaction({
+        description: `Transfer to ${recipientName}`,
+        amount: -sendAmount,
+        category: "Transfer",
+        date: new Date().toISOString().split("T")[0],
+        source: selectedAccount.id,
+      });
+
+      // 2. Update the local storage balance
+      const newBalance = (selectedAccount.balance || 0) - sendAmount;
+      const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
+      const allAccounts = storedAccounts ? JSON.parse(storedAccounts) : [];
+      const updatedAccounts = allAccounts.map((acc: Account) => 
+        acc.id === fromAccountId ? { ...acc, balance: newBalance } : acc
+      );
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedAccounts));
+      
+      onTransactionSent();
+
+      toast({
+        title: "Transfer Successful!",
+        description: `${formatCurrency(sendAmount)} has been sent to ${recipientName}.`,
+      });
+      
+      // Reset form
+      setFromAccountId("");
+      setRecipientName("");
+      setRecipientAccount("");
+      setAmount("");
+      setReference("");
+
+    } catch (error) {
+      console.error(error);
+      toast({ variant: 'destructive', title: 'Transfer Failed', description: 'Something went wrong. Please try again.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSendMoney} className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="fromAccount">From Account</Label>
+        <Select value={fromAccountId} onValueChange={setFromAccountId}>
+          <SelectTrigger id="fromAccount">
+            <SelectValue placeholder="Select an account to send from..." />
+          </SelectTrigger>
+          <SelectContent>
+            {accounts.map((acc) => (
+              <SelectItem key={acc.id} value={acc.id}>
+                <div className="flex justify-between w-full">
+                  <span>{acc.name} (...{acc.last4})</span>
+                  <span className="text-muted-foreground">{formatCurrency(acc.balance || 0)}</span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Recipient Details</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="recipientName">Recipient Name</Label>
+            <Input id="recipientName" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Jane Doe" required/>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="recipientAccount">Account Number</Label>
+            <Input id="recipientAccount" value={recipientAccount} onChange={(e) => setRecipientAccount(e.target.value)} placeholder="0123456789" required />
+          </div>
+        </CardContent>
+      </Card>
+       <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Amount &amp; Reference</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount to Send</Label>
+            <Input id="amount" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="reference">Reference (Optional)</Label>
+            <Input id="reference" value={reference} onChange={(e) => setReference(e.target.value)} placeholder="e.g., For dinner" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Button type="submit" className="w-full" disabled={loading || !fromAccountId}>
+        {loading ? <Loader className="mr-2 animate-spin" /> : <Send className="mr-2" />}
+        Send Money
+      </Button>
+    </form>
+  );
+}
+
+
+function ReceiveMoneyDetails({ accounts }: { accounts: Account[] }) {
+    const { formatCurrency } = useAuth();
+    const [selectedAccountId, setSelectedAccountId] = useState<string>(accounts[0]?.id || "");
+    const [copied, setCopied] = useState<string | null>(null);
+
+    const selectedAccount = accounts.find((acc) => acc.id === selectedAccountId);
+
+    const handleCopy = (textToCopy: string, field: string) => {
+        navigator.clipboard.writeText(textToCopy);
+        setCopied(field);
+        setTimeout(() => setCopied(null), 2000);
+    };
+
+    if (accounts.length === 0) {
+        return <NoAccountsMessage />;
+    }
+
+    return (
+        <div className="space-y-6">
+            <div className="space-y-2">
+                <Label htmlFor="receiveAccount">Share details for account:</Label>
+                <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                    <SelectTrigger id="receiveAccount">
+                        <SelectValue placeholder="Select an account..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {accounts.map((acc) => (
+                        <SelectItem key={acc.id} value={acc.id}>
+                            <div className="flex justify-between w-full">
+                                <span>{acc.name} (...{acc.last4})</span>
+                                <span className="text-muted-foreground">{formatCurrency(acc.balance || 0)}</span>
+                            </div>
+                        </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+            
+            {selectedAccount && (
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Account Details</CardTitle>
+                        <CardDescription>Share these details to receive money.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex justify-between items-center">
+                            <Label>Account Holder</Label>
+                            <div className="flex items-center gap-2">
+                                <span className="font-mono text-sm">{selectedAccount.bankUserName}</span>
+                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopy(selectedAccount.bankUserName, 'name')}>
+                                    {copied === 'name' ? <Check className="h-4 w-4 text-green-500"/> : <Copy className="h-4 w-4" />}
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <Label>Account Number</Label>
+                             <div className="flex items-center gap-2">
+                                <span className="font-mono text-sm">{selectedAccount.accountNumber.replace(/\*(\s)/g, '• ')}</span>
+                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopy(selectedAccount.accountNumber, 'number')}>
+                                     {copied === 'number' ? <Check className="h-4 w-4 text-green-500"/> : <Copy className="h-4 w-4" />}
+                                </Button>
+                            </div>
+                        </div>
+                         <div className="flex justify-between items-center">
+                            <Label>Bank Name</Label>
+                             <div className="flex items-center gap-2">
+                                <span className="text-sm">{selectedAccount.bank}</span>
+                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleCopy(selectedAccount.bank, 'bank')}>
+                                     {copied === 'bank' ? <Check className="h-4 w-4 text-green-500"/> : <Copy className="h-4 w-4" />}
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                 </Card>
+            )}
+        </div>
+    )
+}
+
+function NoAccountsMessage() {
+    return (
+        <Alert>
+            <Wallet className="h-4 w-4" />
+            <AlertTitle>No Bank Accounts Linked</AlertTitle>
+            <AlertDescription>
+                You need to link a bank account before you can send or receive money.
+            </AlertDescription>
+            <div className="mt-4">
+                <Button asChild>
+                    <Link href="/dashboard/link-account">
+                        Link Account Now <ArrowRight className="ml-2" />
+                    </Link>
+                </Button>
+            </div>
+        </Alert>
+    )
+}
+
+export default function TransferPage() {
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [key, setKey] = useState(0); // Used to force-rerender child components
+
+  const fetchAccounts = () => {
+    try {
+      const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (storedAccounts) {
+        setAccounts(JSON.parse(storedAccounts));
+      } else {
+        setAccounts([]);
+      }
+    } catch (error) {
+      console.error("Could not access localStorage:", error);
+      setAccounts([]);
+    }
+  }
+
+  useEffect(() => {
+    fetchAccounts();
+  }, []);
+
+  const handleTransaction = () => {
+    // Re-fetch accounts to update balances
+    fetchAccounts();
+    // Force a re-render of children by changing the key
+    setKey(prevKey => prevKey + 1);
+  }
+
+  return (
+    <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
+      <div className="max-w-xl mx-auto">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
+            <Send className="h-8 w-8" />
+            Send &amp; Receive
+          </h2>
+          <p className="text-muted-foreground">
+            Move money between your accounts and to others.
+          </p>
+        </div>
+
+        <Tabs defaultValue="send" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="send">Send Money</TabsTrigger>
+            <TabsTrigger value="receive">Receive Money</TabsTrigger>
+          </TabsList>
+          <TabsContent value="send" className="mt-6">
+            {accounts.length > 0 ? (
+                <SendMoneyForm key={key} accounts={accounts} onTransaction={handleTransaction}/>
+            ) : (
+                <NoAccountsMessage />
+            )}
+          </TabsContent>
+          <TabsContent value="receive" className="mt-6">
+            <ReceiveMoneyDetails key={key} accounts={accounts} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </main>
+  );
+}

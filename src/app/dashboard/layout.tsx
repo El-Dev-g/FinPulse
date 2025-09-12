@@ -25,6 +25,7 @@ import {
   GanttChartSquare,
   Lock,
   Landmark,
+  Send,
 } from "lucide-react";
 import {
   Sidebar,
@@ -59,6 +60,7 @@ const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/dashboard/transactions", icon: ArrowRightLeft, label: "Transactions" },
   { href: "/dashboard/recurring", icon: Repeat, label: "Recurring" },
+  { href: "/dashboard/transfer", icon: Send, label: "Transfer" },
   { href: "/dashboard/budgets", icon: Wallet, label: "Budgets" },
   { href: "/dashboard/reports", icon: PieChart, label: "Reports", isPro: true },
   { href: "/dashboard/goals", icon: Target, label: "Goals" },
