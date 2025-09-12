@@ -26,6 +26,7 @@ import {
   Lock,
   Landmark,
   Send,
+  TrendingUp,
 } from "lucide-react";
 import {
   Sidebar,
@@ -68,6 +69,7 @@ const navItems = [
 
 const productivitySubMenu = [
     { href: "/dashboard/organizer", icon: ClipboardList, label: "Organizer" },
+    { href: "/dashboard/investments", icon: TrendingUp, label: "Investments" },
     { href: "/dashboard/calculator", icon: Calculator, label: "Calculator" },
     { href: "/dashboard/catalog", icon: ListTree, label: "Categories" },
 ]

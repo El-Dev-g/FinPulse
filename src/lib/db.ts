@@ -2,7 +2,7 @@
 // src/lib/db.ts
 import { db } from './firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy, setDoc, writeBatch } from 'firebase/firestore';
-import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category, AIPlan, UserProfile, Advice } from './types';
+import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category, AIPlan, UserProfile, Advice, Investment } from './types';
 import { auth } from './firebase';
 import { getFinancialAdvice } from './actions';
 
@@ -92,6 +92,7 @@ export const deleteUserData = async (uid: string): Promise<void> => {
         'tasks',
         'categories',
         'ai_plans',
+        'investments',
         'profile' // This will also delete the profile/settings doc
     ];
 
@@ -277,3 +278,10 @@ export const deleteCategory = (id: string) => deleteDataItem('categories', id);
 // --- AI Plans ---
 export const addAIPlan = (plan: Omit<AIPlan, 'id'>) => addDataItem<Omit<AIPlan, 'id'>>('ai_plans', plan);
 export const getAIPlans = () => getData<AIPlan>('ai_plans');
+
+
+// --- Investments ---
+export const addInvestment = (investment: Omit<Investment, 'id'>) => addDataItem('investments', investment);
+export const getInvestments = () => getData<Investment>('investments');
+export const updateInvestment = (id: string, investment: Partial<Investment>) => updateDataItem('investments', id, investment);
+export const deleteInvestment = (id: string) => deleteDataItem('investments', id);

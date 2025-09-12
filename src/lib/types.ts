@@ -123,6 +123,24 @@ export interface Category {
   createdAt: any; // Firestore timestamp
 }
 
+export interface Investment {
+  id?: string;
+  symbol: string;
+  quantity: number;
+  purchasePrice: number;
+  createdAt: any; // Firestore timestamp
+}
+
+export interface ClientInvestment extends Omit<Investment, 'createdAt'> {
+  id: string;
+  currentPrice: number;
+  currentValue: number;
+  gainLoss: number;
+  gainLossPercentage: number;
+  logoUrl?: string;
+  createdAt: Date;
+}
+
 
 export const spendingChartConfig = {
   amount: {
