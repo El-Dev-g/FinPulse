@@ -21,7 +21,7 @@ export function ReportMetrics({ metrics }: ReportMetricsProps) {
     const { formatCurrency } = useAuth();
 
     return (
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium">Total Income</CardTitle>
@@ -40,7 +40,7 @@ export function ReportMetrics({ metrics }: ReportMetricsProps) {
                     <p className="text-2xl font-bold">{formatCurrency(metrics.totalExpenses)}</p>
                 </CardContent>
             </Card>
-             <Card>
+             <Card className="col-span-2 md:col-span-1">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium">Net Savings</CardTitle>
                     <DollarSign className="h-4 w-4 text-muted-foreground"/>

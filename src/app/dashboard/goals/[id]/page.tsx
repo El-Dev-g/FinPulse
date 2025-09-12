@@ -107,7 +107,7 @@ export default function GoalDetailPage() {
           </Button>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-8">
             <Card>
               <CardHeader>
