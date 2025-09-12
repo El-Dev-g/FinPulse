@@ -107,16 +107,16 @@ function EmailSignInForm() {
 }
 
 export default function SignInPage() {
-  const { user, loading } = useAuth();
+  const { user, checked } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user) {
+    if (checked && user) {
       router.push("/dashboard");
     }
-  }, [user, loading, router]);
+  }, [user, checked, router]);
 
-  if (loading || user) {
+  if (!checked || user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader className="h-12 w-12 animate-spin text-primary" />

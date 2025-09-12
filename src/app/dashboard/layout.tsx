@@ -334,9 +334,9 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
+  const { user, checked } = useAuth();
   
-  if (loading || !user) {
+  if (!checked) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader className="h-12 w-12 animate-spin text-primary" />

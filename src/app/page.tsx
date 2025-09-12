@@ -8,11 +8,11 @@ import LandingPage from "@/components/landing-page";
 import { Loader } from "lucide-react";
 
 export default function Home() {
-  const { user, loading } = useAuth();
+  const { user, checked } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user) {
+    if (checked && user) {
        // Check if onboarding is complete
       const onboardingComplete = localStorage.getItem('onboardingComplete') === 'true';
       if (!onboardingComplete) {
@@ -21,9 +21,9 @@ export default function Home() {
         router.push("/dashboard");
       }
     }
-  }, [user, loading, router]);
+  }, [user, checked, router]);
 
-  if (loading || user) {
+  if (!checked || user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader className="h-12 w-12 animate-spin text-primary" />

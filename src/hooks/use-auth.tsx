@@ -43,7 +43,8 @@ const getTruelayerAuthUrl = () => {
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
-  loading: boolean;
+  loading: boolean; // Remains for initial app load, but 'checked' is used for routing
+  checked: boolean; // Becomes true once Firebase auth state is confirmed
   currency: string;
   isPro: boolean;
   subscriptionStatus: SubscriptionStatus;
@@ -58,6 +59,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   loading: true,
+  checked: false,
   currency: "USD",
   isPro: false,
   subscriptionStatus: 'free',
@@ -89,6 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [checked, setChecked] = useState(false); // New state to track if auth check is complete
   const [currency, setCurrencyState] = useState("USD");
   const [subscriptionStatus, setSubscriptionStatusState] = useState<SubscriptionStatus>('free');
 
@@ -113,22 +116,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
         if (user) {
-          // User is signed in, let's get their latest data.
-          // We set the user object from the listener, as it's the source of truth.
           setUser(user);
-          
           const userProfile = await getUserProfile(user.uid);
           setProfile(userProfile);
           
           if (userProfile?.currency) {
             setCurrencyState(userProfile.currency);
           }
-           // For prototype purposes, we check a local storage flag.
            const subStatus = localStorage.getItem('subscriptionStatus') as SubscriptionStatus | null;
            setSubscriptionStatusState(subStatus || 'free');
 
         } else {
-            // User is signed out.
             setUser(null);
             setProfile(null);
             setSubscriptionStatusState('free');
@@ -137,6 +135,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error("Error loading profile:", err);
       } finally {
         setLoading(false);
+        setChecked(true); // Mark auth as checked
       }
     });
 
@@ -145,13 +144,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // --- ROUTE PROTECTION ---
   useEffect(() => {
-    if (loading) return;
+    // Only run route protection after the initial auth state has been checked
+    if (!checked) return;
 
     const isUnprotectedPage = unprotectedRoutes.includes(pathname) || unprotectedRoutes.some(p => p !== '/' && pathname.startsWith(p + '/'));
     const isOnboardingPage = isOnboardingRoute(pathname);
 
-    // If user is not logged in, redirect to signin page if route is protected
     if (!user) {
+      // If user is not logged in, redirect to signin page if route is protected
       if (!isUnprotectedPage && !isOnboardingPage) {
         router.push("/signin");
       }
@@ -161,7 +161,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         router.push("/dashboard");
       }
     }
-  }, [user, loading, pathname, router]);
+  }, [user, checked, pathname, router]);
 
   // --- UTILS ---
   const setCurrency = useCallback(
@@ -176,7 +176,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   
   const handleSetSubscriptionStatus = useCallback((status: SubscriptionStatus) => {
       setSubscriptionStatusState(status);
-      // In a real app, this would be handled by backend events. For now, we use localStorage.
       if (typeof window !== 'undefined') {
           if (status === 'free') {
             localStorage.removeItem('subscriptionStatus');
@@ -198,7 +197,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, currency, isPro, subscriptionStatus, truelayerAuthUrl, setCurrency, setSubscriptionStatus: handleSetSubscriptionStatus, formatCurrency, refreshProfile }}
+      value={{ user, profile, loading, checked, currency, isPro, subscriptionStatus, truelayerAuthUrl, setCurrency, setSubscriptionStatus: handleSetSubscriptionStatus, formatCurrency, refreshProfile }}
     >
       {children}
     </AuthContext.Provider>
