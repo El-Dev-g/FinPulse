@@ -68,16 +68,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const authUrl = process.env.NEXT_PUBLIC_TRUELAYER_AUTH_URL;
-    if (!authUrl) {
-        throw new Error('Truelayer auth URL not set in environment variables.');
-    }
-    
-    const url = new URL(authUrl);
-    const redirectUriForToken = url.searchParams.get('redirect_uri');
+    // Use the specific server-side environment variable for the redirect URI
+    const redirectUriForToken = process.env.TRUELAYER_REDIRECT_URI;
 
     if (!redirectUriForToken) {
-        throw new Error('Could not extract redirect_uri from TRUELAYER_AUTH_URL.');
+        throw new Error('TRUELAYER_REDIRECT_URI is not set in environment variables.');
     }
     
     const accessToken = await exchangeCodeForToken(code, redirectUriForToken);
