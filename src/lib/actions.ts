@@ -103,6 +103,7 @@ export async function getStockData(symbols: string[]): Promise<{ symbol: string;
 
     const apiKey = process.env.FINANCIAL_MODELING_PREP_API_KEY;
     if (!apiKey) {
+        console.error("Financial Modeling Prep API key is not configured.");
         throw new Error("Financial Modeling Prep API key is not configured.");
     }
     
@@ -118,6 +119,11 @@ export async function getStockData(symbols: string[]): Promise<{ symbol: string;
 
         const quoteData = quoteResponse.data;
         const profileData = profileResponse.data;
+        
+        if (!quoteData || (Array.isArray(quoteData) && quoteData.length === 0)) {
+            console.warn('FMP API returned empty quote data.');
+            return symbols.map(s => ({ symbol: s, price: 0, logo: '' }));
+        }
 
         // The API returns a single object if one symbol is requested, and an array otherwise.
         const quotes = Array.isArray(quoteData) ? quoteData : [quoteData];
