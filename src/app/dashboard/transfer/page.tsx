@@ -1,3 +1,4 @@
+
 // src/app/dashboard/transfer/page.tsx
 "use client";
 
@@ -21,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Send, Wallet, Loader, Copy, Check, ArrowRight } from "lucide-react";
+import { Send, Wallet, Loader, Copy, Check, ArrowRight, ArrowLeftRight } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import type { Account } from "@/lib/types";
 import { addTransaction } from "@/lib/db";
@@ -165,6 +166,159 @@ function SendMoneyForm({ accounts, onTransaction: onTransactionSent }: { account
 }
 
 
+function InternalTransferForm({ accounts, onTransaction: onTransactionSent }: { accounts: Account[]; onTransaction: () => void }) {
+  const { formatCurrency } = useAuth();
+  const { toast } = useToast();
+  const [fromAccountId, setFromAccountId] = useState<string>("");
+  const [toAccountId, setToAccountId] = useState<string>("");
+  const [amount, setAmount] = useState("");
+  const [reference, setReference] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const fromAccount = accounts.find((acc) => acc.id === fromAccountId);
+  const toAccount = accounts.find((acc) => acc.id === toAccountId);
+
+  const handleTransfer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fromAccount || !toAccount || !amount) {
+      toast({ variant: 'destructive', title: 'Missing Information', description: 'Please select both accounts and enter an amount.' });
+      return;
+    }
+    if (fromAccountId === toAccountId) {
+      toast({ variant: 'destructive', title: 'Invalid Transfer', description: 'Cannot transfer to the same account.' });
+      return;
+    }
+
+    const transferAmount = parseFloat(amount);
+    if (isNaN(transferAmount) || transferAmount <= 0) {
+      toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Please enter a valid amount to transfer.' });
+      return;
+    }
+    
+    if (fromAccount.balance && transferAmount > fromAccount.balance) {
+      toast({ variant: 'destructive', title: 'Insufficient Funds', description: `You do not have enough funds in your ${fromAccount.name} account.` });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // 1. Create debit transaction
+      await addTransaction({
+        description: `Transfer to ${toAccount.name}`,
+        amount: -transferAmount,
+        category: "Transfer",
+        date: new Date().toISOString().split("T")[0],
+        source: fromAccount.id,
+      });
+
+      // 2. Create credit transaction
+      await addTransaction({
+        description: `Transfer from ${fromAccount.name}`,
+        amount: transferAmount,
+        category: "Transfer",
+        date: new Date().toISOString().split("T")[0],
+        source: toAccount.id,
+      });
+
+      // 3. Update local storage balances
+      const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
+      const allAccounts = storedAccounts ? JSON.parse(storedAccounts) : [];
+      const updatedAccounts = allAccounts.map((acc: Account) => {
+        if (acc.id === fromAccountId) {
+          return { ...acc, balance: (acc.balance || 0) - transferAmount };
+        }
+        if (acc.id === toAccountId) {
+          return { ...acc, balance: (acc.balance || 0) + transferAmount };
+        }
+        return acc;
+      });
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedAccounts));
+      
+      onTransactionSent();
+
+      toast({
+        title: "Transfer Successful!",
+        description: `${formatCurrency(transferAmount)} has been moved to ${toAccount.name}.`,
+      });
+      
+      // Reset form
+      setFromAccountId("");
+      setToAccountId("");
+      setAmount("");
+      setReference("");
+
+    } catch (error) {
+      console.error(error);
+      toast({ variant: 'destructive', title: 'Transfer Failed', description: 'Something went wrong. Please try again.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleTransfer} className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="internalFromAccount">From</Label>
+        <Select value={fromAccountId} onValueChange={setFromAccountId}>
+          <SelectTrigger id="internalFromAccount">
+            <SelectValue placeholder="Select an account..." />
+          </SelectTrigger>
+          <SelectContent>
+            {accounts.map((acc) => (
+              <SelectItem key={acc.id} value={acc.id}>
+                <div className="flex justify-between w-full">
+                  <span>{acc.name} (...{acc.last4})</span>
+                  <span className="text-muted-foreground">{formatCurrency(acc.balance || 0)}</span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      
+       <div className="space-y-2">
+        <Label htmlFor="internalToAccount">To</Label>
+        <Select value={toAccountId} onValueChange={setToAccountId} disabled={!fromAccountId}>
+          <SelectTrigger id="internalToAccount">
+            <SelectValue placeholder="Select an account..." />
+          </SelectTrigger>
+          <SelectContent>
+            {accounts.filter(acc => acc.id !== fromAccountId).map((acc) => (
+              <SelectItem key={acc.id} value={acc.id}>
+                <div className="flex justify-between w-full">
+                  <span>{acc.name} (...{acc.last4})</span>
+                  <span className="text-muted-foreground">{formatCurrency(acc.balance || 0)}</span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+       <Card>
+        <CardContent className="pt-6 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="internal-amount">Amount to Transfer</Label>
+            <Input id="internal-amount" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="internal-reference">Reference (Optional)</Label>
+            <Input id="internal-reference" value={reference} onChange={(e) => setReference(e.target.value)} placeholder="e.g., Savings top-up" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Button type="submit" className="w-full" disabled={loading || !fromAccountId || !toAccountId}>
+        {loading ? <Loader className="mr-2 animate-spin" /> : <ArrowLeftRight className="mr-2" />}
+        Transfer Money
+      </Button>
+    </form>
+  );
+}
+
+
+
 function ReceiveMoneyDetails({ accounts }: { accounts: Account[] }) {
     const { formatCurrency } = useAuth();
     const [selectedAccountId, setSelectedAccountId] = useState<string>(accounts[0]?.id || "");
@@ -306,8 +460,9 @@ export default function TransferPage() {
         </div>
 
         <Tabs defaultValue="send" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="send">Send Money</TabsTrigger>
+            <TabsTrigger value="internal">Internal Transfer</TabsTrigger>
             <TabsTrigger value="receive">Receive Money</TabsTrigger>
           </TabsList>
           <TabsContent value="send" className="mt-6">
@@ -316,6 +471,26 @@ export default function TransferPage() {
             ) : (
                 <NoAccountsMessage />
             )}
+          </TabsContent>
+          <TabsContent value="internal" className="mt-6">
+             {accounts.length > 1 ? (
+                <InternalTransferForm key={key} accounts={accounts} onTransaction={handleTransaction}/>
+             ) : (
+                <Alert>
+                    <Wallet className="h-4 w-4" />
+                    <AlertTitle>Not Enough Accounts</AlertTitle>
+                    <AlertDescription>
+                        You need at least two linked accounts to make an internal transfer.
+                    </AlertDescription>
+                     <div className="mt-4">
+                        <Button asChild>
+                            <Link href="/dashboard/link-account">
+                                Link Another Account <ArrowRight className="ml-2" />
+                            </Link>
+                        </Button>
+                    </div>
+                </Alert>
+             )}
           </TabsContent>
           <TabsContent value="receive" className="mt-6">
             <ReceiveMoneyDetails key={key} accounts={accounts} />
