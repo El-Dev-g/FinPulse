@@ -11,15 +11,16 @@ import {
 } from "@/components/ui/card";
 import { Landmark, TrendingDown, TrendingUp } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
-import type { ClientTransaction, ClientGoal } from '@/lib/types';
+import type { ClientTransaction, ClientGoal, Account } from '@/lib/types';
 import { subDays, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
 
 interface OverviewCardsProps {
     transactions: ClientTransaction[];
     goals: ClientGoal[];
+    accounts: Account[];
 }
 
-export function OverviewCards({ transactions, goals }: OverviewCardsProps) {
+export function OverviewCards({ transactions, goals, accounts }: OverviewCardsProps) {
   const { formatCurrency } = useAuth();
   
   const overviewData = useMemo(() => {
@@ -47,7 +48,8 @@ export function OverviewCards({ transactions, goals }: OverviewCardsProps) {
         }
     });
 
-    const totalAssets = goals.reduce((acc, goal) => acc + goal.current, 0);
+    const totalGoalSavings = goals.reduce((acc, goal) => acc + goal.current, 0);
+    const totalAccountBalances = accounts.reduce((acc, account) => acc + (account.balance || 0), 0);
 
     const incomeChange = lastMonthIncome > 0 ? ((currentMonthIncome - lastMonthIncome) / lastMonthIncome) * 100 : currentMonthIncome > 0 ? 100 : 0;
     const expenseChange = lastMonthExpenses > 0 ? ((currentMonthExpenses - lastMonthExpenses) / lastMonthExpenses) * 100 : currentMonthExpenses > 0 ? 100 : 0;
@@ -55,11 +57,11 @@ export function OverviewCards({ transactions, goals }: OverviewCardsProps) {
     return {
         income: currentMonthIncome,
         expenses: currentMonthExpenses,
-        netWorth: totalAssets,
+        netWorth: totalGoalSavings + totalAccountBalances,
         incomeChange,
         expenseChange
     };
-  }, [transactions, goals]);
+  }, [transactions, goals, accounts]);
 
   const formatPercentage = (value: number) => {
       if (!isFinite(value)) return "0.0%";

@@ -13,26 +13,36 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, Loader } from 'lucide-react';
 import Link from 'next/link';
 import { getTransactions, getGoals } from '@/lib/db';
-import type { Goal, Transaction, ClientGoal, ClientTransaction } from '@/lib/types';
+import type { Account, Goal, Transaction, ClientGoal, ClientTransaction } from '@/lib/types';
 import { processGoals, processTransactions } from '@/lib/utils';
 
+const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
 
 export default function DashboardPage() {
   const { user, subscriptionStatus } = useAuth();
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<ClientTransaction[]>([]);
   const [goals, setGoals] = useState<ClientGoal[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
+      // Fetch data from Firestore
       const [dbTransactions, dbGoals] = await Promise.all([
         getTransactions(),
         getGoals(),
       ]);
       setTransactions(processTransactions(dbTransactions as any[]));
       setGoals(processGoals(dbGoals as any[]));
+
+      // Fetch accounts from Local Storage
+      const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (storedAccounts) {
+        setAccounts(JSON.parse(storedAccounts));
+      }
+
     } catch (error) {
       console.error("Failed to fetch dashboard data", error);
     } finally {
@@ -83,7 +93,7 @@ export default function DashboardPage() {
       <Alerts />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <OverviewCards transactions={transactions} goals={goals} />
+        <OverviewCards transactions={transactions} goals={goals} accounts={accounts} />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
