@@ -106,12 +106,12 @@ export async function getStockData(symbols: string[]): Promise<{ symbol: string;
         console.error("Financial Modeling Prep API key is not configured.");
         throw new Error("Financial Modeling Prep API key is not configured.");
     }
-    
+
     try {
         const symbolsString = symbols.join(',');
         const quoteUrl = `https://financialmodelingprep.com/api/v3/quote/${symbolsString}?apikey=${apiKey}`;
         const profileUrl = `https://financialmodelingprep.com/api/v3/profile/${symbolsString}?apikey=${apiKey}`;
-
+        
         const [quoteResponse, profileResponse] = await Promise.all([
             axios.get(quoteUrl),
             axios.get(profileUrl)
@@ -119,16 +119,10 @@ export async function getStockData(symbols: string[]): Promise<{ symbol: string;
 
         const quoteData = quoteResponse.data;
         const profileData = profileResponse.data;
-        
-        if (!quoteData || (Array.isArray(quoteData) && quoteData.length === 0)) {
-            console.warn('FMP API returned empty quote data for symbols:', symbolsString);
-            return symbols.map(s => ({ symbol: s, price: 0, logo: '' }));
-        }
-        
+
         // The API returns a single object if one symbol is requested, and an array otherwise.
-        // We normalize this to always be an array.
-        const quotes = Array.isArray(quoteData) ? quoteData : [quoteData];
-        const profiles = Array.isArray(profileData) ? profileData : [profileData];
+        const quotes = Array.isArray(quoteData) ? quoteData : (quoteData ? [quoteData] : []);
+        const profiles = Array.isArray(profileData) ? profileData : (profileData ? [profileData] : []);
 
         return symbols.map(symbol => {
             const quote = quotes.find(q => q.symbol === symbol);
@@ -139,8 +133,10 @@ export async function getStockData(symbols: string[]): Promise<{ symbol: string;
                 logo: profile?.image || '',
             };
         });
+
     } catch (error) {
         console.error('Failed to fetch stock data from FMP API:', error);
+        // Throwing the error will allow the client component to catch it and display a message.
         throw new Error('Failed to fetch stock data.');
     }
 }
