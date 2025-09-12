@@ -1,4 +1,3 @@
-
 // src/app/api/truelayer/callback/route.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
@@ -16,6 +15,10 @@ async function exchangeCodeForToken(code: string, redirectUri: string) {
     
     if (!clientId || !clientSecret) {
         throw new Error("Truelayer client credentials are not configured on the server.");
+    }
+    
+    if (!redirectUri) {
+         throw new Error("Redirect URI is not configured for Truelayer callback.");
     }
     
     // In a real application, you would use `fetch` to make this POST request.
@@ -65,8 +68,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // This URI must exactly match one of the URIs configured in the Truelayer developer console.
-    const redirectUriForToken = `${origin}/api/truelayer/callback`;
+    const authUrl = process.env.NEXT_PUBLIC_TRUELAYER_AUTH_URL;
+    if (!authUrl) {
+        throw new Error('Truelayer auth URL not set in environment variables.');
+    }
+    
+    const url = new URL(authUrl);
+    const redirectUriForToken = url.searchParams.get('redirect_uri');
+
+    if (!redirectUriForToken) {
+        throw new Error('Could not extract redirect_uri from TRUELAYER_AUTH_URL.');
+    }
     
     const accessToken = await exchangeCodeForToken(code, redirectUriForToken);
     

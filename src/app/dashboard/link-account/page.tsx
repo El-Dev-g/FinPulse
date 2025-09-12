@@ -1,4 +1,3 @@
-
 // src/app/dashboard/link-account/page.tsx
 "use client";
 
@@ -171,9 +170,16 @@ function LinkAccountPageContent() {
         setIsPermissionDialogOpen(false);
         
         if (permissionProvider === 'Truelayer') {
-            // This URI must exactly match one of the URIs configured in the Truelayer developer console.
-            const redirectUri = `${window.location.origin}/api/truelayer/callback`;
-            const authUrl = `https://auth.truelayer-sandbox.com/?response_type=code&client_id=sandbox-finpulse-0b40c2&scope=info%20accounts%20balance%20cards%20transactions%20direct_debits%20standing_orders%20offline_access&redirect_uri=${encodeURIComponent(redirectUri)}&providers=uk-cs-mock%20uk-ob-all%20uk-oauth-all`;
+            const authUrl = process.env.NEXT_PUBLIC_TRUELAYER_AUTH_URL;
+            
+            if (!authUrl) {
+                toast({
+                    variant: 'destructive',
+                    title: "Configuration Error",
+                    description: "Truelayer authentication URL is not configured.",
+                });
+                return;
+            }
             
             window.top!.location.href = authUrl;
         } else {
