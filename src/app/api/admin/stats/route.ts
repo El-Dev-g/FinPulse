@@ -1,4 +1,3 @@
-
 // src/app/api/admin/stats/route.ts
 import { NextResponse } from 'next/server';
 import { getTransactions, getGoals, getBudgets, getRecurringTransactions, getTasks, getAIPlans, getUserProfile } from '@/lib/db';
