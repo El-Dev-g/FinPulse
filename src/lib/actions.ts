@@ -121,11 +121,12 @@ export async function getStockData(symbols: string[]): Promise<{ symbol: string;
         const profileData = profileResponse.data;
         
         if (!quoteData || (Array.isArray(quoteData) && quoteData.length === 0)) {
-            console.warn('FMP API returned empty quote data.');
+            console.warn('FMP API returned empty quote data for symbols:', symbolsString);
             return symbols.map(s => ({ symbol: s, price: 0, logo: '' }));
         }
-
+        
         // The API returns a single object if one symbol is requested, and an array otherwise.
+        // We normalize this to always be an array.
         const quotes = Array.isArray(quoteData) ? quoteData : [quoteData];
         const profiles = Array.isArray(profileData) ? profileData : [profileData];
 
