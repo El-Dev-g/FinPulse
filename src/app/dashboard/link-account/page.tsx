@@ -174,7 +174,7 @@ function LinkAccountPageContent() {
             const redirectUri = new URL('/api/truelayer/callback', window.location.origin).toString();
             const authUrl = `https://auth.truelayer-sandbox.com/?response_type=code&client_id=sandbox-finpulse-0b40c2&scope=info%20accounts%20balance%20cards%20transactions%20direct_debits%20standing_orders%20offline_access&redirect_uri=${encodeURIComponent(redirectUri)}&providers=uk-cs-mock%20uk-ob-all%20uk-oauth-all`;
             
-            window.location.href = authUrl;
+            window.open(authUrl, "_top");
         } else {
             toast({
                 title: "Permissions Granted",
