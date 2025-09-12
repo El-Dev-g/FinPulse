@@ -106,37 +106,40 @@ export async function getStockData(symbols: string[]): Promise<{ symbol: string;
         console.error("Financial Modeling Prep API key is not configured.");
         throw new Error("Financial Modeling Prep API key is not configured.");
     }
+    
+    const results = await Promise.all(
+        symbols.map(async (symbol) => {
+            try {
+                const quoteUrl = `https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${apiKey}`;
+                const profileUrl = `https://financialmodelingprep.com/api/v3/profile/${symbol}?apikey=${apiKey}`;
+                
+                const [quoteResponse, profileResponse] = await Promise.all([
+                    axios.get(quoteUrl),
+                    axios.get(profileUrl)
+                ]);
 
-    try {
-        const symbolsString = symbols.join(',');
-        const quoteUrl = `https://financialmodelingprep.com/api/v3/quote/${symbolsString}?apikey=${apiKey}`;
-        const profileUrl = `https://financialmodelingprep.com/api/v3/profile/${symbolsString}?apikey=${apiKey}`;
-        
-        const [quoteResponse, profileResponse] = await Promise.all([
-            axios.get(quoteUrl),
-            axios.get(profileUrl)
-        ]);
+                // The API returns an array, even for a single symbol.
+                const quoteData = quoteResponse.data?.[0];
+                const profileData = profileResponse.data?.[0];
+                
+                if (!quoteData || !profileData) {
+                    console.warn(`No data returned for symbol: ${symbol}`);
+                    return { symbol, price: 0, logo: '' };
+                }
 
-        const quoteData = quoteResponse.data;
-        const profileData = profileResponse.data;
+                return {
+                    symbol: symbol,
+                    price: quoteData.price || 0,
+                    logo: profileData.image || '',
+                };
 
-        // The API returns a single object if one symbol is requested, and an array otherwise.
-        const quotes = Array.isArray(quoteData) ? quoteData : (quoteData ? [quoteData] : []);
-        const profiles = Array.isArray(profileData) ? profileData : (profileData ? [profileData] : []);
+            } catch (error) {
+                console.error(`Failed to fetch data for symbol ${symbol}:`, error);
+                // Return a default object for this symbol so the whole process doesn't fail
+                return { symbol, price: 0, logo: '' };
+            }
+        })
+    );
 
-        return symbols.map(symbol => {
-            const quote = quotes.find(q => q.symbol === symbol);
-            const profile = profiles.find(p => p.symbol === symbol);
-            return {
-                symbol,
-                price: quote?.price || 0,
-                logo: profile?.image || '',
-            };
-        });
-
-    } catch (error) {
-        console.error('Failed to fetch stock data from FMP API:', error);
-        // Throwing the error will allow the client component to catch it and display a message.
-        throw new Error('Failed to fetch stock data.');
-    }
+    return results;
 }
