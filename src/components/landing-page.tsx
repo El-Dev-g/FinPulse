@@ -59,10 +59,10 @@ export default function LandingPage() {
         </div>
       </header>
       <main className="flex-grow">
-        <section className="container mx-auto px-4 py-20 md:py-32">
+        <section className="container mx-auto px-4 py-16 md:py-32">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <h1 className="text-4xl md:text-6xl font-headline font-bold text-primary">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-headline font-bold text-primary">
                 {hero.title}
               </h1>
               <p className="text-lg text-foreground/80">
@@ -98,7 +98,7 @@ export default function LandingPage() {
                 {features.description}
               </p>
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-8">
               {features.items.map((feature, index) => (
                 <Card
                   key={index}
