@@ -65,8 +65,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // The redirect URI for the token exchange must EXACTLY match the one used in the initial auth URL.
-    const redirectUriForToken = new URL('/api/truelayer/callback', origin).toString();
+    // This URI must exactly match one of the URIs configured in the Truelayer developer console.
+    const redirectUriForToken = 'https://6000-firebase-studio-1757022081447-us-central1.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev/api/truelayer/callback';
     
     const accessToken = await exchangeCodeForToken(code, redirectUriForToken);
     
@@ -85,3 +85,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(finalRedirectUrl);
   }
 }
+
+    
