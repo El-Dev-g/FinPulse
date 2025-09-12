@@ -172,10 +172,10 @@ function LinkAccountPageContent() {
         
         if (permissionProvider === 'Truelayer') {
             // This URI must exactly match one of the URIs configured in the Truelayer developer console.
-            const redirectUri = 'https://6000-firebase-studio-1757022081447-us-central1.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev/api/truelayer/callback';
+            const redirectUri = 'https://9000-firebase-studio-1756463262326.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev/api/truelayer/callback';
             const authUrl = `https://auth.truelayer-sandbox.com/?response_type=code&client_id=sandbox-finpulse-0b40c2&scope=info%20accounts%20balance%20cards%20transactions%20direct_debits%20standing_orders%20offline_access&redirect_uri=${encodeURIComponent(redirectUri)}&providers=uk-cs-mock%20uk-ob-all%20uk-oauth-all`;
             
-            window.open(authUrl, "_top");
+            window.top!.location.href = authUrl;
         } else {
             toast({
                 title: "Permissions Granted",
