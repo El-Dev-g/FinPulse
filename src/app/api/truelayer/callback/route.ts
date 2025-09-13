@@ -49,9 +49,10 @@ async function exchangeCodeForToken(code: string, redirectUri: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin, pathname } = new URL(request.url);
+  const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
   const error = searchParams.get('error');
+  const state = searchParams.get('state');
 
   // This is the final page the user will land on.
   const finalRedirectUrl = new URL('/dashboard/link-account', origin);
@@ -68,10 +69,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(finalRedirectUrl);
   }
 
+  if (!state) {
+    console.error("Missing state parameter from Truelayer.");
+    finalRedirectUrl.searchParams.set('error', 'truelayer_missing_state');
+    return NextResponse.redirect(finalRedirectUrl);
+  }
+
   try {
-    // Dynamically construct the redirect URI from the request's URL.
-    // This is the crucial fix to ensure it matches what Truelayer expects.
-    const redirectUriForToken = new URL(pathname, origin).toString();
+    // Extract the original redirect_uri from the state parameter
+    const stateParams = new URLSearchParams(state);
+    const redirectUriForToken = stateParams.get('redirect_uri');
+
+    if (!redirectUriForToken) {
+        throw new Error("redirect_uri not found in state parameter.");
+    }
     
     const accessToken = await exchangeCodeForToken(code, redirectUriForToken);
     

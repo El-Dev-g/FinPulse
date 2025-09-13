@@ -1,3 +1,4 @@
+
 // src/hooks/use-auth.tsx
 "use client";
 
@@ -30,12 +31,16 @@ const getTruelayerAuthUrl = () => {
     const scopes = "info accounts balance cards transactions direct_debits standing_orders offline_access";
     const providers = "uk-cs-mock uk-ob-all uk-oauth-all";
 
+    // Pass the redirect_uri in the state parameter, URL-encoded.
+    const state = new URLSearchParams({ redirect_uri: redirectUri }).toString();
+
     const params = new URLSearchParams({
         response_type: "code",
         client_id: clientId,
         redirect_uri: redirectUri,
         scope: scopes,
         providers: providers,
+        state: state, // Add the state parameter here
     });
     return `https://auth.truelayer-sandbox.com/?${params.toString()}`;
 }
