@@ -1,4 +1,3 @@
-
 // src/app/dashboard/transfer/page.tsx
 "use client";
 
@@ -322,7 +321,6 @@ function InternalTransferForm({ accounts, onTransaction: onTransactionSent }: { 
 
 
 function ReceiveMoneyDetails({ accounts }: { accounts: Account[] }) {
-    const { formatCurrency } = useAuth();
     const [selectedAccountId, setSelectedAccountId] = useState<string>(accounts[0]?.id || "");
     const [copied, setCopied] = useState<string | null>(null);
 
@@ -491,7 +489,7 @@ function RecentTransfers({ transactions, onRefund, refundCooldowns }: { transact
 export default function TransferPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [key, setKey] = useState(0); // Used to force-rerender child components
+  const [key, setKey] = useState(0);
   const [refundCooldowns, setRefundCooldowns] = useState<Record<string, number>>({});
   const { toast, formatCurrency } = useAuth();
   
@@ -521,10 +519,8 @@ export default function TransferPage() {
   }
 
   const handleTransaction = () => {
-    // Re-fetch accounts to update balances
     fetchAccounts();
     fetchTransactions();
-    // Force a re-render of children by changing the key
     setKey(prevKey => prevKey + 1);
   }
 
@@ -542,11 +538,9 @@ export default function TransferPage() {
       return;
     }
     
-    // Set cooldown
     setRefundCooldowns(prev => ({...prev, [transaction.id]: Date.now()}));
 
     try {
-        // Create refund transaction
         await addTransaction({
             description: `Refund for: ${transaction.description}`,
             amount: refundAmount,
@@ -555,7 +549,6 @@ export default function TransferPage() {
             source: transaction.source,
         });
 
-        // Update local storage balance
         const newBalance = (sourceAccount.balance || 0) + refundAmount;
         const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
         const allAccounts = storedAccounts ? JSON.parse(storedAccounts) : [];
@@ -576,7 +569,6 @@ export default function TransferPage() {
         toast({ variant: 'destructive', title: 'Refund Failed', description: 'An error occurred while processing the refund.' });
     }
     
-    // Clear cooldown after timeout
     setTimeout(() => {
         setRefundCooldowns(prev => {
             const newCooldowns = {...prev};
@@ -586,9 +578,28 @@ export default function TransferPage() {
     }, COOLDOWN_SECONDS * 1000);
   };
   
+  if (accounts.length === 0) {
+      return (
+         <main className="flex-1 p-4 md:p-6 lg:p-8">
+            <div className="max-w-xl mx-auto">
+                <div className="mb-8">
+                    <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
+                        <Send className="h-8 w-8" />
+                        Transfers
+                    </h2>
+                    <p className="text-muted-foreground">
+                        Move money between your accounts and to others.
+                    </p>
+                </div>
+                <NoAccountsMessage />
+            </div>
+         </main>
+      )
+  }
+
   return (
-    <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
-      <div className="max-w-6xl mx-auto">
+    <main className="flex-1 p-4 md:p-6 lg:p-8">
+      <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
             <Send className="h-8 w-8" />
@@ -599,39 +610,57 @@ export default function TransferPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            <div className="lg:col-span-2 space-y-6">
-                {accounts.length > 0 ? (
-                    <>
-                        <SendMoneyForm key={`send-${key}`} accounts={accounts} onTransaction={handleTransaction}/>
-                        {accounts.length > 1 ? (
-                            <InternalTransferForm key={`internal-${key}`} accounts={accounts} onTransaction={handleTransaction}/>
-                        ) : (
-                            <Alert>
-                                <Wallet className="h-4 w-4" />
-                                <AlertTitle>Link Another Account</AlertTitle>
-                                <AlertDescription>
-                                    You need at least two linked accounts to make an internal transfer.
-                                </AlertDescription>
-                                <div className="mt-4">
-                                    <Button asChild size="sm">
-                                        <Link href="/dashboard/link-account">
-                                            Link Account <ArrowRight className="ml-2" />
-                                        </Link>
-                                    </Button>
-                                </div>
-                            </Alert>
-                        )}
-                    </>
+        <Tabs defaultValue="send" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="send">Send & Transfer</TabsTrigger>
+            <TabsTrigger value="receive">Receive & History</TabsTrigger>
+          </TabsList>
+          <TabsContent value="send">
+            <Tabs defaultValue="external" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="external">Send to Recipient</TabsTrigger>
+                <TabsTrigger value="internal">Internal Transfer</TabsTrigger>
+              </TabsList>
+              <TabsContent value="external">
+                <SendMoneyForm key={`send-${key}`} accounts={accounts} onTransaction={handleTransaction}/>
+              </TabsContent>
+              <TabsContent value="internal">
+                {accounts.length > 1 ? (
+                    <InternalTransferForm key={`internal-${key}`} accounts={accounts} onTransaction={handleTransaction}/>
                 ) : (
-                    <NoAccountsMessage />
+                    <Alert className="mt-4">
+                        <Wallet className="h-4 w-4" />
+                        <AlertTitle>Link Another Account</AlertTitle>
+                        <AlertDescription>
+                            You need at least two linked accounts to make an internal transfer.
+                        </AlertDescription>
+                        <div className="mt-4">
+                            <Button asChild size="sm">
+                                <Link href="/dashboard/link-account">
+                                    Link Account <ArrowRight className="ml-2" />
+                                </Link>
+                            </Button>
+                        </div>
+                    </Alert>
                 )}
-            </div>
-            <div className="lg:col-span-1 space-y-6">
-                <ReceiveMoneyDetails key={`receive-${key}`} accounts={accounts} />
-                <RecentTransfers transactions={transactions} onRefund={handleRefund} refundCooldowns={refundCooldowns} />
-            </div>
-        </div>
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+          <TabsContent value="receive">
+             <Tabs defaultValue="details" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="details">Receive Money</TabsTrigger>
+                    <TabsTrigger value="history">Recent Transfers</TabsTrigger>
+                </TabsList>
+                <TabsContent value="details">
+                     <ReceiveMoneyDetails key={`receive-${key}`} accounts={accounts} />
+                </TabsContent>
+                <TabsContent value="history">
+                    <RecentTransfers transactions={transactions} onRefund={handleRefund} refundCooldowns={refundCooldowns} />
+                </TabsContent>
+             </Tabs>
+          </TabsContent>
+        </Tabs>
       </div>
     </main>
   );
