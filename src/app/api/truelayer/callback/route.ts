@@ -1,10 +1,11 @@
+
 // src/app/api/truelayer/callback/route.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // This function simulates the server-side exchange of an authorization code for an access token.
 async function exchangeCodeForToken(code: string, redirectUri: string) {
-    const clientId = process.env.TRUELAYER_CLIENT_ID;
+    const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
     const clientSecret = process.env.TRUELAYER_CLIENT_SECRET;
 
     console.log("---- Attempting to Exchange Code for Token ----");
