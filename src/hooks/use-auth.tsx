@@ -19,20 +19,20 @@ import type { UserProfile } from "@/lib/types";
 
 type SubscriptionStatus = 'free' | 'active' | 'past_due';
 
-// Dynamically create the Truelayer Auth URL
+// Dynamically create the Truelayer Auth URL using the window's origin
 const getTruelayerAuthUrl = () => {
+    if (typeof window === 'undefined') return "";
+
     const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-    if (!clientId || !baseUrl) {
-        console.error("Truelayer environment variables are not set.");
+    if (!clientId) {
+        console.error("Truelayer client ID is not set in environment variables.");
         return "";
     }
-    const redirectUri = `${baseUrl}/api/truelayer/callback`;
+    
+    // Use window.location.origin to ensure the redirect URI is always correct
+    const redirectUri = `${window.location.origin}/api/truelayer/callback`;
     const scopes = "info accounts balance cards transactions direct_debits standing_orders offline_access";
     const providers = "uk-cs-mock uk-ob-all uk-oauth-all";
-
-    // Pass the redirect_uri in the state parameter, URL-encoded.
-    const state = new URLSearchParams({ redirect_uri: redirectUri }).toString();
 
     const params = new URLSearchParams({
         response_type: "code",
@@ -40,7 +40,7 @@ const getTruelayerAuthUrl = () => {
         redirect_uri: redirectUri,
         scope: scopes,
         providers: providers,
-        state: state, // Add the state parameter here
+        // The 'state' parameter can be used for CSRF protection, but is omitted here for simplicity
     });
     return `https://auth.truelayer-sandbox.com/?${params.toString()}`;
 }
@@ -48,8 +48,8 @@ const getTruelayerAuthUrl = () => {
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
-  loading: boolean; // Remains for initial app load, but 'checked' is used for routing
-  checked: boolean; // Becomes true once Firebase auth state is confirmed
+  loading: boolean;
+  checked: boolean; 
   currency: string;
   isPro: boolean;
   subscriptionStatus: SubscriptionStatus;
@@ -96,7 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [checked, setChecked] = useState(false); // New state to track if auth check is complete
+  const [checked, setChecked] = useState(false);
   const [currency, setCurrencyState] = useState("USD");
   const [subscriptionStatus, setSubscriptionStatusState] = useState<SubscriptionStatus>('free');
 
@@ -109,14 +109,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshProfile = useCallback(async () => {
     if (auth.currentUser) {
-        // Essential: reload the user from Firebase Auth first.
         await auth.currentUser.reload();
-        // The onAuthStateChanged listener will handle the rest.
+        // The onAuthStateChanged listener will handle re-fetching the profile
     }
   }, [auth]);
 
 
-  // --- AUTH STATE LISTENER ---
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
@@ -140,39 +138,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error("Error loading profile:", err);
       } finally {
         setLoading(false);
-        setChecked(true); // Mark auth as checked
+        setChecked(true); 
       }
     });
 
     return () => unsubscribe();
   }, [auth]);
 
-  // --- ROUTE PROTECTION ---
   useEffect(() => {
-    // Only run route protection after the initial auth state has been checked
     if (!checked) return;
 
     const isUnprotectedPage = unprotectedRoutes.includes(pathname) || unprotectedRoutes.some(p => p !== '/' && pathname.startsWith(p + '/'));
     const isOnboardingPage = isOnboardingRoute(pathname);
 
     if (!user) {
-      // If user is not logged in, redirect to signin page if route is protected
       if (!isUnprotectedPage && !isOnboardingPage) {
         router.push("/signin");
       }
     } else {
-      // If user is logged in, redirect from auth pages to dashboard
-      if (pathname === "/signin" || pathname === "/signup" || pathname === "/") {
-        // Prevent redirecting if onboarding is not complete and user lands on '/'
-        const onboardingComplete = localStorage.getItem('onboardingComplete') === 'true';
-        if(pathname === "/" && !onboardingComplete) return;
-
+      if (pathname === "/signin" || pathname === "/signup") {
         router.push("/dashboard");
       }
     }
   }, [user, checked, pathname, router]);
 
-  // --- UTILS ---
   const setCurrency = useCallback(
     async (newCurrency: string) => {
       setCurrencyState(newCurrency);
