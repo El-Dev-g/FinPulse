@@ -10,6 +10,16 @@ import {
   CardTitle,
   CardDescription
 } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader, TrendingUp, MoreHorizontal, FileText } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -30,6 +40,7 @@ export default function InvestmentsPage() {
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingInvestment, setEditingInvestment] = useState<ClientInvestment | null>(null);
+  const [deletingInvestment, setDeletingInvestment] = useState<ClientInvestment | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -91,13 +102,16 @@ export default function InvestmentsPage() {
     fetchData();
   };
 
-  const handleDeleteInvestment = async (id: string) => {
-    await deleteInvestment(id);
+  const handleDeleteInvestment = async () => {
+    if (!deletingInvestment) return;
+    await deleteInvestment(deletingInvestment.id);
+    setDeletingInvestment(null);
     fetchData();
   };
 
 
   return (
+    <>
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
@@ -155,6 +169,7 @@ export default function InvestmentsPage() {
                          <InvestmentHoldingsTable 
                             investments={investments} 
                             onEdit={setEditingInvestment}
+                            onDelete={setDeletingInvestment}
                         />
                     </div>
                     <div className="xl:col-span-1">
@@ -178,6 +193,22 @@ export default function InvestmentsPage() {
         onDeleteInvestment={handleDeleteInvestment}
       />
     </main>
+    <AlertDialog open={!!deletingInvestment} onOpenChange={() => setDeletingInvestment(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your holding for {deletingInvestment?.symbol}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteInvestment} className="bg-destructive hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
-
