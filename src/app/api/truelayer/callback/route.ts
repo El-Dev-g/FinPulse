@@ -49,7 +49,7 @@ async function exchangeCodeForToken(code: string, redirectUri: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams, origin, pathname } = new URL(request.url);
   const code = searchParams.get('code');
   const error = searchParams.get('error');
 
@@ -69,12 +69,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-    if (!baseUrl) {
-      throw new Error('NEXT_PUBLIC_BASE_URL is not set in environment variables.');
-    }
-    // Use the base URL to construct the redirect URI for the token exchange
-    const redirectUriForToken = `${baseUrl}/api/truelayer/callback`;
+    // Dynamically construct the redirect URI from the request's URL.
+    // This is the crucial fix to ensure it matches what Truelayer expects.
+    const redirectUriForToken = new URL(pathname, origin).toString();
     
     const accessToken = await exchangeCodeForToken(code, redirectUriForToken);
     
@@ -93,5 +90,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(finalRedirectUrl);
   }
 }
-
-    
