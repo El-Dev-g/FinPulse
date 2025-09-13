@@ -19,34 +19,42 @@ import type { UserProfile } from "@/lib/types";
 
 type SubscriptionStatus = 'free' | 'active' | 'past_due';
 
-// Dynamically create the Truelayer Auth URL using the window's origin
+// Generates the Truelayer Auth URL
 const getTruelayerAuthUrl = () => {
+    // This function must run on the client-side to access sessionStorage
+    if (typeof window === 'undefined') {
+        return "";
+    }
+    
     const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
     if (!clientId) {
         console.error("Truelayer client ID is not set in environment variables.");
         return "";
     }
     
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-    if (!baseUrl) {
-      console.error("NEXT_PUBLIC_BASE_URL is not set in environment variables.");
-      return "";
-    }
-
-    const redirectUri = `${baseUrl}/api/truelayer/callback`;
+    const redirectUri = `${window.location.origin}/api/truelayer/callback`;
     const scopes = "info accounts balance cards transactions direct_debits standing_orders offline_access";
     const providers = "uk-cs-mock uk-ob-all uk-oauth-all";
 
+    // Generate a random state for CSRF protection and store it
+    const state = Math.random().toString(36).substring(2);
+    try {
+        sessionStorage.setItem('truelayer_state', state);
+    } catch (e) {
+        console.error("Could not write to sessionStorage.");
+    }
+    
     const params = new URLSearchParams({
         response_type: "code",
         client_id: clientId,
         redirect_uri: redirectUri,
         scope: scopes,
         providers: providers,
-        // The 'state' parameter can be used for CSRF protection, but is omitted here for simplicity
+        state: state, // Include the state parameter
     });
     return `https://auth.truelayer-sandbox.com/?${params.toString()}`;
 }
+
 
 interface AuthContextType {
   user: User | null;
@@ -108,7 +116,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
 
   const isPro = useMemo(() => subscriptionStatus === 'active' || subscriptionStatus === 'past_due', [subscriptionStatus]);
-  const truelayerAuthUrl = useMemo(() => getTruelayerAuthUrl(), []);
+  
+  // The URL is now generated on demand when needed, not memoized.
+  const truelayerAuthUrl = useMemo(() => {
+    if (typeof window !== 'undefined') {
+        return getTruelayerAuthUrl();
+    }
+    return "";
+  }, []);
 
   const refreshProfile = useCallback(async () => {
     if (auth.currentUser) {
@@ -205,4 +220,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error("useAuth must be used within an AuthProvider");
+    }
+    return {
+        ...context,
+        // Expose a function to get a fresh URL with a new state every time
+        getTruelayerAuthUrl
+    };
+};

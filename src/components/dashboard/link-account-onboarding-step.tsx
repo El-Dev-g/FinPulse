@@ -1,3 +1,4 @@
+
 // src/components/dashboard/link-account-onboarding-step.tsx
 "use client";
 
@@ -56,7 +57,7 @@ interface LinkAccountStepProps {
 export function LinkAccountStep({ onSkip }: LinkAccountStepProps) {
   const [selectedCountry, setSelectedCountry] = useState<string>("");
   const { toast } = useToast();
-  const { truelayerAuthUrl } = useAuth();
+  const { getTruelayerAuthUrl } = useAuth();
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
   const [permissionProvider, setPermissionProvider] = useState("");
   
@@ -79,11 +80,12 @@ export function LinkAccountStep({ onSkip }: LinkAccountStepProps) {
     setIsPermissionDialogOpen(false);
     
     if (permissionProvider === 'Truelayer') {
-        if (!truelayerAuthUrl) {
+        const authUrl = getTruelayerAuthUrl();
+        if (!authUrl) {
             toast({
                 variant: 'destructive',
                 title: "Configuration Error",
-                description: "Truelayer authentication URL is not configured.",
+                description: "Could not generate Truelayer authentication URL.",
             });
             return;
         }
@@ -91,7 +93,7 @@ export function LinkAccountStep({ onSkip }: LinkAccountStepProps) {
         // This will redirect the main window to the Truelayer login page.
         // After auth, Truelayer will redirect back to our callback URL.
         // The callback logic should then redirect to the dashboard.
-        window.top!.location.href = truelayerAuthUrl;
+        window.top!.location.href = authUrl;
     } else {
         toast({
             title: "Connection Skipped",
@@ -113,9 +115,7 @@ export function LinkAccountStep({ onSkip }: LinkAccountStepProps) {
               <SelectGroup key={continent}>
                 <SelectLabel>{continent}</SelectLabel>
                 {continentCountries.map(({ code, name }) => (
-                  <SelectItem key={code} value={code}>
-                    {name}
-                  </SelectItem>
+                  <SelectItem key={code} value={code}>{name}</SelectItem>
                 ))}
               </SelectGroup>
             ))}

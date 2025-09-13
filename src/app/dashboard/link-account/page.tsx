@@ -1,3 +1,4 @@
+
 // src/app/dashboard/link-account/page.tsx
 "use client";
 
@@ -84,7 +85,7 @@ const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
 function LinkAccountPageContent() {
     const [selectedCountry, setSelectedCountry] = useState<string>('');
     const { toast } = useToast();
-    const { truelayerAuthUrl } = useAuth();
+    const { getTruelayerAuthUrl } = useAuth();
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [viewingAccount, setViewingAccount] = useState<Account | null>(null);
     const [editingAccount, setEditingAccount] = useState<Account | null>(null);
@@ -133,10 +134,20 @@ function LinkAccountPageContent() {
     useEffect(() => {
         const success = searchParams.get('success');
         const error = searchParams.get('error');
+        const state = searchParams.get('state');
+
+        const savedState = sessionStorage.getItem('truelayer_state');
         
         if (success === 'truelayer_connected') {
-            setIsSelectAccountsDialogOpen(true);
-            // Clean up the URL
+            if (state && savedState && state === savedState) {
+                console.log("Truelayer state validation successful.");
+                setIsSelectAccountsDialogOpen(true);
+            } else {
+                console.error("Truelayer state mismatch or missing state. Potential CSRF attack.");
+                setConnectionError("Security check failed. Please try connecting again.");
+            }
+            // Clean up state and URL
+            sessionStorage.removeItem('truelayer_state');
             router.replace('/dashboard/link-account');
         }
 
@@ -147,7 +158,8 @@ function LinkAccountPageContent() {
                 title: "Connection Failed",
                 description: `There was an error connecting your account. (${error})`,
             });
-             // Clean up the URL
+             // Clean up state and URL
+            sessionStorage.removeItem('truelayer_state');
             router.replace('/dashboard/link-account');
         }
     }, [searchParams, toast, router]);
@@ -172,7 +184,8 @@ function LinkAccountPageContent() {
         setIsPermissionDialogOpen(false);
         
         if (permissionProvider === 'Truelayer') {
-            if (!truelayerAuthUrl) {
+            const authUrl = getTruelayerAuthUrl();
+            if (!authUrl) {
                 toast({
                     variant: 'destructive',
                     title: "Configuration Error",
@@ -181,7 +194,7 @@ function LinkAccountPageContent() {
                 return;
             }
             
-            window.top!.location.href = truelayerAuthUrl;
+            window.top!.location.href = authUrl;
         } else {
             toast({
                 title: "Permissions Granted",
