@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
   const error = searchParams.get('error');
   
   // This is the final page the user will land on.
-  const finalRedirectUrl = new URL('/dashboard/link-account', origin);
+  const finalRedirectUrl = new URL('/dashboard/link-account', process.env.NEXT_PUBLIC_BASE_URL);
 
   if (error) {
     console.error("Truelayer callback error:", error);
@@ -69,8 +69,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Construct the redirect URI based on the request's origin. This ensures consistency.
-    const redirectUriForToken = `${origin}/api/truelayer/callback`;
+    const redirectUriForToken = `${process.env.NEXT_PUBLIC_BASE_URL}/api/truelayer/callback`;
     
     const accessToken = await exchangeCodeForToken(code, redirectUriForToken);
     

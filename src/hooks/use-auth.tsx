@@ -21,16 +21,19 @@ type SubscriptionStatus = 'free' | 'active' | 'past_due';
 
 // Dynamically create the Truelayer Auth URL using the window's origin
 const getTruelayerAuthUrl = () => {
-    if (typeof window === 'undefined') return "";
-
     const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
     if (!clientId) {
         console.error("Truelayer client ID is not set in environment variables.");
         return "";
     }
     
-    // Use window.location.origin to ensure the redirect URI is always correct
-    const redirectUri = `${window.location.origin}/api/truelayer/callback`;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    if (!baseUrl) {
+      console.error("NEXT_PUBLIC_BASE_URL is not set in environment variables.");
+      return "";
+    }
+
+    const redirectUri = `${baseUrl}/api/truelayer/callback`;
     const scopes = "info accounts balance cards transactions direct_debits standing_orders offline_access";
     const providers = "uk-cs-mock uk-ob-all uk-oauth-all";
 
