@@ -37,10 +37,12 @@ export default function DashboardPage() {
       setTransactions(processTransactions(dbTransactions as any[]));
       setGoals(processGoals(dbGoals as any[]));
 
-      // Fetch accounts from Local Storage
-      const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (storedAccounts) {
-        setAccounts(JSON.parse(storedAccounts));
+      // Fetch accounts from Local Storage - only on client
+      if (typeof window !== 'undefined') {
+        const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (storedAccounts) {
+          setAccounts(JSON.parse(storedAccounts));
+        }
       }
 
     } catch (error) {

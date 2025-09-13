@@ -158,6 +158,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } else {
       // If user is logged in, redirect from auth pages to dashboard
       if (pathname === "/signin" || pathname === "/signup" || pathname === "/") {
+        // Prevent redirecting if onboarding is not complete and user lands on '/'
+        const onboardingComplete = localStorage.getItem('onboardingComplete') === 'true';
+        if(pathname === "/" && !onboardingComplete) return;
+
         router.push("/dashboard");
       }
     }

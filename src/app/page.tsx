@@ -23,6 +23,7 @@ export default function Home() {
     }
   }, [user, checked, router]);
 
+  // Show a loader if auth state is not checked, or if user is logged in and we are about to redirect.
   if (!checked || user) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -31,5 +32,6 @@ export default function Home() {
     );
   }
 
+  // Only show the landing page if auth is checked and there's no user.
   return <LandingPage />;
 }
