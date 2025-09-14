@@ -105,8 +105,8 @@ function LinkAccountPageContent() {
             }
 
             try {
-                // Construct the redirect URI on the client to ensure it matches what was used to get the code
-                const redirectUri = new URL('/dashboard/link-account', window.location.origin).toString();
+                // Ensure redirect URI matches what was used to get the code
+                const redirectUri = process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI!;
 
                 const response = await fetch('/api/truelayer/callback', {
                     method: 'POST',
@@ -160,7 +160,7 @@ function LinkAccountPageContent() {
     }, [searchParams, router]);
 
 
-    const handleConnect = () => {
+    const handleConnect = async () => {
         setIsConfirming(false); // Close the dialog first
         
         if (selectedContinent !== 'europe') {
@@ -174,7 +174,7 @@ function LinkAccountPageContent() {
 
         setLoading(true);
         try {
-            getTruelayerAuthUrl();
+            await getTruelayerAuthUrl();
             // The getTruelayerAuthUrl now handles the redirection
         } catch (e: any) {
             console.error("Failed to get Truelayer auth URL:", e);

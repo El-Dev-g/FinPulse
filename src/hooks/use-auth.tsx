@@ -31,7 +31,7 @@ interface AuthContextType {
   setSubscriptionStatus: (status: SubscriptionStatus) => void;
   formatCurrency: (amount: number) => string;
   refreshProfile: () => Promise<void>;
-  getTruelayerAuthUrl: () => string;
+  getTruelayerAuthUrl: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -46,7 +46,7 @@ const AuthContext = createContext<AuthContextType>({
   setSubscriptionStatus: () => {},
   formatCurrency: (amount: number) => String(amount),
   refreshProfile: async () => {},
-  getTruelayerAuthUrl: () => '',
+  getTruelayerAuthUrl: () => {},
 });
 
 const unprotectedRoutes = [
@@ -186,53 +186,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [currency]
   );
   
-  const getTruelayerAuthUrl = useCallback(() => {
-    const getUrl = async () => {
-        const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
-        const redirectUri = new URL('/dashboard/link-account', window.location.origin).toString();
+  const getTruelayerAuthUrl = useCallback(async () => {
+    const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
+    const redirectUri = process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI;
 
-        if (!clientId) {
-            throw new Error("Truelayer client ID is not configured.");
-        }
+    if (!clientId) {
+        throw new Error("Truelayer client ID is not configured.");
+    }
+    if (!redirectUri) {
+        throw new Error("Truelayer redirect URI is not configured.");
+    }
 
-        const codeVerifier = generateCodeVerifier();
-        sessionStorage.setItem('truelayer_code_verifier', codeVerifier);
-        const codeChallenge = await generateCodeChallenge(codeVerifier);
+    const codeVerifier = generateCodeVerifier();
+    sessionStorage.setItem('truelayer_code_verifier', codeVerifier);
+    const codeChallenge = await generateCodeChallenge(codeVerifier);
 
-        const scopes = [
-            "info",
-            "accounts",
-            "balance",
-            "cards",
-            "transactions",
-            "direct_debits",
-            "standing_orders",
-            "offline_access"
-        ].join(" ");
+    const scopes = [
+        "info",
+        "accounts",
+        "balance",
+        "cards",
+        "transactions",
+        "direct_debits",
+        "standing_orders",
+        "offline_access"
+    ].join(" ");
 
-        const providers = "uk-cs-mock uk-ob-all uk-oauth-all";
+    const providers = "uk-cs-mock uk-ob-all uk-oauth-all";
 
-        const params = new URLSearchParams({
-            response_type: 'code',
-            client_id: clientId,
-            scope: scopes,
-            redirect_uri: redirectUri,
-            providers: providers,
-            code_challenge: codeChallenge,
-            code_challenge_method: 'S256',
-        });
-        
-        return `https://auth.truelayer-sandbox.com/?${params.toString()}`;
-    };
+    const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: clientId,
+        scope: scopes,
+        redirect_uri: redirectUri,
+        providers: providers,
+        code_challenge: codeChallenge,
+        code_challenge_method: 'S256',
+    });
     
-    // This is a synchronous function for simplicity in the calling component.
-    // The actual URL generation logic is async, so we'll just initiate it.
-    // The router.push in the calling component handles the async nature.
-    getUrl().then(url => router.push(url));
-    
-    // This function will now have a side effect of navigation.
-    // We return an empty string because the caller expects a string, but navigation is handled internally.
-    return '';
+    router.push(`https://auth.truelayer-sandbox.com/?${params.toString()}`);
   }, [router]);
 
   return (
