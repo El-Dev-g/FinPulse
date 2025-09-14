@@ -12,7 +12,16 @@ import {
   CardTitle,
   CardFooter
 } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Landmark, Loader, AlertCircle, CheckCircle, MoreVertical } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import type { Account } from '@/lib/types';
@@ -48,6 +57,8 @@ function LinkAccountPageContent() {
     const [step, setStep] = useState<'initial' | 'connecting' | 'success'>('initial');
     const [connectedAccounts, setConnectedAccounts] = useState<Account[]>([]);
     const [newlyFetchedAccounts, setNewlyFetchedAccounts] = useState<any[]>([]);
+    const [isConfirming, setIsConfirming] = useState(false);
+
 
     const { getTruelayerAuthUrl, formatCurrency } = useAuth();
     const router = useRouter();
@@ -192,80 +203,97 @@ function LinkAccountPageContent() {
     }
 
     return (
-        <div className="space-y-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Connected Accounts</CardTitle>
-                    <CardDescription>These are the accounts currently syncing with FinPulse.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {connectedAccounts.length > 0 ? (
-                        <div className="space-y-4">
-                            {connectedAccounts.map(account => (
-                                <div key={account.id} className="flex items-center justify-between rounded-lg border p-4">
-                                    <div className="flex items-center gap-4">
-                                        <Landmark className="h-6 w-6 text-muted-foreground" />
-                                        <div>
-                                            <p className="font-semibold">{account.name} (...{account.last4})</p>
-                                            <p className="text-sm text-muted-foreground">{account.type} - {formatCurrency(account.balance || 0)}</p>
+        <>
+            <div className="space-y-8">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Connected Accounts</CardTitle>
+                        <CardDescription>These are the accounts currently syncing with FinPulse.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {connectedAccounts.length > 0 ? (
+                            <div className="space-y-4">
+                                {connectedAccounts.map(account => (
+                                    <div key={account.id} className="flex items-center justify-between rounded-lg border p-4">
+                                        <div className="flex items-center gap-4">
+                                            <Landmark className="h-6 w-6 text-muted-foreground" />
+                                            <div>
+                                                <p className="font-semibold">{account.name} (...{account.last4})</p>
+                                                <p className="text-sm text-muted-foreground">{account.type} - {formatCurrency(account.balance || 0)}</p>
+                                            </div>
                                         </div>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon">
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent>
+                                                <DropdownMenuItem>Refresh</DropdownMenuItem>
+                                                <DropdownMenuItem className="text-destructive">Unlink</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </div>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon">
-                                                <MoreVertical className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent>
-                                            <DropdownMenuItem>Refresh</DropdownMenuItem>
-                                            <DropdownMenuItem className="text-destructive">Unlink</DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                         <div className="text-center py-10">
-                            <p className="text-muted-foreground">No accounts connected yet.</p>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-10">
+                                <p className="text-muted-foreground">No accounts connected yet.</p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Connect a New Account</CardTitle>
-                    <CardDescription>
-                       Select your continent to begin the secure connection process. We use trusted partners like Plaid, Truelayer, and Mono to protect your data.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <Label>Select Your Continent</Label>
-                        <Select>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Choose a continent..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="africa">Africa</SelectItem>
-                                <SelectItem value="antarctica">Antarctica</SelectItem>
-                                <SelectItem value="asia">Asia</SelectItem>
-                                <SelectItem value="europe">Europe</SelectItem>
-                                <SelectItem value="north-america">North America</SelectItem>
-                                <SelectItem value="south-america">South America</SelectItem>
-                                <SelectItem value="australia-oceania">Australia/Oceania</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </CardContent>
-                <CardFooter>
-                    <Button onClick={handleConnect} disabled={loading} className="w-full">
-                        {loading ? <Loader className="mr-2 animate-spin" /> : <Landmark className="mr-2" />}
-                        Connect Securely
-                    </Button>
-                </CardFooter>
-            </Card>
-        </div>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Connect a New Account</CardTitle>
+                        <CardDescription>
+                        Select your continent to begin the secure connection process. We use trusted partners like Plaid, Truelayer, and Mono to protect your data.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Select Your Continent</Label>
+                            <Select>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Choose a continent..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="africa">Africa</SelectItem>
+                                    <SelectItem value="antarctica">Antarctica</SelectItem>
+                                    <SelectItem value="asia">Asia</SelectItem>
+                                    <SelectItem value="europe">Europe</SelectItem>
+                                    <SelectItem value="north-america">North America</SelectItem>
+                                    <SelectItem value="south-america">South America</SelectItem>
+                                    <SelectItem value="australia-oceania">Australia/Oceania</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                        <Button onClick={() => setIsConfirming(true)} disabled={loading} className="w-full">
+                            {loading ? <Loader className="mr-2 animate-spin" /> : <Landmark className="mr-2" />}
+                            Connect Securely
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </div>
+            <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Secure Bank Connection</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            You are about to be redirected to a secure portal provided by our trusted partner, Truelayer, to connect your bank account.
+                            FinPulse will never see or store your bank login credentials.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConnect}>Accept & Continue</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     );
 }
 
