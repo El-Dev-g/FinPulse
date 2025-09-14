@@ -48,6 +48,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 
 const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
@@ -74,6 +75,7 @@ function LinkAccountPageContent() {
     const { getTruelayerAuthUrl, formatCurrency } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { toast } = useToast();
     
     const partner = useMemo(() => {
         return continentPartners[selectedContinent] || { name: 'our secure partner', termsUrl: '#', privacyUrl: '#' };
@@ -155,6 +157,17 @@ function LinkAccountPageContent() {
 
 
     const handleConnect = () => {
+        setIsConfirming(false); // Close the dialog first
+        
+        if (selectedContinent !== 'europe') {
+            toast({
+                title: "Integration Not Available",
+                description: `Connecting with banks in ${partner.name} is not yet supported. This is a prototype feature currently limited to European banks.`,
+                variant: 'default',
+            });
+            return;
+        }
+
         setLoading(true);
         try {
             const authUrl = getTruelayerAuthUrl();
