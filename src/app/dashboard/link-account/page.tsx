@@ -15,8 +15,6 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Landmark, Loader, AlertCircle, CheckCircle, Banknote, CreditCard, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { addTransaction } from '@/lib/db';
-import { useToast } from '@/hooks/use-toast';
 import type { Account } from '@/lib/types';
 import { sha256 } from 'js-sha256';
 import {
@@ -40,7 +38,6 @@ function LinkAccountPageContent() {
     const { getTruelayerAuthUrl, formatCurrency } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { toast } = useToast();
 
     // Exchange the authorization code for an access token
     useEffect(() => {
