@@ -91,8 +91,9 @@ export function LinkAccountStep({ onSkip }: LinkAccountStepProps) {
         }
         
         // This will redirect the main window to the Truelayer login page.
-        // After auth, Truelayer will redirect back to our callback URL.
-        // The callback logic should then redirect to the dashboard.
+        // The API callback will redirect back to the /link-account page to finalize.
+        // For the onboarding flow, this means the user will land there instead of the dashboard.
+        // This is an acceptable trade-off for the prototype.
         window.top!.location.href = authUrl;
     } else {
         toast({
