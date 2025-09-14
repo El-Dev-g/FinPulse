@@ -7,6 +7,7 @@ import { z } from 'zod';
 const exchangeCodeRequestSchema = z.object({
   code: z.string(),
   code_verifier: z.string(),
+  redirect_uri: z.string().url(),
 });
 
 // This is a new route handler for the client to call from the final redirect page.
@@ -20,13 +21,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body', details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { code, code_verifier } = parsed.data;
+  const { code, code_verifier, redirect_uri } = parsed.data;
 
   const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
   const clientSecret = process.env.TRUELAYER_CLIENT_SECRET;
-  const redirect_uri = process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI;
 
-  if (!clientId || !clientSecret || !redirect_uri) {
+  if (!clientId || !clientSecret) {
     return NextResponse.json({ error: 'Truelayer client credentials are not configured on the server.' }, { status: 500 });
   }
 
