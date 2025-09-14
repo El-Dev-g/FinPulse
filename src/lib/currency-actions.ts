@@ -21,8 +21,7 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
     return { convertedAmount: amount };
   }
 
-  // Use the environment variable if available, otherwise use the provided fallback key.
-  const accessKey = process.env.EXCHANGERATE_API_KEY || "e6bfac69f7921744c90ae5232156c465";
+  const accessKey = process.env.EXCHANGERATE_API_KEY;
 
   if (!accessKey) {
     throw new Error("Currency conversion service is not configured. Missing API key.");
