@@ -16,7 +16,6 @@ import { app } from "@/lib/firebase";
 import { useRouter, usePathname } from "next/navigation";
 import { getUserProfile, updateUserProfile } from "@/lib/db";
 import type { UserProfile } from "@/lib/types";
-import { sha256 } from 'js-sha256';
 
 type SubscriptionStatus = 'free' | 'active' | 'past_due';
 
@@ -66,26 +65,6 @@ const unprotectedRoutes = [
 
 const isOnboardingRoute = (pathname: string) =>
   pathname.startsWith("/welcome/onboarding");
-
-// PKCE Helper Functions
-function generateCodeVerifier() {
-  const randomBytes = new Uint8Array(32);
-  window.crypto.getRandomValues(randomBytes);
-  return base64URLEncode(randomBytes);
-}
-
-function base64URLEncode(str: Uint8Array): string {
-  return btoa(String.fromCharCode.apply(null, Array.from(str)))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
-}
-
-async function generateCodeChallenge(verifier: string) {
-    const hash = sha256.arrayBuffer(verifier);
-    return base64URLEncode(new Uint8Array(hash));
-}
-
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -197,12 +176,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!redirectUri) {
         throw new Error("Truelayer redirect URI is not configured.");
     }
-
-    const codeVerifier = generateCodeVerifier();
-    // Store in a cookie to be read by the server-side API route
-    document.cookie = `truelayer_code_verifier=${codeVerifier}; path=/; max-age=300; SameSite=Lax`;
-    const codeChallenge = await generateCodeChallenge(codeVerifier);
-
+    
     const scopes = [
         "info",
         "accounts",
@@ -222,11 +196,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         scope: scopes,
         redirect_uri: redirectUri,
         providers: providers,
-        code_challenge: codeChallenge,
-        code_challenge_method: 'S256',
     });
     
-    router.push(`https://auth.truelayer-sandbox.com/?${params.toString()}`);
+    window.location.href = `https://auth.truelayer-sandbox.com/?${params.toString()}`;
   }, [router]);
 
   return (
