@@ -20,69 +20,6 @@ import { sha256 } from 'js-sha256';
 
 type SubscriptionStatus = 'free' | 'active' | 'past_due';
 
-// --- PKCE Helper Functions ---
-function base64URLEncode(str: Buffer) {
-    return str.toString('base64')
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=/g, '');
-}
-
-function generateCodeVerifier() {
-    const randomBytes = new Uint8Array(32);
-    if (typeof window !== 'undefined') {
-        window.crypto.getRandomValues(randomBytes);
-    }
-    return base64URLEncode(Buffer.from(randomBytes));
-}
-
-function generateCodeChallenge(verifier: string) {
-    const hash = sha256.digest(verifier);
-    return base64URLEncode(Buffer.from(hash));
-}
-
-
-// Generates the Truelayer Auth URL using PKCE flow
-const getTruelayerAuthUrl = () => {
-    if (typeof window === 'undefined') {
-        return "";
-    }
-    
-    const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
-    const redirectUri = process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI;
-
-    if (!clientId || !redirectUri) {
-        console.error("Truelayer client ID or redirect URI is not set in environment variables.");
-        return "";
-    }
-    
-    const scopes = "info accounts balance cards transactions direct_debits standing_orders offline_access";
-    const providers = "uk-cs-mock uk-ob-all uk-oauth-all";
-
-    // --- PKCE ---
-    const codeVerifier = generateCodeVerifier();
-    const codeChallenge = generateCodeChallenge(codeVerifier);
-    try {
-        sessionStorage.setItem('truelayer_code_verifier', codeVerifier);
-    } catch (e) {
-        console.error("Could not write to sessionStorage.");
-    }
-    // --- End PKCE ---
-    
-    const params = new URLSearchParams({
-        response_type: "code",
-        client_id: clientId,
-        redirect_uri: redirectUri,
-        scope: scopes,
-        providers: providers,
-        code_challenge: codeChallenge,
-        code_challenge_method: 'S256',
-    });
-
-    return `https://auth.truelayer-sandbox.com/?${params.toString()}`;
-}
-
-
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
@@ -95,7 +32,6 @@ interface AuthContextType {
   setSubscriptionStatus: (status: SubscriptionStatus) => void;
   formatCurrency: (amount: number) => string;
   refreshProfile: () => Promise<void>;
-  getTruelayerAuthUrl: () => string; // Expose the function directly
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -110,7 +46,6 @@ const AuthContext = createContext<AuthContextType>({
   setSubscriptionStatus: () => {},
   formatCurrency: (amount: number) => String(amount),
   refreshProfile: async () => {},
-  getTruelayerAuthUrl: () => "",
 });
 
 const unprotectedRoutes = [
@@ -232,7 +167,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, checked, currency, isPro, subscriptionStatus, setCurrency, setSubscriptionStatus: handleSetSubscriptionStatus, formatCurrency, refreshProfile, getTruelayerAuthUrl }}
+      value={{ user, profile, loading, checked, currency, isPro, subscriptionStatus, setCurrency, setSubscriptionStatus: handleSetSubscriptionStatus, formatCurrency, refreshProfile }}
     >
       {children}
     </AuthContext.Provider>

@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ArrowRightLeft, Download, Plus, Loader, Lock, RefreshCcw, MoreHorizontal, Trash2 } from "lucide-react";
+import { ArrowRightLeft, Download, Plus, Loader, Lock, MoreHorizontal, Trash2 } from "lucide-react";
 import { AddTransactionDialog } from "@/components/dashboard/add-transaction-dialog";
 import type { ClientTransaction, Transaction } from "@/lib/types";
 import { addTransaction, getTransactions, deleteTransaction } from "@/lib/db";
@@ -58,12 +58,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 
-const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<ClientTransaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isSyncing, setIsSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isAddTransactionDialogOpen, setIsAddTransactionDialogOpen] =
@@ -110,39 +108,6 @@ export default function TransactionsPage() {
     await addTransaction(newTransaction);
     fetchTransactions(); // Refetch
   };
-
-  const handleSyncTransactions = async () => {
-    const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
-    const accounts = storedAccounts ? JSON.parse(storedAccounts) : [];
-    
-    if (accounts.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "No Bank Connected",
-        description: "Please connect a bank account before syncing.",
-      });
-      return;
-    }
-    
-    setIsSyncing(true);
-    try {
-      await fetchTransactions();
-      toast({
-        title: "Sync Complete!",
-        description: "Your transactions are up-to-date.",
-      });
-    } catch (error) {
-      console.error("Error syncing transactions:", error);
-      toast({
-        variant: "destructive",
-        title: "Sync Failed",
-        description: "Could not refresh your transactions at this time.",
-      });
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
 
   const handleExportCSV = () => {
     if (!isPro) return; // This should be redundant due to the button being disabled, but it's good practice.
@@ -208,10 +173,6 @@ export default function TransactionsPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleSyncTransactions} disabled={isSyncing || loading}>
-                {isSyncing ? <Loader className="mr-2 animate-spin" /> : <RefreshCcw className="mr-2" />}
-                Sync
-            </Button>
             <Button onClick={() => setIsAddTransactionDialogOpen(true)}>
               <Plus className="mr-2" />
               Add Manually
