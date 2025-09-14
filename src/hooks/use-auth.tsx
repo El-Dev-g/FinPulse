@@ -16,7 +16,6 @@ import { app } from "@/lib/firebase";
 import { useRouter, usePathname } from "next/navigation";
 import { getUserProfile, updateUserProfile } from "@/lib/db";
 import type { UserProfile } from "@/lib/types";
-import { sha256 } from 'js-sha256';
 
 type SubscriptionStatus = 'free' | 'active' | 'past_due';
 
@@ -80,14 +79,6 @@ function base64URLEncode(str: Uint8Array): string {
     .replace(/\//g, '_')
     .replace(/=/g, '');
 }
-
-async function generateCodeChallenge(verifier: string) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(verifier);
-  const digest = await window.crypto.subtle.digest('SHA-256', data);
-  return base64URLEncode(new Uint8Array(digest));
-}
-
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -191,8 +182,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   
   const getTruelayerAuthUrl = useCallback(() => {
     const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
-    
-    // This is the critical fix: always redirect back to the client-side page.
     const redirectUri = new URL('/dashboard/link-account', window.location.origin).toString();
 
     if (!clientId) {
@@ -201,8 +190,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     const codeVerifier = generateCodeVerifier();
     sessionStorage.setItem('truelayer_code_verifier', codeVerifier);
-
-    const codeChallenge = sha256(codeVerifier);
 
     const scopes = [
         "info",
@@ -223,8 +210,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         scope: scopes,
         redirect_uri: redirectUri,
         providers: providers,
-        code_challenge: codeChallenge,
-        code_challenge_method: 'S256',
+        code_challenge: codeVerifier,
+        code_challenge_method: 'plain',
     });
 
     return `https://auth.truelayer-sandbox.com/?${params.toString()}`;
