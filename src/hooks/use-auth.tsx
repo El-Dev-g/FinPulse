@@ -21,7 +21,7 @@ type SubscriptionStatus = 'free' | 'active' | 'past_due';
 
 // Generates the Truelayer Auth URL
 const getTruelayerAuthUrl = () => {
-    // This function must run on the client-side to access sessionStorage
+    // This function must run on the client-side to access sessionStorage and window.location
     if (typeof window === 'undefined') {
         return "";
     }
@@ -32,6 +32,7 @@ const getTruelayerAuthUrl = () => {
         return "";
     }
     
+    // Use the actual window origin to construct the redirect URI
     const redirectUri = `${window.location.origin}/api/truelayer/callback`;
     const scopes = "info accounts balance cards transactions direct_debits standing_orders offline_access";
     const providers = "uk-cs-mock uk-ob-all uk-oauth-all";
@@ -64,11 +65,11 @@ interface AuthContextType {
   currency: string;
   isPro: boolean;
   subscriptionStatus: SubscriptionStatus;
-  truelayerAuthUrl: string;
   setCurrency: (currency: string) => void;
   setSubscriptionStatus: (status: SubscriptionStatus) => void;
   formatCurrency: (amount: number) => string;
   refreshProfile: () => Promise<void>;
+  getTruelayerAuthUrl: () => string; // Expose the function directly
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -79,11 +80,11 @@ const AuthContext = createContext<AuthContextType>({
   currency: "USD",
   isPro: false,
   subscriptionStatus: 'free',
-  truelayerAuthUrl: "",
   setCurrency: () => {},
   setSubscriptionStatus: () => {},
   formatCurrency: (amount: number) => String(amount),
   refreshProfile: async () => {},
+  getTruelayerAuthUrl: () => "",
 });
 
 const unprotectedRoutes = [
@@ -117,14 +118,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const isPro = useMemo(() => subscriptionStatus === 'active' || subscriptionStatus === 'past_due', [subscriptionStatus]);
   
-  // The URL is now generated on demand when needed, not memoized.
-  const truelayerAuthUrl = useMemo(() => {
-    if (typeof window !== 'undefined') {
-        return getTruelayerAuthUrl();
-    }
-    return "";
-  }, []);
-
   const refreshProfile = useCallback(async () => {
     if (auth.currentUser) {
         await auth.currentUser.reload();
@@ -213,7 +206,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, checked, currency, isPro, subscriptionStatus, truelayerAuthUrl, setCurrency, setSubscriptionStatus: handleSetSubscriptionStatus, formatCurrency, refreshProfile }}
+      value={{ user, profile, loading, checked, currency, isPro, subscriptionStatus, setCurrency, setSubscriptionStatus: handleSetSubscriptionStatus, formatCurrency, refreshProfile, getTruelayerAuthUrl }}
     >
       {children}
     </AuthContext.Provider>
@@ -225,9 +218,5 @@ export const useAuth = () => {
     if (context === undefined) {
         throw new Error("useAuth must be used within an AuthProvider");
     }
-    return {
-        ...context,
-        // Expose a function to get a fresh URL with a new state every time
-        getTruelayerAuthUrl
-    };
+    return context;
 };
