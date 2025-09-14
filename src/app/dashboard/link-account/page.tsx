@@ -1,7 +1,8 @@
+
 // src/app/dashboard/link-account/page.tsx
 "use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Landmark, Loader, CheckCircle, MoreVertical } from 'lucide-react';
+import { Landmark, Loader, CheckCircle, MoreVertical, Info } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import type { Account } from '@/lib/types';
 import {
@@ -51,6 +52,16 @@ import { Label } from '@/components/ui/label';
 
 const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
 
+const continentPartners: { [key: string]: { name: string, termsUrl: string, privacyUrl: string } } = {
+    'europe': { name: 'Truelayer', termsUrl: '#', privacyUrl: '#' },
+    'north-america': { name: 'Plaid', termsUrl: '#', privacyUrl: '#' },
+    'africa': { name: 'Mono', termsUrl: '#', privacyUrl: '#' },
+    'asia': { name: 'Akahu', termsUrl: '#', privacyUrl: '#' },
+    'south-america': { name: 'Belvo', termsUrl: '#', privacyUrl: '#' },
+    'australia-oceania': { name: 'Basiq', termsUrl: '#', privacyUrl: '#' },
+    'antarctica': { name: 'PenguinPay', termsUrl: '#', privacyUrl: '#' }, // Just for fun
+};
+
 function LinkAccountPageContent() {
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState<'initial' | 'connecting' | 'success'>('initial');
@@ -63,6 +74,10 @@ function LinkAccountPageContent() {
     const { getTruelayerAuthUrl, formatCurrency } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
+    
+    const partner = useMemo(() => {
+        return continentPartners[selectedContinent] || { name: 'our secure partner', termsUrl: '#', privacyUrl: '#' };
+    }, [selectedContinent]);
 
     // Fetch existing accounts from local storage on mount
     useEffect(() => {
@@ -249,7 +264,7 @@ function LinkAccountPageContent() {
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label>Select Your Continent</Label>
-                            <Select onValueChange={setSelectedContinent}>
+                            <Select value={selectedContinent} onValueChange={setSelectedContinent}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Choose a continent..." />
                                 </SelectTrigger>
@@ -276,15 +291,32 @@ function LinkAccountPageContent() {
             <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Secure Bank Connection</AlertDialogTitle>
+                        <AlertDialogTitle>Connect your account</AlertDialogTitle>
                         <AlertDialogDescription>
-                            You are about to be redirected to a secure portal provided by our trusted partner, Truelayer, to connect your bank account.
-                            FinPulse will never see or store your bank login credentials.
+                            FinPulse's data partner, <strong>{partner.name}</strong>, would like 90-day access to your account details.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
+                    <div className="text-sm space-y-4">
+                       <div className="flex items-start gap-2 p-3 bg-muted rounded-md">
+                           <Info className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
+                           <div>
+                            <h4 className="font-semibold text-foreground">What details am I sharing?</h4>
+                            <p className="text-muted-foreground">To provide its services, {partner.name} needs permission to access the following information and share it with FinPulse:</p>
+                           </div>
+                       </div>
+                        <ul className="list-disc list-inside pl-4 space-y-1 text-muted-foreground">
+                            <li>Full name</li>
+                            <li>Account number and sort code</li>
+                            <li>Balance</li>
+                            <li>Transactions, direct debits and standing orders</li>
+                        </ul>
+                        <p className="text-xs text-muted-foreground text-center pt-2">
+                            By tapping 'Allow', you agree to {partner.name}'s <a href={partner.termsUrl} target="_blank" rel="noopener noreferrer" className="underline">Terms of Service</a> and <a href={partner.privacyUrl} target="_blank" rel="noopener noreferrer" className="underline">Privacy Policy</a>.
+                        </p>
+                    </div>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConnect}>Accept & Continue</AlertDialogAction>
+                        <AlertDialogAction onClick={handleConnect}>Allow</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
