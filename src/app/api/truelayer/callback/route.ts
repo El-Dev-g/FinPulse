@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { saveTruelayerToken } from '@/lib/db';
 
 const exchangeCodeRequestSchema = z.object({
   code: z.string(),
@@ -53,12 +54,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to exchange code for token.', details: responseData }, { status: response.status });
     }
 
-    // IMPORTANT: In a real app, you would save the access_token and refresh_token
-    // securely, associated with the user's account.
-    console.log("Successfully exchanged code for token:", responseData);
+    // IMPORTANT: Save the token to Firestore
+    await saveTruelayerToken({
+        access_token: responseData.access_token,
+        refresh_token: responseData.refresh_token,
+        expires_in: responseData.expires_in,
+        token_type: responseData.token_type,
+        scope: responseData.scope,
+    });
+    
+    console.log("Successfully exchanged code for token and saved to database.");
     
     // For this prototype, we'll just confirm success. The client will handle showing the account selection.
-    return NextResponse.json({ success: true, message: "Token exchanged successfully." });
+    return NextResponse.json({ success: true, message: "Token exchanged and saved successfully." });
 
   } catch (error: any) {
     console.error("Token exchange failed:", error);
