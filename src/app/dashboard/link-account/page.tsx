@@ -22,7 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Landmark, Loader, AlertCircle, CheckCircle, MoreVertical } from 'lucide-react';
+import { Landmark, Loader, CheckCircle, MoreVertical } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import type { Account } from '@/lib/types';
 import {
@@ -53,11 +53,11 @@ const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
 
 function LinkAccountPageContent() {
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [step, setStep] = useState<'initial' | 'connecting' | 'success'>('initial');
     const [connectedAccounts, setConnectedAccounts] = useState<Account[]>([]);
     const [newlyFetchedAccounts, setNewlyFetchedAccounts] = useState<any[]>([]);
     const [isConfirming, setIsConfirming] = useState(false);
+    const [selectedContinent, setSelectedContinent] = useState<string>('');
 
 
     const { getTruelayerAuthUrl, formatCurrency } = useAuth();
@@ -80,11 +80,9 @@ function LinkAccountPageContent() {
     useEffect(() => {
         const exchangeToken = async (code: string) => {
             setStep('connecting');
-            setError(null);
             
             const codeVerifier = sessionStorage.getItem('truelayer_code_verifier');
             if (!codeVerifier) {
-                //setError('Security check failed: code verifier not found. Please try connecting again.');
                 setStep('initial');
                 return;
             }
@@ -124,7 +122,6 @@ function LinkAccountPageContent() {
                 setStep('success');
 
             } catch (err: any) {
-                //setError(err.message);
                 setStep('initial');
             }
         };
@@ -133,7 +130,7 @@ function LinkAccountPageContent() {
         const authError = searchParams.get('error');
 
         if (authError) {
-             //setError(`Connection failed: ${authError.replace(/_/g, ' ')}. Please try again.`);
+             // setError(`Connection failed: ${authError.replace(/_/g, ' ')}. Please try again.`);
         } else if (code) {
             exchangeToken(code);
             // Clean the URL
@@ -144,12 +141,10 @@ function LinkAccountPageContent() {
 
     const handleConnect = () => {
         setLoading(true);
-        setError(null);
         try {
             const authUrl = getTruelayerAuthUrl();
             router.push(authUrl);
         } catch (e: any) {
-            //setError(e.message);
             setLoading(false);
         }
     };
@@ -254,7 +249,7 @@ function LinkAccountPageContent() {
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label>Select Your Continent</Label>
-                            <Select>
+                            <Select onValueChange={setSelectedContinent}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Choose a continent..." />
                                 </SelectTrigger>
@@ -271,7 +266,7 @@ function LinkAccountPageContent() {
                         </div>
                     </CardContent>
                     <CardFooter>
-                        <Button onClick={() => setIsConfirming(true)} disabled={loading} className="w-full">
+                        <Button onClick={() => setIsConfirming(true)} disabled={loading || !selectedContinent} className="w-full">
                             {loading ? <Loader className="mr-2 animate-spin" /> : <Landmark className="mr-2" />}
                             Connect Securely
                         </Button>
