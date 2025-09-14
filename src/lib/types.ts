@@ -27,6 +27,7 @@ export interface Transaction {
   date: string; // ISO string
   category: string;
   goalId?: string;
+  projectId?: string;
   createdAt: any; // Firestore timestamp
   source: 'manual' | string; // 'manual' or a linked account ID
   bankTransactionId?: string; // Unique ID from the bank/aggregator
@@ -96,6 +97,21 @@ export interface Goal {
 }
 
 export interface ClientGoal extends Omit<Goal, 'createdAt'>{
+  createdAt: Date;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  description: string;
+  targetAmount: number;
+  currentAmount: number;
+  imageUrl: string;
+  status: 'active' | 'completed' | 'archived';
+  createdAt: any; // Firestore timestamp
+}
+
+export interface ClientProject extends Omit<Project, 'createdAt'>{
   createdAt: Date;
 }
 
