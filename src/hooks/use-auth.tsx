@@ -31,7 +31,7 @@ interface AuthContextType {
   setSubscriptionStatus: (status: SubscriptionStatus) => void;
   formatCurrency: (amount: number) => string;
   refreshProfile: () => Promise<void>;
-  getTruelayerAuthUrl: () => Promise<void>;
+  getTruelayerAuthUrl: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -46,7 +46,7 @@ const AuthContext = createContext<AuthContextType>({
   setSubscriptionStatus: () => {},
   formatCurrency: (amount: number) => String(amount),
   refreshProfile: async () => {},
-  getTruelayerAuthUrl: async () => {},
+  getTruelayerAuthUrl: () => {},
 });
 
 const unprotectedRoutes = [
@@ -166,7 +166,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [currency]
   );
   
-  const getTruelayerAuthUrl = useCallback(async () => {
+  const getTruelayerAuthUrl = useCallback(() => {
     const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
     const redirectUri = process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI;
 
@@ -199,7 +199,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
     
     window.location.href = `https://auth.truelayer-sandbox.com/?${params.toString()}`;
-  }, [router]);
+  }, []);
 
   return (
     <AuthContext.Provider
