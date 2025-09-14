@@ -1,4 +1,3 @@
-
 // src/hooks/use-auth.tsx
 "use client";
 
@@ -16,6 +15,7 @@ import { app } from "@/lib/firebase";
 import { useRouter, usePathname } from "next/navigation";
 import { getUserProfile, updateUserProfile } from "@/lib/db";
 import type { UserProfile } from "@/lib/types";
+import { sha256 } from 'js-sha256';
 
 type SubscriptionStatus = 'free' | 'active' | 'past_due';
 
@@ -79,6 +79,12 @@ function base64URLEncode(str: Uint8Array): string {
     .replace(/\//g, '_')
     .replace(/=/g, '');
 }
+
+async function generateCodeChallenge(verifier: string) {
+    const hash = sha256.arrayBuffer(verifier);
+    return base64URLEncode(new Uint8Array(hash));
+}
+
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -181,41 +187,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
   
   const getTruelayerAuthUrl = useCallback(() => {
-    const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
-    const redirectUri = new URL('/dashboard/link-account', window.location.origin).toString();
+    const getUrl = async () => {
+        const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
+        const redirectUri = new URL('/dashboard/link-account', window.location.origin).toString();
 
-    if (!clientId) {
-        throw new Error("Truelayer client ID is not configured.");
-    }
+        if (!clientId) {
+            throw new Error("Truelayer client ID is not configured.");
+        }
+
+        const codeVerifier = generateCodeVerifier();
+        sessionStorage.setItem('truelayer_code_verifier', codeVerifier);
+        const codeChallenge = await generateCodeChallenge(codeVerifier);
+
+        const scopes = [
+            "info",
+            "accounts",
+            "balance",
+            "cards",
+            "transactions",
+            "direct_debits",
+            "standing_orders",
+            "offline_access"
+        ].join(" ");
+
+        const providers = "uk-cs-mock uk-ob-all uk-oauth-all";
+
+        const params = new URLSearchParams({
+            response_type: 'code',
+            client_id: clientId,
+            scope: scopes,
+            redirect_uri: redirectUri,
+            providers: providers,
+            code_challenge: codeChallenge,
+            code_challenge_method: 'S256',
+        });
+        
+        return `https://auth.truelayer-sandbox.com/?${params.toString()}`;
+    };
     
-    const codeVerifier = generateCodeVerifier();
-    sessionStorage.setItem('truelayer_code_verifier', codeVerifier);
-
-    const scopes = [
-        "info",
-        "accounts",
-        "balance",
-        "cards",
-        "transactions",
-        "direct_debits",
-        "standing_orders",
-        "offline_access"
-    ].join(" ");
-
-    const providers = "uk-cs-mock uk-ob-all uk-oauth-all";
-
-    const params = new URLSearchParams({
-        response_type: 'code',
-        client_id: clientId,
-        scope: scopes,
-        redirect_uri: redirectUri,
-        providers: providers,
-        code_challenge: codeVerifier,
-        code_challenge_method: 'plain',
-    });
-
-    return `https://auth.truelayer-sandbox.com/?${params.toString()}`;
-  }, []);
+    // This is a synchronous function for simplicity in the calling component.
+    // The actual URL generation logic is async, so we'll just initiate it.
+    // The router.push in the calling component handles the async nature.
+    getUrl().then(url => router.push(url));
+    
+    // This function will now have a side effect of navigation.
+    // We return an empty string because the caller expects a string, but navigation is handled internally.
+    return '';
+  }, [router]);
 
   return (
     <AuthContext.Provider

@@ -1,4 +1,3 @@
-
 // src/app/dashboard/link-account/page.tsx
 "use client";
 
@@ -175,8 +174,8 @@ function LinkAccountPageContent() {
 
         setLoading(true);
         try {
-            const authUrl = getTruelayerAuthUrl();
-            router.push(authUrl);
+            getTruelayerAuthUrl();
+            // The getTruelayerAuthUrl now handles the redirection
         } catch (e: any) {
             console.error("Failed to get Truelayer auth URL:", e);
             setLoading(false);
