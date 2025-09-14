@@ -1,3 +1,4 @@
+
 // src/hooks/use-auth.tsx
 "use client";
 
@@ -31,7 +32,7 @@ interface AuthContextType {
   setSubscriptionStatus: (status: SubscriptionStatus) => void;
   formatCurrency: (amount: number) => string;
   refreshProfile: () => Promise<void>;
-  getTruelayerAuthUrl: () => void;
+  getTruelayerAuthUrl: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -46,7 +47,7 @@ const AuthContext = createContext<AuthContextType>({
   setSubscriptionStatus: () => {},
   formatCurrency: (amount: number) => String(amount),
   refreshProfile: async () => {},
-  getTruelayerAuthUrl: () => {},
+  getTruelayerAuthUrl: async () => {},
 });
 
 const unprotectedRoutes = [
@@ -198,7 +199,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const codeVerifier = generateCodeVerifier();
-    sessionStorage.setItem('truelayer_code_verifier', codeVerifier);
+    // Store in a cookie to be read by the server-side API route
+    document.cookie = `truelayer_code_verifier=${codeVerifier}; path=/; max-age=300; SameSite=Lax`;
     const codeChallenge = await generateCodeChallenge(codeVerifier);
 
     const scopes = [

@@ -92,72 +92,41 @@ function LinkAccountPageContent() {
         }
     }, []);
 
-    // Exchange the authorization code for an access token
+    // Handle the redirect back from the API route
     useEffect(() => {
-        const exchangeToken = async (code: string) => {
+        const success = searchParams.get('success');
+        const error = searchParams.get('error');
+        
+        if (success === 'true') {
             setStep('connecting');
+            // Simulate fetching accounts and store them in local storage
+            const fetchedAccounts = [
+                { id: 'acc1', name: 'Monzo', bank: 'Monzo Bank', bankUserName: 'John Doe', last4: '1234', accountNumber: '**** **** **** 1234', type: 'Checking', balance: 2548.75, syncStatus: 'synced' },
+                { id: 'acc2', name: 'Revolut', bank: 'Revolut Ltd', bankUserName: 'John Doe', last4: '5678', accountNumber: '**** **** **** 5678', type: 'Savings', balance: 10500.00, syncStatus: 'synced' },
+                { id: 'acc3', name: 'AMEX', bank: 'American Express', bankUserName: 'John Doe', last4: '0005', accountNumber: '**** ****** *0005', type: 'Credit Card', balance: -450.23, syncStatus: 'pending' },
+            ];
             
-            const codeVerifier = sessionStorage.getItem('truelayer_code_verifier');
-            if (!codeVerifier) {
-                console.error("Security check failed: code verifier not found in session storage. Please try connecting again.");
-                setStep('initial');
-                return;
-            }
+            const existingAccounts = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+            const updatedAccounts = [...existingAccounts, ...fetchedAccounts];
+            const uniqueAccounts = Array.from(new Set(updatedAccounts.map(a => a.id))).map(id => updatedAccounts.find(a => a.id === id));
+            
+            setNewlyFetchedAccounts(fetchedAccounts);
+            setConnectedAccounts(uniqueAccounts as Account[]);
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(uniqueAccounts));
 
-            try {
-                // Ensure redirect URI matches what was used to get the code
-                const redirectUri = process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI!;
-
-                const response = await fetch('/api/truelayer/callback', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        code, 
-                        code_verifier: codeVerifier,
-                        redirect_uri: redirectUri,
-                    }),
-                });
-
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to exchange code for token.');
-                }
-                
-                // Simulate fetching accounts and store them in local storage
-                const fetchedAccounts = [
-                    { id: 'acc1', name: 'Monzo', bank: 'Monzo Bank', bankUserName: 'John Doe', last4: '1234', accountNumber: '**** **** **** 1234', type: 'Checking', balance: 2548.75, syncStatus: 'synced' },
-                    { id: 'acc2', name: 'Revolut', bank: 'Revolut Ltd', bankUserName: 'John Doe', last4: '5678', accountNumber: '**** **** **** 5678', type: 'Savings', balance: 10500.00, syncStatus: 'synced' },
-                    { id: 'acc3', name: 'AMEX', bank: 'American Express', bankUserName: 'John Doe', last4: '0005', accountNumber: '**** ****** *0005', type: 'Credit Card', balance: -450.23, syncStatus: 'pending' },
-                ];
-                
-                const existingAccounts = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
-                const updatedAccounts = [...existingAccounts, ...fetchedAccounts];
-                const uniqueAccounts = Array.from(new Set(updatedAccounts.map(a => a.id))).map(id => updatedAccounts.find(a => a.id === id));
-                
-                setNewlyFetchedAccounts(fetchedAccounts);
-                setConnectedAccounts(uniqueAccounts as Account[]);
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(uniqueAccounts));
-
-                setStep('success');
-
-            } catch (err: any) {
-                console.error("Token exchange failed:", err);
-                setStep('initial');
-            }
-        };
-
-        const code = searchParams.get('code');
-        const authError = searchParams.get('error');
-
-        if (authError) {
-             console.error(`Connection failed: ${authError.replace(/_/g, ' ')}. Please try again.`);
-        } else if (code) {
-            exchangeToken(code);
-            // Clean the URL
+            setStep('success');
+             // Clean the URL
+            router.replace('/dashboard/link-account', { scroll: false });
+        } else if (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Connection Failed',
+                description: `Something went wrong: ${error}. Please try again.`
+            });
             router.replace('/dashboard/link-account', { scroll: false });
         }
-    }, [searchParams, router]);
+
+    }, [searchParams, router, toast]);
 
 
     const handleConnect = async () => {
@@ -178,6 +147,11 @@ function LinkAccountPageContent() {
             // The getTruelayerAuthUrl now handles the redirection
         } catch (e: any) {
             console.error("Failed to get Truelayer auth URL:", e);
+            toast({
+                variant: 'destructive',
+                title: 'Connection Error',
+                description: e.message || 'Could not start the connection process.'
+            })
             setLoading(false);
         }
     };

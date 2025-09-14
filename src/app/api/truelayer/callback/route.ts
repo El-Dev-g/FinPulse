@@ -11,24 +11,39 @@ const exchangeCodeRequestSchema = z.object({
   redirect_uri: z.string().url(),
 });
 
-// This is a new route handler for the client to call from the final redirect page.
-// It securely handles the token exchange on the server-side.
-export async function POST(request: NextRequest) {
-  const body = await request.json();
 
-  const parsed = exchangeCodeRequestSchema.safeParse(body);
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const code = searchParams.get('code');
+  const scope = searchParams.get('scope');
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid request body', details: parsed.error.flatten() }, { status: 400 });
+  if (!code) {
+    const error = searchParams.get('error');
+    const errorDescription = searchParams.get('error_description');
+    console.error(`Truelayer auth error: ${error} - ${errorDescription}`);
+    // Redirect to the linking page with an error message
+    const redirectUrl = new URL('/dashboard/link-account', request.url);
+    redirectUrl.searchParams.set('error', error || 'unknown_error');
+    return NextResponse.redirect(redirectUrl);
   }
 
-  const { code, code_verifier, redirect_uri } = parsed.data;
+  const codeVerifier = request.cookies.get('truelayer_code_verifier')?.value;
+  if (!codeVerifier) {
+    console.error("Security check failed: code verifier not found in cookies.");
+    const redirectUrl = new URL('/dashboard/link-account', request.url);
+    redirectUrl.searchParams.set('error', 'verifier_missing');
+    return NextResponse.redirect(redirectUrl);
+  }
 
   const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
   const clientSecret = process.env.TRUELAYER_CLIENT_SECRET;
+  const redirectUri = process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI;
 
-  if (!clientId || !clientSecret) {
-    return NextResponse.json({ error: 'Truelayer client credentials are not configured on the server.' }, { status: 500 });
+  if (!clientId || !clientSecret || !redirectUri) {
+    console.error('Truelayer client credentials are not configured on the server.');
+    const redirectUrl = new URL('/dashboard/link-account', request.url);
+    redirectUrl.searchParams.set('error', 'server_config_error');
+    return NextResponse.redirect(redirectUrl);
   }
 
   try {
@@ -41,9 +56,9 @@ export async function POST(request: NextRequest) {
         grant_type: 'authorization_code',
         client_id: clientId,
         client_secret: clientSecret,
-        redirect_uri: redirect_uri,
+        redirect_uri: redirectUri,
         code: code,
-        code_verifier: code_verifier,
+        code_verifier: codeVerifier,
       }),
     });
 
@@ -51,10 +66,9 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       console.error("Truelayer API Error:", responseData);
-      return NextResponse.json({ error: 'Failed to exchange code for token.', details: responseData }, { status: response.status });
+      throw new Error(responseData.error_description || 'Failed to exchange code for token.');
     }
 
-    // IMPORTANT: Save the token to Firestore
     await saveTruelayerToken({
         access_token: responseData.access_token,
         refresh_token: responseData.refresh_token,
@@ -64,12 +78,21 @@ export async function POST(request: NextRequest) {
     });
     
     console.log("Successfully exchanged code for token and saved to database.");
+
+    // Redirect to the account linking page with a success indicator
+    const redirectUrl = new URL('/dashboard/link-account', request.url);
+    redirectUrl.searchParams.set('success', 'true');
     
-    // For this prototype, we'll just confirm success. The client will handle showing the account selection.
-    return NextResponse.json({ success: true, message: "Token exchanged and saved successfully." });
+    const responseRedirect = NextResponse.redirect(redirectUrl);
+    // Clear the cookie after use
+    responseRedirect.cookies.delete('truelayer_code_verifier');
+
+    return responseRedirect;
 
   } catch (error: any) {
     console.error("Token exchange failed:", error);
-    return NextResponse.json({ error: 'An internal server error occurred during token exchange.' }, { status: 500 });
+    const redirectUrl = new URL('/dashboard/link-account', request.url);
+    redirectUrl.searchParams.set('error', 'token_exchange_failed');
+    return NextResponse.redirect(redirectUrl);
   }
 }
