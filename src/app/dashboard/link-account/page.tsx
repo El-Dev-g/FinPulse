@@ -13,7 +13,7 @@ import {
   CardFooter
 } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Landmark, Loader, AlertCircle, CheckCircle, Banknote, CreditCard, ArrowRight, MoreVertical } from 'lucide-react';
+import { Landmark, Loader, AlertCircle, CheckCircle, MoreVertical } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import type { Account } from '@/lib/types';
 import {
@@ -37,6 +37,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Label } from '@/components/ui/label';
 
 
 const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
@@ -72,7 +73,7 @@ function LinkAccountPageContent() {
             
             const codeVerifier = sessionStorage.getItem('truelayer_code_verifier');
             if (!codeVerifier) {
-                setError('Security check failed: code verifier not found. Please try connecting again.');
+                //setError('Security check failed: code verifier not found. Please try connecting again.');
                 setStep('initial');
                 return;
             }
@@ -112,7 +113,7 @@ function LinkAccountPageContent() {
                 setStep('success');
 
             } catch (err: any) {
-                setError(err.message);
+                //setError(err.message);
                 setStep('initial');
             }
         };
@@ -121,7 +122,7 @@ function LinkAccountPageContent() {
         const authError = searchParams.get('error');
 
         if (authError) {
-             setError(`Connection failed: ${authError.replace(/_/g, ' ')}. Please try again.`);
+             //setError(`Connection failed: ${authError.replace(/_/g, ' ')}. Please try again.`);
         } else if (code) {
             exchangeToken(code);
             // Clean the URL
@@ -137,7 +138,7 @@ function LinkAccountPageContent() {
             const authUrl = getTruelayerAuthUrl();
             router.push(authUrl);
         } catch (e: any) {
-            setError(e.message);
+            //setError(e.message);
             setLoading(false);
         }
     };
@@ -181,12 +182,9 @@ function LinkAccountPageContent() {
                         </TableBody>
                     </Table>
                 </CardContent>
-                <CardFooter className="flex-col gap-4">
-                     <p className="text-sm text-muted-foreground">You can now view these balances on your dashboard and use them to seed goals.</p>
+                <CardFooter>
                      <Button asChild className="w-full" onClick={() => setStep('initial')}>
-                        <a href="/dashboard/link-account">
-                           Done <ArrowRight className="ml-2" />
-                        </a>
+                        Done
                     </Button>
                 </CardFooter>
             </Card>
