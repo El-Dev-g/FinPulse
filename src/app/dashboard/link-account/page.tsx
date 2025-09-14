@@ -13,10 +13,9 @@ import {
   CardFooter
 } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Landmark, Loader, AlertCircle, CheckCircle, Banknote, CreditCard, ArrowRight } from 'lucide-react';
+import { Landmark, Loader, AlertCircle, CheckCircle, Banknote, CreditCard, ArrowRight, MoreVertical } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import type { Account } from '@/lib/types';
-import { sha256 } from 'js-sha256';
 import {
   Table,
   TableBody,
@@ -25,6 +24,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 
 const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
@@ -32,12 +44,25 @@ const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
 function LinkAccountPageContent() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [step, setStep] = useState<'initial' | 'connecting' | 'selecting' | 'success'>('initial');
-    const [accounts, setAccounts] = useState<any[]>([]);
+    const [step, setStep] = useState<'initial' | 'connecting' | 'success'>('initial');
+    const [connectedAccounts, setConnectedAccounts] = useState<Account[]>([]);
+    const [newlyFetchedAccounts, setNewlyFetchedAccounts] = useState<any[]>([]);
 
     const { getTruelayerAuthUrl, formatCurrency } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
+
+    // Fetch existing accounts from local storage on mount
+    useEffect(() => {
+        try {
+            const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (storedAccounts) {
+                setConnectedAccounts(JSON.parse(storedAccounts));
+            }
+        } catch (error) {
+            console.error("Could not access localStorage:", error);
+        }
+    }, []);
 
     // Exchange the authorization code for an access token
     useEffect(() => {
@@ -69,15 +94,20 @@ function LinkAccountPageContent() {
                     throw new Error(data.error || 'Failed to exchange code for token.');
                 }
                 
-                // For this prototype, we'll simulate fetching accounts and store them in local storage
+                // Simulate fetching accounts and store them in local storage
                 const fetchedAccounts = [
-                    { id: sha256('acc1'), name: 'Monzo', bank: 'Monzo Bank', bankUserName: 'John Doe', last4: '1234', accountNumber: '**** **** **** 1234', type: 'Checking', balance: 2548.75, syncStatus: 'synced' },
-                    { id: sha256('acc2'), name: 'Revolut', bank: 'Revolut Ltd', bankUserName: 'John Doe', last4: '5678', accountNumber: '**** **** **** 5678', type: 'Savings', balance: 10500.00, syncStatus: 'synced' },
-                    { id: sha256('acc3'), name: 'AMEX', bank: 'American Express', bankUserName: 'John Doe', last4: '0005', accountNumber: '**** ****** *0005', type: 'Credit Card', balance: -450.23, syncStatus: 'pending' },
+                    { id: 'acc1', name: 'Monzo', bank: 'Monzo Bank', bankUserName: 'John Doe', last4: '1234', accountNumber: '**** **** **** 1234', type: 'Checking', balance: 2548.75, syncStatus: 'synced' },
+                    { id: 'acc2', name: 'Revolut', bank: 'Revolut Ltd', bankUserName: 'John Doe', last4: '5678', accountNumber: '**** **** **** 5678', type: 'Savings', balance: 10500.00, syncStatus: 'synced' },
+                    { id: 'acc3', name: 'AMEX', bank: 'American Express', bankUserName: 'John Doe', last4: '0005', accountNumber: '**** ****** *0005', type: 'Credit Card', balance: -450.23, syncStatus: 'pending' },
                 ];
-
-                setAccounts(fetchedAccounts);
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(fetchedAccounts));
+                
+                const existingAccounts = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+                const updatedAccounts = [...existingAccounts, ...fetchedAccounts];
+                const uniqueAccounts = Array.from(new Set(updatedAccounts.map(a => a.id))).map(id => updatedAccounts.find(a => a.id === id));
+                
+                setNewlyFetchedAccounts(fetchedAccounts);
+                setConnectedAccounts(uniqueAccounts);
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(uniqueAccounts));
 
                 setStep('success');
 
@@ -114,18 +144,10 @@ function LinkAccountPageContent() {
     
     if (step === 'connecting') {
         return (
-            <Card className="text-center">
-                <CardHeader>
-                    <CardTitle>Connecting to Your Bank</CardTitle>
-                    <CardDescription>Please wait while we securely connect your account. You may be redirected.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex flex-col items-center justify-center h-40">
-                        <Loader className="h-12 w-12 animate-spin text-primary" />
-                        <p className="mt-4 text-muted-foreground">Finalizing secure connection...</p>
-                    </div>
-                </CardContent>
-            </Card>
+            <div className="flex flex-col items-center justify-center h-64">
+                <Loader className="h-12 w-12 animate-spin text-primary" />
+                <p className="mt-4 text-muted-foreground">Finalizing secure connection...</p>
+            </div>
         )
     }
     
@@ -137,7 +159,7 @@ function LinkAccountPageContent() {
                         <CheckCircle className="h-8 w-8 text-green-500" />
                         Connection Successful!
                     </CardTitle>
-                    <CardDescription>We've successfully linked your accounts. Here is a summary of what we've found.</CardDescription>
+                    <CardDescription>We've successfully linked your accounts. You can view and manage them below.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -149,7 +171,7 @@ function LinkAccountPageContent() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {accounts.map(acc => (
+                            {newlyFetchedAccounts.map(acc => (
                                 <TableRow key={acc.id}>
                                     <TableCell className="font-medium text-left">{acc.name} (...{acc.last4})</TableCell>
                                     <TableCell>{acc.type}</TableCell>
@@ -161,9 +183,9 @@ function LinkAccountPageContent() {
                 </CardContent>
                 <CardFooter className="flex-col gap-4">
                      <p className="text-sm text-muted-foreground">You can now view these balances on your dashboard and use them to seed goals.</p>
-                     <Button asChild className="w-full">
-                        <a href="/dashboard">
-                            Go to Dashboard <ArrowRight className="ml-2" />
+                     <Button asChild className="w-full" onClick={() => setStep('initial')}>
+                        <a href="/dashboard/link-account">
+                           Done <ArrowRight className="ml-2" />
                         </a>
                     </Button>
                 </CardFooter>
@@ -172,43 +194,76 @@ function LinkAccountPageContent() {
     }
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Connect Your Bank Account</CardTitle>
-                <CardDescription>
-                    Securely link your bank account using Truelayer to automatically sync your transactions and balances.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                {error && (
-                    <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Connection Failed</AlertTitle>
-                        <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                )}
-                <div className="flex items-start p-4 bg-muted/50 rounded-lg border">
-                    <Banknote className="h-10 w-10 text-muted-foreground mr-4" />
-                    <div>
-                        <h4 className="font-semibold">View all your accounts in one place</h4>
-                        <p className="text-sm text-muted-foreground">Get a complete picture of your finances by connecting checking, savings, and credit card accounts.</p>
+        <div className="space-y-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Connected Accounts</CardTitle>
+                    <CardDescription>These are the accounts currently syncing with FinPulse.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {connectedAccounts.length > 0 ? (
+                        <div className="space-y-4">
+                            {connectedAccounts.map(account => (
+                                <div key={account.id} className="flex items-center justify-between rounded-lg border p-4">
+                                    <div className="flex items-center gap-4">
+                                        <Landmark className="h-6 w-6 text-muted-foreground" />
+                                        <div>
+                                            <p className="font-semibold">{account.name} (...{account.last4})</p>
+                                            <p className="text-sm text-muted-foreground">{account.type} - {formatCurrency(account.balance || 0)}</p>
+                                        </div>
+                                    </div>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon">
+                                                <MoreVertical className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            <DropdownMenuItem>Refresh</DropdownMenuItem>
+                                            <DropdownMenuItem className="text-destructive">Unlink</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                         <div className="text-center py-10">
+                            <p className="text-muted-foreground">No accounts connected yet.</p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Connect a New Account</CardTitle>
+                    <CardDescription>
+                       Select your country to begin the secure connection process. We use trusted partners like Plaid, Truelayer, and Mono to protect your data.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label>Select Your Country</Label>
+                        <Select>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Choose a country..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="gb">United Kingdom</SelectItem>
+                                <SelectItem value="us" disabled>United States (Coming Soon)</SelectItem>
+                                <SelectItem value="ca" disabled>Canada (Coming Soon)</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
-                </div>
-                 <div className="flex items-start p-4 bg-muted/50 rounded-lg border">
-                    <CreditCard className="h-10 w-10 text-muted-foreground mr-4" />
-                    <div>
-                        <h4 className="font-semibold">Automatic Transaction Syncing</h4>
-                        <p className="text-sm text-muted-foreground">Your latest transactions will be automatically imported and categorized, saving you manual entry time.</p>
-                    </div>
-                </div>
-            </CardContent>
-            <CardFooter>
-                <Button onClick={handleConnect} disabled={loading} className="w-full">
-                    {loading ? <Loader className="mr-2 animate-spin" /> : <Landmark className="mr-2" />}
-                    Connect Securely with Truelayer
-                </Button>
-            </CardFooter>
-        </Card>
+                </CardContent>
+                <CardFooter>
+                    <Button onClick={handleConnect} disabled={loading} className="w-full">
+                        {loading ? <Loader className="mr-2 animate-spin" /> : <Landmark className="mr-2" />}
+                        Connect Securely
+                    </Button>
+                </CardFooter>
+            </Card>
+        </div>
     );
 }
 
@@ -223,7 +278,7 @@ export default function LinkAccountPage() {
                         Link Bank Account
                     </h2>
                     <p className="text-muted-foreground">
-                        Connect your accounts to get a complete financial overview.
+                        Securely connect your accounts to automatically sync transactions.
                     </p>
                 </div>
                 <Suspense fallback={<Loader className="animate-spin" />}>
