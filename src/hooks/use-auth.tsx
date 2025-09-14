@@ -1,4 +1,3 @@
-
 // src/hooks/use-auth.tsx
 "use client";
 
@@ -32,6 +31,7 @@ interface AuthContextType {
   setSubscriptionStatus: (status: SubscriptionStatus) => void;
   formatCurrency: (amount: number) => string;
   refreshProfile: () => Promise<void>;
+  getTruelayerAuthUrl: () => string;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -46,6 +46,7 @@ const AuthContext = createContext<AuthContextType>({
   setSubscriptionStatus: () => {},
   formatCurrency: (amount: number) => String(amount),
   refreshProfile: async () => {},
+  getTruelayerAuthUrl: () => '',
 });
 
 const unprotectedRoutes = [
@@ -64,6 +65,28 @@ const unprotectedRoutes = [
 
 const isOnboardingRoute = (pathname: string) =>
   pathname.startsWith("/welcome/onboarding");
+
+// PKCE Helper Functions
+function generateCodeVerifier() {
+  const randomBytes = new Uint8Array(32);
+  window.crypto.getRandomValues(randomBytes);
+  return base64URLEncode(randomBytes);
+}
+
+function base64URLEncode(str: Uint8Array): string {
+  return btoa(String.fromCharCode.apply(null, Array.from(str)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+}
+
+async function generateCodeChallenge(verifier: string) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const digest = await window.crypto.subtle.digest('SHA-256', data);
+  return base64URLEncode(new Uint8Array(digest));
+}
+
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -164,10 +187,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     },
     [currency]
   );
+  
+  const getTruelayerAuthUrl = useCallback(() => {
+    const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
+    const redirectUri = process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI;
+
+    if (!clientId || !redirectUri) {
+        throw new Error("Truelayer client credentials are not configured.");
+    }
+    
+    const codeVerifier = generateCodeVerifier();
+    sessionStorage.setItem('truelayer_code_verifier', codeVerifier);
+
+    const codeChallenge = sha256(codeVerifier);
+
+    const scopes = [
+        "info",
+        "accounts",
+        "balance",
+        "cards",
+        "transactions",
+        "direct_debits",
+        "standing_orders",
+        "offline_access"
+    ].join(" ");
+
+    const providers = "uk-cs-mock uk-ob-all uk-oauth-all";
+
+    const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: clientId,
+        scope: scopes,
+        redirect_uri: redirectUri,
+        providers: providers,
+        code_challenge: codeChallenge,
+        code_challenge_method: 'S256',
+    });
+
+    return `https://auth.truelayer-sandbox.com/?${params.toString()}`;
+  }, []);
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, checked, currency, isPro, subscriptionStatus, setCurrency, setSubscriptionStatus: handleSetSubscriptionStatus, formatCurrency, refreshProfile }}
+      value={{ user, profile, loading, checked, currency, isPro, subscriptionStatus, setCurrency, setSubscriptionStatus: handleSetSubscriptionStatus, formatCurrency, refreshProfile, getTruelayerAuthUrl }}
     >
       {children}
     </AuthContext.Provider>

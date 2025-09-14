@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Loader, Rocket, Award, ShieldCheck } from "lucide-react";
+import { Loader, Rocket, Award, ShieldCheck, Landmark } from "lucide-react";
 import { AddGoalDialog } from "@/components/dashboard/add-goal-dialog";
 import { AddBudgetDialog } from "@/components/dashboard/add-budget-dialog";
 import { addGoal, addBudget } from "@/lib/db";
@@ -22,7 +22,7 @@ import type { Goal, Budget } from "@/lib/types";
 import Link from "next/link";
 
 export default function OnboardingPage() {
-  const { user } = useAuth();
+  const { user, getTruelayerAuthUrl } = useAuth();
   const router = useRouter();
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
@@ -89,6 +89,11 @@ export default function OnboardingPage() {
     completeOnboarding();
   }
 
+  const handleConnectBank = () => {
+    const authUrl = getTruelayerAuthUrl();
+    router.push(authUrl);
+  };
+
 
   if (!user) {
     return (
@@ -135,8 +140,31 @@ export default function OnboardingPage() {
                 </CardContent>
               </Card>
             </CarouselItem>
+
+            {/* Step 2: Link Bank */}
+            <CarouselItem>
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center p-12 text-center space-y-4">
+                  <Landmark className="w-16 h-16 text-primary" />
+                  <h2 className="text-3xl font-headline font-bold">
+                    Connect Your Bank Account
+                  </h2>
+                  <p className="text-muted-foreground max-w-md">
+                    Get a complete view of your finances by securely linking your bank account. This enables automatic transaction syncing.
+                  </p>
+                  <div className="flex gap-4">
+                    <Button onClick={handleConnectBank}>
+                      Connect Securely
+                    </Button>
+                     <Button variant="outline" onClick={() => api?.scrollNext()}>
+                      Skip for now
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </CarouselItem>
             
-            {/* Step 2: Set Goal */}
+            {/* Step 3: Set Goal */}
             <CarouselItem>
               <Card>
                 <CardContent className="flex flex-col items-center justify-center p-12 text-center space-y-4">
@@ -160,7 +188,7 @@ export default function OnboardingPage() {
               </Card>
             </CarouselItem>
 
-            {/* Step 3: Set Budget */}
+            {/* Step 4: Set Budget */}
             <CarouselItem>
               <Card>
                 <CardContent className="flex flex-col items-center justify-center p-12 text-center space-y-4">
@@ -184,7 +212,7 @@ export default function OnboardingPage() {
               </Card>
             </CarouselItem>
 
-             {/* Step 4: Finish */}
+             {/* Step 5: Finish */}
             <CarouselItem>
               <Card>
                 <CardContent className="flex flex-col items-center justify-center p-12 text-center space-y-4">

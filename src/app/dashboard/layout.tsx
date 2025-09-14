@@ -82,6 +82,7 @@ const aiSubMenu = [
 ];
 
 const settingsNavItems = [
+  { href: "/dashboard/link-account", icon: Landmark, label: "Link Account" },
   { href: "/dashboard/billing", icon: FileText, label: "Billing" },
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
