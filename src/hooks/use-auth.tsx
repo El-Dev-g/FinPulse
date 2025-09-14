@@ -49,13 +49,12 @@ const getTruelayerAuthUrl = () => {
     }
     
     const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
-    if (!clientId) {
-        console.error("Truelayer client ID is not set in environment variables.");
+    const redirectUri = process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI;
+
+    if (!clientId || !redirectUri) {
+        console.error("Truelayer client ID or redirect URI is not set in environment variables.");
         return "";
     }
-    
-    // The redirect URI must match what's configured in the Truelayer console.
-    const redirectUri = `${window.location.origin}/api/truelayer/callback`;
     
     const scopes = "info accounts balance cards transactions direct_debits standing_orders offline_access";
     const providers = "uk-cs-mock uk-ob-all uk-oauth-all";
