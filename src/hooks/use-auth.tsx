@@ -16,34 +16,59 @@ import { app } from "@/lib/firebase";
 import { useRouter, usePathname } from "next/navigation";
 import { getUserProfile, updateUserProfile } from "@/lib/db";
 import type { UserProfile } from "@/lib/types";
+import { sha256 } from 'js-sha256';
 
 type SubscriptionStatus = 'free' | 'active' | 'past_due';
 
-// Generates the Truelayer Auth URL
+// --- PKCE Helper Functions ---
+function base64URLEncode(str: Buffer) {
+    return str.toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
+}
+
+function generateCodeVerifier() {
+    const randomBytes = new Uint8Array(32);
+    if (typeof window !== 'undefined') {
+        window.crypto.getRandomValues(randomBytes);
+    }
+    return base64URLEncode(Buffer.from(randomBytes));
+}
+
+function generateCodeChallenge(verifier: string) {
+    const hash = sha256.digest(verifier);
+    return base64URLEncode(Buffer.from(hash));
+}
+
+
+// Generates the Truelayer Auth URL using PKCE flow
 const getTruelayerAuthUrl = () => {
-    // This function must run on the client-side to access sessionStorage
     if (typeof window === 'undefined') {
         return "";
     }
     
     const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
-    const redirectUri = process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI;
-
-    if (!clientId || !redirectUri) {
-        console.error("Truelayer environment variables (NEXT_PUBLIC_TRUELAYER_CLIENT_ID or NEXT_PUBLIC_TRUELAYER_REDIRECT_URI) are not set.");
+    if (!clientId) {
+        console.error("Truelayer client ID is not set in environment variables.");
         return "";
     }
+    
+    // The redirect URI must match what's configured in the Truelayer console.
+    const redirectUri = `${window.location.origin}/api/truelayer/callback`;
     
     const scopes = "info accounts balance cards transactions direct_debits standing_orders offline_access";
     const providers = "uk-cs-mock uk-ob-all uk-oauth-all";
 
-    // Generate a random state for CSRF protection and store it
-    const state = Math.random().toString(36).substring(2);
+    // --- PKCE ---
+    const codeVerifier = generateCodeVerifier();
+    const codeChallenge = generateCodeChallenge(codeVerifier);
     try {
-        sessionStorage.setItem('truelayer_state', state);
+        sessionStorage.setItem('truelayer_code_verifier', codeVerifier);
     } catch (e) {
         console.error("Could not write to sessionStorage.");
     }
+    // --- End PKCE ---
     
     const params = new URLSearchParams({
         response_type: "code",
@@ -51,8 +76,10 @@ const getTruelayerAuthUrl = () => {
         redirect_uri: redirectUri,
         scope: scopes,
         providers: providers,
-        state: state, // Include the state parameter
+        code_challenge: codeChallenge,
+        code_challenge_method: 'S256',
     });
+
     return `https://auth.truelayer-sandbox.com/?${params.toString()}`;
 }
 

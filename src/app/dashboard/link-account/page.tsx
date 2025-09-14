@@ -2,7 +2,7 @@
 // src/app/dashboard/link-account/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   Card,
@@ -130,39 +130,68 @@ function LinkAccountPageContent() {
         }
     }, []);
     
-    // Handle the result of the OAuth flow from the bank
+    // This effect handles the OAuth callback from Truelayer.
     useEffect(() => {
-        const success = searchParams.get('success');
+        const code = searchParams.get('code');
         const error = searchParams.get('error');
-        const state = searchParams.get('state');
 
-        const savedState = sessionStorage.getItem('truelayer_state');
-        
-        if (success === 'truelayer_connected') {
-            if (state && savedState && state === savedState) {
-                console.log("Truelayer state validation successful.");
-                setIsSelectAccountsDialogOpen(true);
-            } else {
-                console.error("Truelayer state mismatch or missing state. Potential CSRF attack.");
-                setConnectionError("Security check failed. Please try connecting again.");
-            }
-            // Clean up state and URL
-            sessionStorage.removeItem('truelayer_state');
-            router.replace('/dashboard/link-account');
-        }
-
+        // If there's an error param in the URL, display it.
         if (error) {
-            setConnectionError(`There was an error connecting your account. (${error})`);
+            const errorMessage = `There was an error connecting your account. (${error})`;
+            setConnectionError(errorMessage);
             toast({
                 variant: 'destructive',
                 title: "Connection Failed",
-                description: `There was an error connecting your account. (${error})`,
+                description: errorMessage,
             });
-             // Clean up state and URL
-            sessionStorage.removeItem('truelayer_state');
-            router.replace('/dashboard/link-account');
+            // Clean up URL
+            router.replace('/dashboard/link-account', { scroll: false });
+            return;
         }
-    }, [searchParams, toast, router]);
+
+        // If there's a code, exchange it for a token.
+        if (code) {
+            const exchangeToken = async () => {
+                const codeVerifier = sessionStorage.getItem('truelayer_code_verifier');
+                if (!codeVerifier) {
+                    setConnectionError("Security check failed: code verifier not found. Please try connecting again.");
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/truelayer/callback', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            code: code,
+                            code_verifier: codeVerifier,
+                            redirect_uri: `${window.location.origin}/api/truelayer/callback`
+                        }),
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Token exchange failed.');
+                    }
+                    
+                    // On success, show the account selection dialog.
+                    setIsSelectAccountsDialogOpen(true);
+
+                } catch (e: any) {
+                    setConnectionError(`There was an error connecting your account. (${e.message})`);
+                    console.error("Token exchange failed:", e);
+                } finally {
+                    // Clean up sessionStorage and URL
+                    sessionStorage.removeItem('truelayer_code_verifier');
+                    router.replace('/dashboard/link-account', { scroll: false });
+                }
+            };
+            exchangeToken();
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams, router, toast]);
+
 
 
     const handleConnect = () => {
@@ -193,8 +222,8 @@ function LinkAccountPageContent() {
                 });
                 return;
             }
-            
-            window.top!.location.href = authUrl;
+            // Redirect the user to the Truelayer consent screen.
+            window.location.href = authUrl;
         } else {
             toast({
                 title: "Permissions Granted",

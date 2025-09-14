@@ -2,56 +2,79 @@
 // src/app/api/truelayer/callback/route.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { z } from 'zod';
 
-// This function simulates the server-side exchange of an authorization code for an access token.
-async function exchangeCodeForToken(code: string) {
-    const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
-    const clientSecret = process.env.TRUELAYER_CLIENT_SECRET;
-    const redirectUri = process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI;
+const exchangeCodeRequestSchema = z.object({
+  code: z.string(),
+  code_verifier: z.string(),
+  redirect_uri: z.string().url(),
+});
 
-    console.log("---- Attempting to Exchange Code for Token ----");
-    console.log("Client ID:", clientId ? "Found" : "Missing");
-    console.log("Client Secret:", clientSecret ? "Found" : "Missing");
-    console.log("Redirect URI for token exchange:", redirectUri);
-    console.log("Authorization Code:", code);
-    
-    if (!clientId || !clientSecret || !redirectUri) {
-        throw new Error("Truelayer client credentials or redirect URI are not configured on the server.");
-    }
-    
-    // In a real application, you would use `fetch` to make this POST request.
+// This is a new route handler for the client to call from the final redirect page.
+// It securely handles the token exchange on the server-side.
+export async function POST(request: NextRequest) {
+  const body = await request.json();
+
+  const parsed = exchangeCodeRequestSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid request body', details: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const { code, code_verifier, redirect_uri } = parsed.data;
+
+  const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
+  const clientSecret = process.env.TRUELAYER_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    return NextResponse.json({ error: 'Truelayer client credentials are not configured on the server.' }, { status: 500 });
+  }
+
+  try {
     const response = await fetch('https://auth.truelayer-sandbox.com/connect/token', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-            grant_type: 'authorization_code',
-            client_id: clientId,
-            client_secret: clientSecret,
-            redirect_uri: redirectUri,
-            code: code,
-        }),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirect_uri,
+        code: code,
+        code_verifier: code_verifier,
+      }),
     });
-    
+
+    const responseData = await response.json();
+
     if (!response.ok) {
-        const errorBody = await response.text();
-        console.error("Truelayer API Error:", errorBody);
-        throw new Error(`Failed to exchange code for token. Status: ${response.status}`);
+      console.error("Truelayer API Error:", responseData);
+      return NextResponse.json({ error: 'Failed to exchange code for token.', details: responseData }, { status: response.status });
     }
 
-    const data = await response.json();
-    console.log("Successfully exchanged code for token:", data);
-    return data.access_token;
+    // IMPORTANT: In a real app, you would save the access_token and refresh_token
+    // securely, associated with the user's account.
+    console.log("Successfully exchanged code for token:", responseData);
+    
+    // For this prototype, we'll just confirm success. The client will handle showing the account selection.
+    return NextResponse.json({ success: true, message: "Token exchanged successfully." });
+
+  } catch (error: any) {
+    console.error("Token exchange failed:", error);
+    return NextResponse.json({ error: 'An internal server error occurred during token exchange.' }, { status: 500 });
+  }
 }
 
+
+// This GET handler now just redirects the user to the final page with the code.
+// The sensitive token exchange is handled by the POST request from that final page.
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const error = searchParams.get('error');
-  const receivedState = searchParams.get('state');
 
-  const finalRedirectUrl = new URL('/dashboard/link-account', process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin);
+  const finalRedirectUrl = new URL('/dashboard/link-account', request.nextUrl.origin);
 
   if (error) {
     console.error("Truelayer callback error:", error);
@@ -65,28 +88,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(finalRedirectUrl);
   }
 
-  // A production app would store the state in a server-side session or a signed cookie to validate.
-  // For this prototype, we'll just check that it exists.
-  if (!receivedState) {
-    console.warn("Missing state parameter from Truelayer. Skipping validation for prototype.");
-    // In a real app, you would probably want to abort here.
-    // finalRedirectUrl.searchParams.set('error', 'truelayer_missing_state');
-    // return NextResponse.redirect(finalRedirectUrl);
-  }
-
-
-  try {
-    const accessToken = await exchangeCodeForToken(code);
-    
-    console.log(`Successfully obtained access token: ${accessToken}`);
-    
-    finalRedirectUrl.searchParams.set('success', 'truelayer_connected');
-    finalRedirectUrl.searchParams.set('state', receivedState); // Pass state back for client-side validation
-    return NextResponse.redirect(finalRedirectUrl);
-
-  } catch (e: any) {
-    console.error("Token exchange failed:", e.message);
-    finalRedirectUrl.searchParams.set('error', 'truelayer_token_exchange_failed');
-    return NextResponse.redirect(finalRedirectUrl);
-  }
+  // Pass the code to the front-end to be exchanged securely via the POST handler.
+  finalRedirectUrl.searchParams.set('code', code);
+  return NextResponse.redirect(finalRedirectUrl);
 }
