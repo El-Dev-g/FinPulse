@@ -4,9 +4,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // This function simulates the server-side exchange of an authorization code for an access token.
-async function exchangeCodeForToken(code: string, redirectUri: string) {
+async function exchangeCodeForToken(code: string) {
     const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
     const clientSecret = process.env.TRUELAYER_CLIENT_SECRET;
+    const redirectUri = process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI;
 
     console.log("---- Attempting to Exchange Code for Token ----");
     console.log("Client ID:", clientId ? "Found" : "Missing");
@@ -14,12 +15,8 @@ async function exchangeCodeForToken(code: string, redirectUri: string) {
     console.log("Redirect URI for token exchange:", redirectUri);
     console.log("Authorization Code:", code);
     
-    if (!clientId || !clientSecret) {
-        throw new Error("Truelayer client credentials are not configured on the server.");
-    }
-    
-    if (!redirectUri) {
-         throw new Error("Redirect URI is not configured for Truelayer callback.");
+    if (!clientId || !clientSecret || !redirectUri) {
+        throw new Error("Truelayer client credentials or redirect URI are not configured on the server.");
     }
     
     // In a real application, you would use `fetch` to make this POST request.
@@ -49,13 +46,12 @@ async function exchangeCodeForToken(code: string, redirectUri: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const error = searchParams.get('error');
   const receivedState = searchParams.get('state');
 
-  // This is the final page the user will land on.
-  const finalRedirectUrl = new URL('/dashboard/link-account', process.env.NEXT_PUBLIC_BASE_URL || origin);
+  const finalRedirectUrl = new URL('/dashboard/link-account', process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin);
 
   if (error) {
     console.error("Truelayer callback error:", error);
@@ -69,28 +65,23 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(finalRedirectUrl);
   }
 
-  // Although we can't access sessionStorage on the server, the state parameter is primarily a client-side
-  // CSRF protection mechanism. For this prototype, we'll proceed, but a production app would
-  // use a server-side session or a signed cookie to validate the state.
+  // A production app would store the state in a server-side session or a signed cookie to validate.
+  // For this prototype, we'll just check that it exists.
   if (!receivedState) {
     console.warn("Missing state parameter from Truelayer. Skipping validation for prototype.");
+    // In a real app, you would probably want to abort here.
+    // finalRedirectUrl.searchParams.set('error', 'truelayer_missing_state');
+    // return NextResponse.redirect(finalRedirectUrl);
   }
 
 
   try {
-    // The redirect_uri must EXACTLY match the one used to initiate the flow.
-    // We construct it again here based on the request's origin.
-    const redirectUriForToken = `${origin}/api/truelayer/callback`;
+    const accessToken = await exchangeCodeForToken(code);
     
-    const accessToken = await exchangeCodeForToken(code, redirectUriForToken);
+    console.log(`Successfully obtained access token: ${accessToken}`);
     
-    // In a real app, you would now save this `accessToken` securely to your database,
-    // associated with the currently logged-in user. You would then use it to fetch
-    // the user's account information and transactions.
-    console.log(`Successfully obtained mock access token: ${accessToken}`);
-    
-    // Redirect the user back to the linking page with a success message.
     finalRedirectUrl.searchParams.set('success', 'truelayer_connected');
+    finalRedirectUrl.searchParams.set('state', receivedState); // Pass state back for client-side validation
     return NextResponse.redirect(finalRedirectUrl);
 
   } catch (e: any) {
