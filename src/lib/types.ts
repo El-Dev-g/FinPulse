@@ -29,7 +29,7 @@ export interface Transaction {
   goalId?: string;
   projectId?: string;
   createdAt: any; // Firestore timestamp
-  source?: 'manual'; // Source is now optional and only for manual
+  source?: 'manual' | string; // Source can be manual or an account ID
 }
 
 export interface ClientTransaction extends Omit<Transaction, 'createdAt'>{
