@@ -65,30 +65,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'An internal server error occurred during token exchange.' }, { status: 500 });
   }
 }
-
-
-// This GET handler now just redirects the user to the final page with the code.
-// The sensitive token exchange is handled by the POST request from that final page.
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const code = searchParams.get('code');
-  const error = searchParams.get('error');
-
-  const finalRedirectUrl = new URL('/dashboard/link-account', request.nextUrl.origin);
-
-  if (error) {
-    console.error("Truelayer callback error:", error);
-    finalRedirectUrl.searchParams.set('error', `truelayer_error_${error}`);
-    return NextResponse.redirect(finalRedirectUrl);
-  }
-
-  if (!code) {
-    console.error("Missing authorization code from Truelayer.");
-    finalRedirectUrl.searchParams.set('error', 'truelayer_missing_code');
-    return NextResponse.redirect(finalRedirectUrl);
-  }
-
-  // Pass the code to the front-end to be exchanged securely via the POST handler.
-  finalRedirectUrl.searchParams.set('code', code);
-  return NextResponse.redirect(finalRedirectUrl);
-}

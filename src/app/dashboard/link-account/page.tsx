@@ -100,18 +100,22 @@ function LinkAccountPageContent() {
             
             const codeVerifier = sessionStorage.getItem('truelayer_code_verifier');
             if (!codeVerifier) {
+                console.error("Security check failed: code verifier not found in session storage. Please try connecting again.");
                 setStep('initial');
                 return;
             }
 
             try {
+                // Construct the redirect URI on the client to ensure it matches what was used to get the code
+                const redirectUri = new URL('/dashboard/link-account', window.location.origin).toString();
+
                 const response = await fetch('/api/truelayer/callback', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         code, 
                         code_verifier: codeVerifier,
-                        redirect_uri: process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI,
+                        redirect_uri: redirectUri,
                     }),
                 });
 
@@ -133,12 +137,13 @@ function LinkAccountPageContent() {
                 const uniqueAccounts = Array.from(new Set(updatedAccounts.map(a => a.id))).map(id => updatedAccounts.find(a => a.id === id));
                 
                 setNewlyFetchedAccounts(fetchedAccounts);
-                setConnectedAccounts(uniqueAccounts);
+                setConnectedAccounts(uniqueAccounts as Account[]);
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(uniqueAccounts));
 
                 setStep('success');
 
             } catch (err: any) {
+                console.error("Token exchange failed:", err);
                 setStep('initial');
             }
         };
@@ -147,7 +152,7 @@ function LinkAccountPageContent() {
         const authError = searchParams.get('error');
 
         if (authError) {
-             // setError(`Connection failed: ${authError.replace(/_/g, ' ')}. Please try again.`);
+             console.error(`Connection failed: ${authError.replace(/_/g, ' ')}. Please try again.`);
         } else if (code) {
             exchangeToken(code);
             // Clean the URL
@@ -162,7 +167,7 @@ function LinkAccountPageContent() {
         if (selectedContinent !== 'europe') {
             toast({
                 title: "Integration Not Available",
-                description: `Connecting with banks in ${partner.name} is not yet supported. This is a prototype feature currently limited to European banks.`,
+                description: `Connecting with banks in your region via ${partner.name} is not yet supported. This is a prototype feature currently limited to European banks.`,
                 variant: 'default',
             });
             return;
@@ -173,6 +178,7 @@ function LinkAccountPageContent() {
             const authUrl = getTruelayerAuthUrl();
             router.push(authUrl);
         } catch (e: any) {
+            console.error("Failed to get Truelayer auth URL:", e);
             setLoading(false);
         }
     };
@@ -218,7 +224,7 @@ function LinkAccountPageContent() {
                 </CardContent>
                 <CardFooter>
                      <Button asChild className="w-full" onClick={() => setStep('initial')}>
-                        Done
+                        <p>Done</p>
                     </Button>
                 </CardFooter>
             </Card>

@@ -1,3 +1,4 @@
+
 // src/hooks/use-auth.tsx
 "use client";
 
@@ -190,10 +191,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   
   const getTruelayerAuthUrl = useCallback(() => {
     const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
-    const redirectUri = process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI;
+    
+    // This is the critical fix: always redirect back to the client-side page.
+    const redirectUri = new URL('/dashboard/link-account', window.location.origin).toString();
 
-    if (!clientId || !redirectUri) {
-        throw new Error("Truelayer client credentials are not configured.");
+    if (!clientId) {
+        throw new Error("Truelayer client ID is not configured.");
     }
     
     const codeVerifier = generateCodeVerifier();
