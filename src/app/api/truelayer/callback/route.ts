@@ -22,9 +22,11 @@ export async function GET(request: NextRequest) {
   
   const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
   const clientSecret = process.env.TRUELAYER_CLIENT_SECRET;
-  const redirectUri = process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI;
+  
+  // Dynamically determine the redirect URI from the request headers
+  const redirectUri = new URL('/api/truelayer/callback', request.url).toString();
 
-  if (!clientId || !clientSecret || !redirectUri) {
+  if (!clientId || !clientSecret) {
     console.error('Truelayer client credentials are not configured on the server.');
     const redirectUrl = new URL('/dashboard/link-account', request.url);
     redirectUrl.searchParams.set('error', 'server_config_error');

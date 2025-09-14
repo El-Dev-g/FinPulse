@@ -168,14 +168,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   
   const getTruelayerAuthUrl = useCallback(() => {
     const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
-    const redirectUri = process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI;
 
     if (!clientId) {
         throw new Error("Truelayer client ID is not configured.");
     }
-    if (!redirectUri) {
-        throw new Error("Truelayer redirect URI is not configured.");
-    }
+    
+    // Dynamically create the redirect URI based on the current window location.
+    const redirectUri = new URL('/api/truelayer/callback', window.location.origin).toString();
     
     const scopes = [
         "info",
