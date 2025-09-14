@@ -39,28 +39,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 
 
 const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
 
-const continentPartners: { [key: string]: { name: string, termsUrl: string, privacyUrl: string } } = {
-    'europe': { name: 'Truelayer', termsUrl: '#', privacyUrl: '#' },
-    'north-america': { name: 'Plaid', termsUrl: '#', privacyUrl: '#' },
-    'africa': { name: 'Mono', termsUrl: '#', privacyUrl: '#' },
-    'asia': { name: 'Akahu', termsUrl: '#', privacyUrl: '#' },
-    'south-america': { name: 'Belvo', termsUrl: '#', privacyUrl: '#' },
-    'australia-oceania': { name: 'Basiq', termsUrl: '#', privacyUrl: '#' },
-    'antarctica': { name: 'PenguinPay', termsUrl: '#', privacyUrl: '#' }, // Just for fun
-};
+const partner = { name: 'Truelayer', termsUrl: '#', privacyUrl: '#' };
 
 function LinkAccountPageContent() {
     const [loading, setLoading] = useState(false);
@@ -68,17 +52,12 @@ function LinkAccountPageContent() {
     const [connectedAccounts, setConnectedAccounts] = useState<Account[]>([]);
     const [newlyFetchedAccounts, setNewlyFetchedAccounts] = useState<any[]>([]);
     const [isConfirming, setIsConfirming] = useState(false);
-    const [selectedContinent, setSelectedContinent] = useState<string>('');
-
 
     const { getTruelayerAuthUrl, formatCurrency } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
     
-    const partner = useMemo(() => {
-        return continentPartners[selectedContinent] || { name: 'our secure partner', termsUrl: '#', privacyUrl: '#' };
-    }, [selectedContinent]);
 
     // Fetch existing accounts from local storage on mount
     useEffect(() => {
@@ -132,18 +111,9 @@ function LinkAccountPageContent() {
     const handleConnect = async () => {
         setIsConfirming(false); // Close the dialog first
         
-        if (selectedContinent !== 'europe') {
-            toast({
-                title: "Integration Not Available",
-                description: `Connecting with banks in your region via ${partner.name} is not yet supported. This is a prototype feature currently limited to European banks.`,
-                variant: 'default',
-            });
-            return;
-        }
-
         setLoading(true);
         try {
-            await getTruelayerAuthUrl();
+            getTruelayerAuthUrl();
             // The getTruelayerAuthUrl now handles the redirection
         } catch (e: any) {
             console.error("Failed to get Truelayer auth URL:", e);
@@ -250,32 +220,13 @@ function LinkAccountPageContent() {
                     <CardHeader>
                         <CardTitle>Connect a New Account</CardTitle>
                         <CardDescription>
-                        Select your continent to begin the secure connection process. We use trusted partners like Plaid, Truelayer, and Mono to protect your data.
+                        We use our trusted partner, Truelayer, to securely connect to your bank and protect your data.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>Select Your Continent</Label>
-                            <Select value={selectedContinent} onValueChange={setSelectedContinent}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Choose a continent..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="africa">Africa</SelectItem>
-                                    <SelectItem value="antarctica">Antarctica</SelectItem>
-                                    <SelectItem value="asia">Asia</SelectItem>
-                                    <SelectItem value="europe">Europe</SelectItem>
-                                    <SelectItem value="north-america">North America</SelectItem>
-                                    <SelectItem value="south-america">South America</SelectItem>
-                                    <SelectItem value="australia-oceania">Australia/Oceania</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </CardContent>
                     <CardFooter>
-                        <Button onClick={() => setIsConfirming(true)} disabled={loading || !selectedContinent} className="w-full">
+                        <Button onClick={() => setIsConfirming(true)} disabled={loading} className="w-full">
                             {loading ? <Loader className="mr-2 animate-spin" /> : <Landmark className="mr-2" />}
-                            Connect Securely
+                            Connect Securely via Truelayer
                         </Button>
                     </CardFooter>
                 </Card>

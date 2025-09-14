@@ -46,11 +46,23 @@ export function Chatbot() {
   const dragInfo = useRef({ isDragging: false, startX: 0, startY: 0, lastX: 0, lastY: 0 });
   
   const resetChat = useCallback(() => {
-    setChatStage('collecting-name');
-    setMessages([
-        { sender: "bot", text: "Hello! Before we start, could I get your name?" }
-    ]);
-    setUserInfo({ name: "", email: "" });
+    // Check if user info is already collected in this session
+    const sessionUserInfo = sessionStorage.getItem('chatbotUserInfo');
+    if (sessionUserInfo) {
+      const parsedInfo = JSON.parse(sessionUserInfo);
+      setUserInfo(parsedInfo);
+      setChatStage('chatting');
+      setMessages([
+          { sender: "bot", text: `Welcome back, ${parsedInfo.name}! How can I help you today? Type \`/\` to see what I can help with.` }
+      ]);
+    } else {
+      setChatStage('collecting-name');
+      setMessages([
+          { sender: "bot", text: "Hello! Before we start, could I get your name?" }
+      ]);
+      setUserInfo({ name: "", email: "" });
+    }
+
     setInput("");
     setIsLoading(false);
     setShowCommands(false);
@@ -108,12 +120,16 @@ export function Chatbot() {
         setMessages(prev => [...prev, userMessage]);
         
         if (chatStage === 'collecting-name') {
-            setUserInfo(prev => ({...prev, name: input}));
+            const newInfo = {...userInfo, name: input};
+            setUserInfo(newInfo);
             setChatStage('collecting-email');
             setMessages(prev => [...prev, { sender: 'bot', text: `Thanks ${input}! What's your email address?` }]);
         } else if (chatStage === 'collecting-email') {
-            setUserInfo(prev => ({...prev, email: input}));
+            const newInfo = {...userInfo, email: input};
+            setUserInfo(newInfo);
             setChatStage('chatting');
+            // Save to session storage
+            sessionStorage.setItem('chatbotUserInfo', JSON.stringify(newInfo));
             setMessages(prev => [...prev, { sender: 'bot', text: `Perfect. Thanks! I'm the FinPulse assistant. Type \`/\` to see what I can help with, or just ask a question.` }]);
         }
         setInput("");
@@ -289,7 +305,7 @@ export function Chatbot() {
                   disabled={isLoading}
                   autoFocus
                 />
-                <Button type="submit" size="icon" disabled={isLoading || !input.trim() || input.trim() === '/'}>
+                <Button type="submit" size="icon" disabled={isLoading || !input.trim() || (input.trim() === '/' && chatStage === 'chatting')}>
                   <Send />
                 </Button>
               </form>

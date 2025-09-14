@@ -489,7 +489,6 @@ function RecentTransfers({ transactions, onRefund, refundCooldowns }: { transact
 export default function TransferPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [key, setKey] = useState(0);
   const [refundCooldowns, setRefundCooldowns] = useState<Record<string, number>>({});
   const { toast, formatCurrency } = useAuth();
   
@@ -521,7 +520,6 @@ export default function TransferPage() {
   const handleTransaction = () => {
     fetchAccounts();
     fetchTransactions();
-    setKey(prevKey => prevKey + 1);
   }
 
   useEffect(() => {
@@ -622,11 +620,11 @@ export default function TransferPage() {
                 <TabsTrigger value="internal">Internal Transfer</TabsTrigger>
               </TabsList>
               <TabsContent value="external">
-                <SendMoneyForm key={`send-${key}`} accounts={accounts} onTransaction={handleTransaction}/>
+                <SendMoneyForm accounts={accounts} onTransaction={handleTransaction}/>
               </TabsContent>
               <TabsContent value="internal">
                 {accounts.length > 1 ? (
-                    <InternalTransferForm key={`internal-${key}`} accounts={accounts} onTransaction={handleTransaction}/>
+                    <InternalTransferForm accounts={accounts} onTransaction={handleTransaction}/>
                 ) : (
                     <Alert className="mt-4">
                         <Wallet className="h-4 w-4" />
@@ -653,7 +651,7 @@ export default function TransferPage() {
                     <TabsTrigger value="history">Recent Transfers</TabsTrigger>
                 </TabsList>
                 <TabsContent value="details">
-                     <ReceiveMoneyDetails key={`receive-${key}`} accounts={accounts} />
+                     <ReceiveMoneyDetails accounts={accounts} />
                 </TabsContent>
                 <TabsContent value="history">
                     <RecentTransfers transactions={transactions} onRefund={handleRefund} refundCooldowns={refundCooldowns} />
