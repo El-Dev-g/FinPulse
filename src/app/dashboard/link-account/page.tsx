@@ -236,20 +236,24 @@ function LinkAccountPageContent() {
                 <CardHeader>
                     <CardTitle>Connect a New Account</CardTitle>
                     <CardDescription>
-                       Select your country to begin the secure connection process. We use trusted partners like Plaid, Truelayer, and Mono to protect your data.
+                       Select your continent to begin the secure connection process. We use trusted partners like Plaid, Truelayer, and Mono to protect your data.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
-                        <Label>Select Your Country</Label>
+                        <Label>Select Your Continent</Label>
                         <Select>
                             <SelectTrigger>
-                                <SelectValue placeholder="Choose a country..." />
+                                <SelectValue placeholder="Choose a continent..." />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="gb">United Kingdom</SelectItem>
-                                <SelectItem value="us" disabled>United States (Coming Soon)</SelectItem>
-                                <SelectItem value="ca" disabled>Canada (Coming Soon)</SelectItem>
+                                <SelectItem value="africa">Africa</SelectItem>
+                                <SelectItem value="antarctica">Antarctica</SelectItem>
+                                <SelectItem value="asia">Asia</SelectItem>
+                                <SelectItem value="europe">Europe</SelectItem>
+                                <SelectItem value="north-america">North America</SelectItem>
+                                <SelectItem value="south-america">South America</SelectItem>
+                                <SelectItem value="australia-oceania">Australia/Oceania</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
