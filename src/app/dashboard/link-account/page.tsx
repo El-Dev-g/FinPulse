@@ -165,7 +165,7 @@ function LinkAccountPageContent() {
                         body: JSON.stringify({
                             code: code,
                             code_verifier: codeVerifier,
-                            redirect_uri: `${window.location.origin}/api/truelayer/callback`
+                            redirect_uri: process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI,
                         }),
                     });
 

@@ -67,8 +67,8 @@ export async function POST(request: NextRequest) {
 }
 
 
-// This GET handler now just redirects the user to the final page with the code.
-// The sensitive token exchange is handled by the POST request from that final page.
+// The GET handler is no longer needed as the user is redirected directly to the front-end page.
+// We are keeping it here but it will not be used in the corrected flow.
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');

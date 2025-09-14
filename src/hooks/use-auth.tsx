@@ -49,11 +49,10 @@ const getTruelayerAuthUrl = () => {
     }
     
     const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
-    const redirectUri = `${window.location.origin}/api/truelayer/callback`;
+    const redirectUri = process.env.NEXT_PUBLIC_TRUELAYER_REDIRECT_URI;
 
-
-    if (!clientId) {
-        console.error("Truelayer client ID is not set in environment variables.");
+    if (!clientId || !redirectUri) {
+        console.error("Truelayer client ID or redirect URI is not set in environment variables.");
         return "";
     }
     
