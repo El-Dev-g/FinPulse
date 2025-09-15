@@ -1,3 +1,4 @@
+
 // src/app/dashboard/link-account/page.tsx
 "use client";
 
@@ -81,7 +82,7 @@ function LinkAccountPageContent() {
         
         async function handleSuccess() {
             setStep('connecting');
-            const fetchedAccountsData = [
+            const fetchedAccountsData: Account[] = [
                 { id: 'acc1', name: 'Monzo', bank: 'Monzo Bank', bankUserName: 'John Doe', last4: '1234', accountNumber: '**** **** **** 1234', type: 'Checking', balance: 2548.75, syncStatus: 'synced' },
                 { id: 'acc2', name: 'Revolut', bank: 'Revolut Ltd', bankUserName: 'John Doe', last4: '5678', accountNumber: '**** **** **** 5678', type: 'Savings', balance: 10500.00, syncStatus: 'synced' },
                 { id: 'acc3', name: 'AMEX', bank: 'American Express', bankUserName: 'John Doe', last4: '0005', accountNumber: '**** ****** *0005', type: 'Credit Card', balance: -450.23, syncStatus: 'pending' },
@@ -177,7 +178,7 @@ function LinkAccountPageContent() {
                                 <TableRow key={acc.id}>
                                     <TableCell className="font-medium text-left">{acc.name} (...{acc.last4})</TableCell>
                                     <TableCell>{acc.type}</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(acc.balance)}</TableCell>
+                                    <TableCell className="text-right">{formatCurrency(acc.balance || 0)}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -239,19 +240,10 @@ function LinkAccountPageContent() {
                             </Alert>
                         )}
                     </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Connect a New Account</CardTitle>
-                        <CardDescription>
-                        We use a trusted partner to securely connect to your bank and protect your data.
-                        </CardDescription>
-                    </CardHeader>
                     <CardFooter>
-                        <Button onClick={() => setIsConfirming(true)} disabled={loading} className="w-full">
+                        <Button onClick={() => setIsConfirming(true)} disabled={loading} className="w-full sm:w-auto">
                             {loading ? <Loader className="mr-2 animate-spin" /> : <Landmark className="mr-2" />}
-                            Connect Securely
+                            Connect New Account
                         </Button>
                     </CardFooter>
                 </Card>

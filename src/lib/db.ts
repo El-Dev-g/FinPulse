@@ -24,7 +24,15 @@ const getUid = async (): Promise<string | null> => {
     return user.uid;
 };
 
-// Generic add function
+// Generic set function that can create or update a document with a specific ID
+const setDataItem = async <T extends object>(collectionName: string, id: string, data: T, merge: boolean = false, customUid?: string): Promise<void> => {
+    const uid = customUid || await getUid();
+    if (!uid) throw new Error("User not authenticated");
+    const docRef = doc(db, `users/${uid}/${collectionName}`, id);
+    await setDoc(docRef, data, { merge });
+};
+
+// Generic add function for when you want Firestore to auto-generate an ID
 const addDataItem = async <T extends object>(collectionName: string, data: T, customUid?: string): Promise<string> => {
     const uid = customUid || await getUid();
     if (!uid) throw new Error("User not authenticated");
@@ -34,6 +42,7 @@ const addDataItem = async <T extends object>(collectionName: string, data: T, cu
     });
     return docRef.id;
 };
+
 
 // Generic get function
 const getData = async <T>(collectionName: string): Promise<(T & { id: string })[]> => {
@@ -64,8 +73,7 @@ const deleteDataItem = async (collectionName: string, id: string): Promise<void>
 // --- User Profile ---
 export const updateUserProfile = async (uid: string, profileData: Partial<UserProfile>) => {
     if (!uid) throw new Error("UID is required to update a user profile.");
-    const profileRef = doc(db, `users/${uid}/profile`, 'settings');
-    await setDoc(profileRef, profileData, { merge: true });
+    await setDataItem('profile', 'settings', profileData, true, uid);
 }
 
 export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
@@ -205,7 +213,7 @@ export const deleteTransaction = (id: string) => deleteDataItem('transactions', 
 
 // --- Tasks ---
 export const addTask = (task: Omit<FinancialTask, 'id'>) => {
-    const taskData: Omit<FinancialTask, 'id' | 'createdAt'> = {
+    const taskData: Partial<Omit<FinancialTask, 'id' | 'createdAt'>> = {
         title: task.title,
         status: task.status,
     };
@@ -214,7 +222,7 @@ export const addTask = (task: Omit<FinancialTask, 'id'>) => {
     if (task.goalId) taskData.goalId = task.goalId;
     if (task.projectId) taskData.projectId = task.projectId;
     
-    return addDataItem<Omit<FinancialTask, 'id' | 'createdAt'>>('tasks', taskData);
+    return addDataItem<Partial<Omit<FinancialTask, 'id' | 'createdAt'>>>('tasks', taskData);
 }
 export const getTasks = () => getData<FinancialTask>('tasks');
 export const updateTask = (id: string, task: Partial<FinancialTask>) => updateDataItem('tasks', id, task);
@@ -230,14 +238,17 @@ export const deleteRecurringTransaction = (id: string) => deleteDataItem('recurr
 export const addCategory = async (category: Omit<Category, 'id' | 'createdAt'>, customUid?: string): Promise<string> => {
     const uid = customUid || await getUid();
     if (!uid) throw new Error("User not authenticated");
-    // Check if category already exists
-    const q = query(collection(db, `users/${uid}/categories`), where("name", "==", category.name));
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-        // Return existing category ID or simply don't add, depending on desired behavior
-        return querySnapshot.docs[0].id;
-    }
-    return addDataItem<Omit<Category, 'id'>>('categories', category, uid);
+    
+    // Create a new document with an auto-generated ID
+    const docRef = doc(collection(db, `users/${uid}/categories`));
+    
+    // Use set to create the document with the desired data
+    await setDoc(docRef, {
+        ...category,
+        createdAt: new Date(),
+    });
+    
+    return docRef.id;
 };
 export const getCategories = () => getData<Category>('categories');
 export const deleteCategory = (id: string) => deleteDataItem('categories', id);
@@ -270,8 +281,13 @@ export const updateProject = (id: string, project: Partial<Project>) => updateDa
 export const deleteProject = (id: string) => deleteDataItem('projects', id);
 
 // --- Linked Accounts ---
-export const addAccount = (account: Omit<Account, 'id'>) => addDataItem<Omit<Account, 'id'>>('accounts', account);
+export const addAccount = (account: Account) => {
+    const { id, ...data } = account;
+    const dataWithTimestamp = { ...data, createdAt: new Date() };
+    return setDataItem('accounts', id, dataWithTimestamp, true);
+};
 export const getAccounts = () => getData<Account>('accounts');
 export const updateAccount = (id: string, account: Partial<Account>) => updateDataItem('accounts', id, account);
 export const deleteAccount = (id: string) => deleteDataItem('accounts', id);
+
 
