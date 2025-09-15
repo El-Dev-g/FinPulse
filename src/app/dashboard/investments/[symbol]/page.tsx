@@ -117,9 +117,12 @@ export default function StockDetailPage() {
     
     if (pageError) {
         return (
-             <main className="flex-1 p-4 md:p-6 lg:p-8 text-center">
-                <h2 className="text-xl font-bold text-destructive">Error</h2>
-                <p className="text-muted-foreground mt-2">{pageError}</p>
+             <main className="flex-1 p-4 md:p-6 lg:p-8 flex flex-col items-center justify-center text-center">
+                <Alert variant="destructive" className="max-w-lg">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error Loading Stock Data</AlertTitle>
+                    <AlertDescription>{pageError}</AlertDescription>
+                </Alert>
                  <Button asChild variant="outline" className="mt-6">
                     <Link href="/dashboard/investments">
                         <ArrowLeft className="mr-2" />
