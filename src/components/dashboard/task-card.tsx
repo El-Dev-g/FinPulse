@@ -4,8 +4,8 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card } from "@/components/ui/card";
-import { FinancialTask, Goal, TaskStatus } from "@/lib/types";
-import { GripVertical, Pencil, Target, Check, Circle } from "lucide-react";
+import { FinancialTask, Goal, TaskStatus, ClientProject } from "@/lib/types";
+import { GripVertical, Pencil, Target, Check, Circle, FolderKanban } from "lucide-react";
 import { cn, formatTime } from "@/lib/utils";
 import { Button } from "../ui/button";
 import {
@@ -18,12 +18,13 @@ import {
 interface TaskCardProps {
   task: FinancialTask;
   goal?: Goal | null;
+  project?: ClientProject | null;
   onEdit: (task: FinancialTask) => void;
   onStatusChange: (taskId: string, status: TaskStatus) => void;
   isOverdue?: boolean;
 }
 
-export function TaskCard({ task, goal, onEdit, onStatusChange, isOverdue = false }: TaskCardProps) {
+export function TaskCard({ task, goal, project, onEdit, onStatusChange, isOverdue = false }: TaskCardProps) {
   const {
     attributes,
     listeners,
@@ -90,6 +91,21 @@ export function TaskCard({ task, goal, onEdit, onStatusChange, isOverdue = false
                                 </TooltipTrigger>
                                 <TooltipContent>
                                     <p>Goal: {goal.title}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
+                     {project && (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-default">
+                                        <FolderKanban className="h-3 w-3 text-primary/70"/>
+                                        <p className="max-w-[120px] truncate">{project.name}</p>
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Project: {project.name}</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>

@@ -124,24 +124,26 @@ export function AddTaskDialog({
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="goalId">
-                Link to Goal (Optional)
-              </Label>
-              <Select value={goalId} onValueChange={setGoalId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a goal" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {goals.map((goal) => (
-                    <SelectItem key={goal.id} value={goal.id}>
-                      {goal.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {goals.length > 0 && (
+                <div className="space-y-2">
+                <Label htmlFor="goalId">
+                    Link to Goal (Optional)
+                </Label>
+                <Select value={goalId} onValueChange={setGoalId}>
+                    <SelectTrigger>
+                    <SelectValue placeholder="Select a goal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {goals.map((goal) => (
+                        <SelectItem key={goal.id} value={goal.id}>
+                        {goal.title}
+                        </SelectItem>
+                    ))}
+                    </SelectContent>
+                </Select>
+                </div>
+            )}
           </div>
           {error && <p className="text-sm text-destructive mb-4">{error}</p>}
           <DialogFooter>

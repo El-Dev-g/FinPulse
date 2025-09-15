@@ -21,7 +21,7 @@ import {
   GraduationCap,
   Send
 } from "lucide-react";
-import type { ClientTransaction, Transaction, ClientBudget, Budget, ClientRecurringTransaction, RecurringTransaction, ClientFinancialTask, FinancialTask, ClientGoal, Goal } from "./types";
+import type { ClientTransaction, Transaction, ClientBudget, Budget, ClientRecurringTransaction, RecurringTransaction, ClientFinancialTask, FinancialTask, ClientGoal, Goal, ClientProject, Project } from "./types";
 
 
 export function cn(...inputs: ClassValue[]) {
@@ -133,5 +133,20 @@ export function processGoal(goal: Goal): ClientGoal {
     return {
         ...goal,
         createdAt: goal.createdAt.toDate(),
+    }
+}
+
+export function processProjects(projects: Project[]): ClientProject[] {
+    if (!projects) return [];
+    return projects.map(p => ({
+        ...p,
+        createdAt: p.createdAt.toDate(),
+    }));
+}
+
+export function processProject(project: Project): ClientProject {
+    return {
+        ...project,
+        createdAt: project.createdAt.toDate(),
     }
 }

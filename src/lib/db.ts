@@ -244,6 +244,16 @@ export const deleteInvestment = (id: string) => deleteDataItem('investments', id
 // --- Projects ---
 export const addProject = (project: Omit<Project, 'id'>) => addDataItem('projects', project);
 export const getProjects = () => getData<Project>('projects');
+export const getProject = async (id: string): Promise<(Project & { id: string }) | null> => {
+    const uid = await getUid();
+    if (!uid) return null;
+    const docRef = doc(db, `users/${uid}/projects`, id);
+    const docSnap = await getDoc(docRef);
+    if(docSnap.exists()){
+        return { id: docSnap.id, ...docSnap.data() } as Project & { id: string };
+    }
+    return null;
+}
 export const updateProject = (id: string, project: Partial<Project>) => updateDataItem('projects', id, project);
 export const deleteProject = (id: string) => deleteDataItem('projects', id);
 

@@ -59,6 +59,7 @@ export interface FinancialTask {
   dueDate?: string; // ISO string
   dueTime?: string; // HH:mm format
   goalId?: string;
+  projectId?: string;
   createdAt: any; // Firestore timestamp
 }
 

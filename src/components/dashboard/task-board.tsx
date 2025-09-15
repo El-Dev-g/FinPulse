@@ -6,7 +6,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
-import { FinancialTask, TaskStatus, Goal } from "@/lib/types";
+import { FinancialTask, TaskStatus, Goal, ClientProject } from "@/lib/types";
 import { TaskCard } from "./task-card";
 
 type TaskSection = {
@@ -16,6 +16,7 @@ type TaskSection = {
 interface TaskBoardProps {
   sections: TaskSection;
   goals: Goal[];
+  projects: ClientProject[];
   onEdit: (task: FinancialTask) => void;
   onStatusChange: (taskId: string, status: TaskStatus) => void;
 }
@@ -24,12 +25,13 @@ interface TaskSectionColumnProps {
     title: string;
     tasks: FinancialTask[];
     goals: Goal[];
+    projects: ClientProject[];
     onEdit: (task: FinancialTask) => void;
     onStatusChange: (taskId: string, status: TaskStatus) => void;
     isOverdue?: boolean;
 }
 
-function TaskSectionColumn({ title, tasks, goals, onEdit, onStatusChange, isOverdue = false }: TaskSectionColumnProps) {
+function TaskSectionColumn({ title, tasks, goals, projects, onEdit, onStatusChange, isOverdue = false }: TaskSectionColumnProps) {
     const { setNodeRef } = useDroppable({ id: title });
 
     // Only render the column if it has tasks, except for the "Done" column which should always be visible.
@@ -46,11 +48,13 @@ function TaskSectionColumn({ title, tasks, goals, onEdit, onStatusChange, isOver
                 <div ref={setNodeRef} className="space-y-3 p-1 rounded-md min-h-12 bg-background">
                     {tasks.map(task => {
                         const goal = task.goalId ? goals.find(g => g.id === task.goalId) : null;
+                        const project = task.projectId ? projects.find(p => p.id === task.projectId) : null;
                         return (
                             <TaskCard 
                                 key={task.id} 
                                 task={task} 
                                 goal={goal} 
+                                project={project}
                                 onEdit={onEdit}
                                 onStatusChange={onStatusChange}
                                 isOverdue={isOverdue}
@@ -70,7 +74,7 @@ function TaskSectionColumn({ title, tasks, goals, onEdit, onStatusChange, isOver
 }
 
 
-export function TaskBoard({ sections, goals, onEdit, onStatusChange }: TaskBoardProps) {
+export function TaskBoard({ sections, goals, projects, onEdit, onStatusChange }: TaskBoardProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-8">
         {/* Main Columns */}
@@ -79,6 +83,7 @@ export function TaskBoard({ sections, goals, onEdit, onStatusChange }: TaskBoard
                 title="Overdue" 
                 tasks={sections["Overdue"]}
                 goals={goals}
+                projects={projects}
                 onEdit={onEdit}
                 onStatusChange={onStatusChange}
                 isOverdue
@@ -87,6 +92,7 @@ export function TaskBoard({ sections, goals, onEdit, onStatusChange }: TaskBoard
                 title="Today" 
                 tasks={sections["Today"]}
                 goals={goals}
+                projects={projects}
                 onEdit={onEdit}
                 onStatusChange={onStatusChange}
              />
@@ -96,6 +102,7 @@ export function TaskBoard({ sections, goals, onEdit, onStatusChange }: TaskBoard
                 title="Upcoming" 
                 tasks={sections["Upcoming"]}
                 goals={goals}
+                projects={projects}
                 onEdit={onEdit}
                 onStatusChange={onStatusChange}
              />
@@ -105,6 +112,7 @@ export function TaskBoard({ sections, goals, onEdit, onStatusChange }: TaskBoard
                 title="Other" 
                 tasks={sections["Other"]}
                 goals={goals}
+                projects={projects}
                 onEdit={onEdit}
                 onStatusChange={onStatusChange}
             />
@@ -114,6 +122,7 @@ export function TaskBoard({ sections, goals, onEdit, onStatusChange }: TaskBoard
                 title="Done" 
                 tasks={sections["Done"]}
                 goals={goals}
+                projects={projects}
                 onEdit={onEdit}
                 onStatusChange={onStatusChange}
              />

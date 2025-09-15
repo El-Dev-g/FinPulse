@@ -13,6 +13,8 @@ import {
   type FinancialTask,
   type TaskStatus,
   type Goal,
+  type Project,
+  type ClientProject,
 } from "@/lib/types";
 import { AddTaskDialog } from "@/components/dashboard/add-task-dialog";
 import { EditTaskDialog } from "@/components/dashboard/edit-task-dialog";
@@ -22,9 +24,9 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
-import { getTasks, getGoals, addTask, updateTask, deleteTask } from "@/lib/db";
+import { getTasks, getGoals, getProjects, addTask, updateTask, deleteTask } from "@/lib/db";
 import { startOfToday, isBefore, isSameDay, parseISO } from 'date-fns';
-import { formatTime } from "@/lib/utils";
+import { formatTime, processProjects } from "@/lib/utils";
 import Confetti from 'react-confetti';
 
 function CalendarView({ tasks, onEdit }: { tasks: FinancialTask[], onEdit: (task: FinancialTask) => void; }) {
@@ -131,6 +133,7 @@ export default function OrganizerPage() {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<FinancialTask[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [projects, setProjects] = useState<ClientProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingTask, setEditingTask] = useState<FinancialTask | null>(null);
   const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
@@ -141,9 +144,10 @@ export default function OrganizerPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const [dbTasks, dbGoals] = await Promise.all([getTasks(), getGoals()]);
+      const [dbTasks, dbGoals, dbProjects] = await Promise.all([getTasks(), getGoals(), getProjects()]);
       setTasks(dbTasks as FinancialTask[]);
       setGoals(dbGoals as Goal[]);
+      setProjects(processProjects(dbProjects as Project[]));
 
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -248,6 +252,7 @@ export default function OrganizerPage() {
               <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
                 <TaskBoard
                   goals={goals}
+                  projects={projects}
                   onEdit={setEditingTask}
                   onStatusChange={handleUpdateTaskStatus}
                   sections={{
