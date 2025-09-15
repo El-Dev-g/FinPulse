@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/use-auth';
 import type { Project, ClientProject } from '@/lib/types';
 import { getProjects, addProject, updateProject, deleteProject } from '@/lib/db';
 import { AddProjectDialog } from '@/components/dashboard/add-project-dialog';
+import { EditProjectDialog } from '@/components/dashboard/edit-project-dialog';
 import { ProjectCard } from '@/components/dashboard/project-card';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
@@ -18,22 +19,17 @@ import {
 } from "@/components/ui/tooltip";
 import { ProBadge } from "@/components/pro-badge";
 import Link from "next/link";
+import { processProjects } from '@/lib/utils';
 
 export default function ProjectsPage() {
   const { user, isPro } = useAuth();
   const [projects, setProjects] = useState<ClientProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddProjectDialogOpen, setIsAddProjectDialogOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<ClientProject | null>(null);
 
   const projectLimit = 10;
   const hasReachedProjectLimit = !isPro && projects.length >= projectLimit;
-
-  const processProjects = (projects: Project[]): ClientProject[] => {
-    return projects.map(p => ({
-      ...p,
-      createdAt: p.createdAt.toDate(),
-    }));
-  };
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -54,6 +50,16 @@ export default function ProjectsPage() {
 
   const handleAddProject = async (newProject: Omit<Project, "id" | "createdAt">) => {
     await addProject(newProject);
+    fetchData();
+  };
+
+  const handleEditProject = async (id: string, updatedData: Partial<Project>) => {
+    await updateProject(id, updatedData);
+    fetchData();
+  };
+
+  const handleDeleteProject = async (id: string) => {
+    await deleteProject(id);
     fetchData();
   };
 
@@ -109,7 +115,12 @@ export default function ProjectsPage() {
           ) : projects.length > 0 ? (
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {projects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
+                <ProjectCard 
+                  key={project.id} 
+                  project={project} 
+                  onEdit={() => setEditingProject(project)}
+                  onDelete={() => setEditingProject(project)} // Open edit dialog to confirm delete
+                />
               ))}
             </div>
           ) : (
@@ -136,6 +147,13 @@ export default function ProjectsPage() {
         isOpen={isAddProjectDialogOpen}
         onOpenChange={setIsAddProjectDialogOpen}
         onAddProject={handleAddProject}
+      />
+      <EditProjectDialog
+        project={editingProject}
+        isOpen={!!editingProject}
+        onOpenChange={() => setEditingProject(null)}
+        onEditProject={handleEditProject}
+        onDeleteProject={handleDeleteProject}
       />
     </>
   );

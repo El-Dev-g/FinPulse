@@ -26,9 +26,11 @@ import {
 
 interface ProjectCardProps {
   project: ClientProject;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
+export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
   const { formatCurrency } = useAuth();
   const progress = project.targetAmount > 0 ? (project.currentAmount / project.targetAmount) * 100 : 0;
 
@@ -56,9 +58,12 @@ export function ProjectCard({ project }: ProjectCardProps) {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem>View Details</DropdownMenuItem>
-                    <DropdownMenuItem>Edit Project</DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive">Delete Project</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => onEdit()}>
+                      Edit Project
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => onDelete()} className="text-destructive">
+                      Delete Project
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
          </div>
