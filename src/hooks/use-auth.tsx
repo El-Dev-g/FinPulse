@@ -1,4 +1,3 @@
-
 // src/hooks/use-auth.tsx
 "use client";
 
@@ -167,38 +166,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
   
   const getTruelayerAuthUrl = useCallback(() => {
-    const clientId = process.env.NEXT_PUBLIC_TRUELAYER_CLIENT_ID;
-
-    if (!clientId) {
-        throw new Error("Truelayer client ID is not configured.");
-    }
-    
-    // Dynamically create the redirect URI based on the current window location.
-    const redirectUri = new URL('/api/truelayer/callback', window.location.origin).toString();
-    
-    const scopes = [
-        "info",
-        "accounts",
-        "balance",
-        "cards",
-        "transactions",
-        "direct_debits",
-        "standing_orders",
-        "offline_access"
-    ].join(" ");
-
-    const providers = "uk-cs-mock uk-ob-all uk-oauth-all";
-
-    const params = new URLSearchParams({
-        response_type: 'code',
-        client_id: clientId,
-        scope: scopes,
-        redirect_uri: redirectUri,
-        providers: providers,
-    });
-    
-    window.location.href = `https://auth.truelayer-sandbox.com/?${params.toString()}`;
-  }, []);
+    // This function simply navigates to our own API route.
+    // The server-side route will handle building the full Truelayer URL.
+    // This keeps sensitive details and logic off the client.
+    router.push('/api/truelayer/auth');
+  }, [router]);
 
   return (
     <AuthContext.Provider
