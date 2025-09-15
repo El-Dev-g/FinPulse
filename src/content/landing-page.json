@@ -3,8 +3,8 @@
     "title": "Take Control of Your Financial Future.",
     "description": "FinPulse is your all-in-one financial companion. Track your spending, set meaningful goals, and get personalized AI-powered advice to build a healthier financial life.",
     "buttonText": "Get Started for Free",
-    "imageUrl": "https://picsum.photos/800/600",
-    "imageAlt": "A person reviewing their finances on a laptop with charts and graphs."
+    "imageUrl": "https://picsum.photos/seed/123/800/600",
+    "imageAlt": "A financial management dashboard showing charts and graphs."
   },
   "features": {
     "title": "Everything You Need to Succeed",
@@ -45,6 +45,7 @@
   "pricing": {
     "title": "Choose the Plan That's Right for You",
     "description": "Simple, transparent pricing. Get started for free or unlock powerful features with Pro.",
+    "annualDiscount": "Save 17%",
     "plans": [
       {
         "title": "Free",
@@ -64,6 +65,9 @@
         "title": "Pro",
         "price": "$9.99",
         "frequency": "/ month",
+        "annualPrice": "$99.99",
+        "annualFrequency": "/ year",
+        "monthlyEquivalent": "$8.33",
         "description": "For those who want to unlock the full power of financial management.",
         "features": [
           "Everything in Free, plus:",

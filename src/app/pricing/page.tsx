@@ -1,6 +1,7 @@
 // src/app/pricing/page.tsx
 "use client";
 
+import { useState } from 'react';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,18 +12,20 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { Check, Loader } from "lucide-react";
 import content from "@/content/landing-page.json";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
-import { Loader } from "lucide-react";
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 export default function PricingPage() {
   const { pricing } = content;
   const { user, loading, setSubscriptionStatus, subscriptionStatus } = useAuth();
   const router = useRouter();
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annually'>('monthly');
 
   if (loading) {
      return (
@@ -62,9 +65,26 @@ export default function PricingPage() {
                 {pricing.description}
               </p>
             </div>
+            
+            <div className="flex items-center justify-center space-x-4 mb-10">
+              <Label htmlFor="billing-cycle" className={cn(billingCycle === 'monthly' ? 'text-foreground' : 'text-muted-foreground')}>Monthly</Label>
+              <Switch
+                id="billing-cycle"
+                checked={billingCycle === 'annually'}
+                onCheckedChange={(checked) => setBillingCycle(checked ? 'annually' : 'monthly')}
+              />
+              <Label htmlFor="billing-cycle" className={cn(billingCycle === 'annually' ? 'text-foreground' : 'text-muted-foreground')}>
+                Annually
+                <span className="text-xs text-primary font-semibold ml-2 bg-primary/10 px-2 py-1 rounded-full">{pricing.annualDiscount}</span>
+              </Label>
+            </div>
+
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-start">
               {pricing.plans.map((plan, index) => {
                 const isCurrentPlan = (plan.title === 'Pro' && subscriptionStatus !== 'free') || (plan.title === 'Free' && subscriptionStatus === 'free');
+                const price = billingCycle === 'annually' && plan.annualPrice ? plan.annualPrice : plan.price;
+                const frequency = billingCycle === 'annually' && plan.annualFrequency ? plan.annualFrequency : plan.frequency;
+                
                 return (
                 <Card
                   key={index}
@@ -74,8 +94,11 @@ export default function PricingPage() {
                     <CardTitle className="font-headline text-2xl">{plan.title}</CardTitle>
                     <CardDescription>{plan.description}</CardDescription>
                     <div className="pt-4">
-                      <span className="text-5xl font-bold">{plan.price}</span>
-                      <span className="text-muted-foreground">{plan.frequency}</span>
+                      <span className="text-5xl font-bold">{price}</span>
+                      <span className="text-muted-foreground">{frequency}</span>
+                       {billingCycle === 'annually' && plan.monthlyEquivalent && (
+                        <p className="text-sm text-muted-foreground mt-1">{plan.monthlyEquivalent} per month</p>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent className="flex-grow">
