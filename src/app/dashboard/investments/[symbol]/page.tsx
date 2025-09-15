@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader, TrendingUp, TrendingDown, AreaChart, BarChart, Clock, Badge } from 'lucide-react';
+import { ArrowLeft, Loader, TrendingUp, TrendingDown, AreaChart, BarChart, Clock, Badge, AlertCircle } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -28,6 +28,7 @@ import {
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
 type HistoricalData = {
@@ -55,25 +56,32 @@ export default function StockDetailPage() {
     const [history, setHistory] = useState<HistoricalData[]>([]);
     const [stockData, setStockData] = useState<StockData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [pageError, setPageError] = useState<string | null>(null);
+    const [chartError, setChartError] = useState<string | null>(null);
 
     const fetchData = useCallback(async () => {
         if (!symbol) return;
         setLoading(true);
-        setError(null);
+        setPageError(null);
+        setChartError(null);
         try {
-            const [historyData, quoteDataArr] = await Promise.all([
+            const [historyResult, quoteDataArr] = await Promise.all([
                 getStockHistory(symbol),
                 getStockData([symbol])
             ]);
 
+            if (historyResult.error) {
+                setChartError(historyResult.error);
+            } else if (historyResult.data) {
+                setHistory(historyResult.data.reverse()); // Reverse to have oldest data first
+            }
+
             const quoteData = quoteDataArr[0];
             
-            if (!historyData || historyData.length === 0) {
-                throw new Error("Could not load historical data for this stock.");
+            if (!quoteData || !quoteData.name) {
+                throw new Error("Could not load core data for this stock.");
             }
             
-            setHistory(historyData.reverse()); // Reverse to have oldest data first
             setStockData({
                 symbol: quoteData.symbol,
                 price: quoteData.price,
@@ -87,7 +95,7 @@ export default function StockDetailPage() {
 
         } catch (e: any) {
             console.error("Failed to fetch stock data:", e);
-            setError(e.message || "An unexpected error occurred.");
+            setPageError(e.message || "An unexpected error occurred.");
         } finally {
             setLoading(false);
         }
@@ -107,11 +115,11 @@ export default function StockDetailPage() {
         )
     }
     
-    if (error) {
+    if (pageError) {
         return (
              <main className="flex-1 p-4 md:p-6 lg:p-8 text-center">
                 <h2 className="text-xl font-bold text-destructive">Error</h2>
-                <p className="text-muted-foreground mt-2">{error}</p>
+                <p className="text-muted-foreground mt-2">{pageError}</p>
                  <Button asChild variant="outline" className="mt-6">
                     <Link href="/dashboard/investments">
                         <ArrowLeft className="mr-2" />
@@ -159,28 +167,40 @@ export default function StockDetailPage() {
                         <CardDescription>Performance over the last 3 months.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <ResponsiveContainer width="100%" height={350}>
-                            <LineChart data={history}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="date" tickFormatter={(str) => format(parseISO(str), 'MMM d')} />
-                                <YAxis domain={['dataMin', 'dataMax']} tickFormatter={(num) => formatCurrency(num)} />
-                                <Tooltip 
-                                    content={({ active, payload, label }) => {
-                                        if (active && payload && payload.length) {
-                                            return (
-                                            <div className="rounded-lg border bg-background p-2 shadow-sm">
-                                                <p className="font-bold">{formatCurrency(payload[0].value as number)}</p>
-                                                <p className="text-sm text-muted-foreground">{format(parseISO(label), 'PPP')}</p>
-                                            </div>
-                                            );
-                                        }
-                                        return null;
-                                    }}
-                                />
-                                <Legend />
-                                <Line type="monotone" dataKey="close" name="Closing Price" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
-                            </LineChart>
-                        </ResponsiveContainer>
+                        {chartError ? (
+                            <div className="h-[350px] flex items-center justify-center">
+                                <Alert variant="destructive" className="max-w-md">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertTitle>Chart Error</AlertTitle>
+                                    <AlertDescription>
+                                        {chartError}
+                                    </AlertDescription>
+                                </Alert>
+                            </div>
+                        ) : (
+                            <ResponsiveContainer width="100%" height={350}>
+                                <LineChart data={history}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="date" tickFormatter={(str) => format(parseISO(str), 'MMM d')} />
+                                    <YAxis domain={['dataMin', 'dataMax']} tickFormatter={(num) => formatCurrency(num)} />
+                                    <Tooltip 
+                                        content={({ active, payload, label }) => {
+                                            if (active && payload && payload.length) {
+                                                return (
+                                                <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                                    <p className="font-bold">{formatCurrency(payload[0].value as number)}</p>
+                                                    <p className="text-sm text-muted-foreground">{format(parseISO(label), 'PPP')}</p>
+                                                </div>
+                                                );
+                                            }
+                                            return null;
+                                        }}
+                                    />
+                                    <Legend />
+                                    <Line type="monotone" dataKey="close" name="Closing Price" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        )}
                     </CardContent>
                 </Card>
 

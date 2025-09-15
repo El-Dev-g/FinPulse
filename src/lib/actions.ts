@@ -149,28 +149,31 @@ export async function getStockData(symbols: string[]): Promise<{ symbol: string;
     return results;
 }
 
-export async function getStockHistory(symbol: string): Promise<{ date: string; close: number }[]> {
-    if (!symbol) return [];
+export async function getStockHistory(symbol: string): Promise<{ data: { date: string; close: number }[] | null, error: string | null }> {
+    if (!symbol) return { data: null, error: "No symbol provided." };
 
     const apiKey = process.env.FINANCIAL_MODELING_PREP_API_KEY;
     if (!apiKey) {
-        throw new Error("Financial Modeling Prep API key is not configured.");
+        const errorMessage = "Financial Modeling Prep API key is not configured.";
+        console.error(errorMessage);
+        return { data: null, error: errorMessage };
     }
 
-    // Fetch daily data for the last 3 months (approx 90 days)
     const url = `https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?timeseries=90&apikey=${apiKey}`;
 
     try {
         const response = await axios.get(url);
         if (response.data && Array.isArray(response.data.historical)) {
-            return response.data.historical.map((item: any) => ({
+            const historicalData = response.data.historical.map((item: any) => ({
                 date: item.date,
                 close: item.close,
             }));
+            return { data: historicalData, error: null };
         }
-        return [];
-    } catch (error) {
-        console.error(`Failed to fetch historical data for ${symbol}:`, error);
-        throw new Error(`Could not load historical data for ${symbol}. The API may be unavailable or the symbol may be invalid.`);
+        return { data: [], error: null }; // Return empty data if historical is not an array
+    } catch (error: any) {
+        const errorMessage = `Could not load historical data for ${symbol}. The API may be unavailable or the symbol may be invalid.`;
+        console.error(`Failed to fetch historical data for ${symbol}:`, error.message);
+        return { data: null, error: errorMessage };
     }
 }
