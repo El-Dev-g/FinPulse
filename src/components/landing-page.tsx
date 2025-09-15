@@ -1,3 +1,7 @@
+
+"use client";
+
+import { useState } from 'react';
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -27,6 +31,8 @@ import { Chatbot } from "./chatbot";
 import content from "@/content/landing-page.json";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 const icons: { [key: string]: React.ReactNode } = {
   Wallet: <Wallet className="h-8 w-8 text-primary" />,
@@ -39,6 +45,7 @@ const icons: { [key: string]: React.ReactNode } = {
 
 export default function LandingPage() {
   const { hero, features, pricing, cta, footer } = content;
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annually'>('monthly');
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -76,7 +83,7 @@ export default function LandingPage() {
             </div>
             <div className="relative h-64 md:h-96 rounded-2xl overflow-hidden shadow-2xl">
               <Image
-                src="https://picsum.photos/seed/123/800/600"
+                src="https://picsum.photos/seed/dashboard/800/600"
                 alt="A financial management dashboard showing charts and graphs."
                 fill
                 className="object-cover"
@@ -129,8 +136,25 @@ export default function LandingPage() {
                 {pricing.description}
               </p>
             </div>
+
+            <div className="flex items-center justify-center space-x-4 mb-10">
+              <Label htmlFor="billing-cycle-landing" className={cn(billingCycle === 'monthly' ? 'text-foreground' : 'text-muted-foreground')}>Monthly</Label>
+              <Switch
+                id="billing-cycle-landing"
+                checked={billingCycle === 'annually'}
+                onCheckedChange={(checked) => setBillingCycle(checked ? 'annually' : 'monthly')}
+              />
+              <Label htmlFor="billing-cycle-landing" className={cn(billingCycle === 'annually' ? 'text-foreground' : 'text-muted-foreground')}>
+                Annually
+                <span className="text-xs text-primary font-semibold ml-2 bg-primary/10 px-2 py-1 rounded-full">{pricing.annualDiscount}</span>
+              </Label>
+            </div>
+
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-start">
-              {pricing.plans.map((plan, index) => (
+              {pricing.plans.map((plan, index) => {
+                const price = billingCycle === 'annually' && plan.annualPrice ? plan.annualPrice : plan.price;
+                const frequency = billingCycle === 'annually' && plan.annualFrequency ? plan.annualFrequency : plan.frequency;
+                return (
                 <Card
                   key={index}
                   className={cn("flex flex-col h-full", plan.isFeatured && "border-primary shadow-lg")}
@@ -139,8 +163,11 @@ export default function LandingPage() {
                     <CardTitle className="font-headline text-2xl">{plan.title}</CardTitle>
                     <CardDescription>{plan.description}</CardDescription>
                     <div>
-                      <span className="text-4xl font-bold">{plan.price}</span>
-                      <span className="text-muted-foreground">{plan.frequency}</span>
+                      <span className="text-4xl font-bold">{price}</span>
+                      <span className="text-muted-foreground">{frequency}</span>
+                       {billingCycle === 'annually' && plan.monthlyEquivalent && (
+                        <p className="text-sm text-muted-foreground mt-1">{plan.monthlyEquivalent} per month</p>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent className="flex-grow">
@@ -159,7 +186,7 @@ export default function LandingPage() {
                     </Button>
                   </CardFooter>
                 </Card>
-              ))}
+              )})}
             </div>
              <div className="text-center mt-12 text-sm text-muted-foreground">
                 <p>Have questions? <Link href="/contact" className="underline hover:text-primary">Contact our support team</Link>.</p>
