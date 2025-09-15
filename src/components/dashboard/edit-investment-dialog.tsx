@@ -31,7 +31,6 @@ interface EditInvestmentDialogProps {
   isOpen: boolean;
   onOpenChange: () => void;
   onEditInvestment: (id: string, updatedData: Partial<Investment>) => Promise<void>;
-  onDeleteInvestment: (id: string) => Promise<void>;
 }
 
 export function EditInvestmentDialog({
@@ -39,13 +38,11 @@ export function EditInvestmentDialog({
   isOpen,
   onOpenChange,
   onEditInvestment,
-  onDeleteInvestment,
 }: EditInvestmentDialogProps) {
   const [quantity, setQuantity] = useState("");
   const [purchasePrice, setPurchasePrice] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     if (investment) {
@@ -79,21 +76,6 @@ export function EditInvestmentDialog({
       setError("Failed to update investment. Please try again.");
     } finally {
       setLoading(false);
-    }
-  };
-  
-  const handleDelete = async () => {
-    if (investment) {
-      setLoading(true);
-      try {
-        await onDeleteInvestment(investment.id);
-        setIsDeleteDialogOpen(false);
-        onOpenChange();
-      } catch (err) {
-        setError("Failed to delete investment.");
-      } finally {
-        setLoading(false);
-      }
     }
   };
 
@@ -130,7 +112,7 @@ export function EditInvestmentDialog({
                     />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="purchasePrice-edit">Purchase Price ($)</Label>
+                    <Label htmlFor="purchasePrice-edit">Average Cost ($)</Label>
                     <Input
                     id="purchasePrice-edit"
                     type="number"
@@ -141,11 +123,7 @@ export function EditInvestmentDialog({
               </div>
             </div>
             {error && <p className="text-sm text-destructive mb-4">{error}</p>}
-            <DialogFooter className="justify-between">
-              <Button type="button" variant="destructive" onClick={() => setIsDeleteDialogOpen(true)} disabled={loading}>
-                <Trash className="mr-2 h-4 w-4" />
-                Delete
-              </Button>
+            <DialogFooter className="justify-end">
               <Button type="submit" disabled={loading}>
                 {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
                 Save Changes
@@ -154,22 +132,6 @@ export function EditInvestmentDialog({
           </form>
         </DialogContent>
       </Dialog>
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your holding for {investment?.symbol}.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

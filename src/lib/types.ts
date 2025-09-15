@@ -147,6 +147,7 @@ export interface Investment {
 
 export interface ClientInvestment extends Omit<Investment, 'createdAt'> {
   id: string;
+  name: string;
   currentPrice: number;
   currentValue: number;
   gainLoss: number;

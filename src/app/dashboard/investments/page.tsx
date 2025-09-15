@@ -69,6 +69,7 @@ export default function InvestmentsPage() {
         return {
           ...inv,
           id: inv.id!,
+          name: data?.name || inv.symbol,
           currentPrice,
           currentValue,
           gainLoss,
@@ -94,7 +95,8 @@ export default function InvestmentsPage() {
 
   const filteredInvestments = useMemo(() => {
     return investments.filter(inv => 
-      inv.symbol.toLowerCase().includes(searchTerm.toLowerCase())
+      inv.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      inv.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [investments, searchTerm]);
 
@@ -237,7 +239,6 @@ export default function InvestmentsPage() {
         isOpen={!!editingInvestment}
         onOpenChange={() => setEditingInvestment(null)}
         onEditInvestment={handleEditInvestment}
-        onDeleteInvestment={handleDeleteInvestment}
       />
     </main>
     <div className="sticky bottom-6 flex justify-center">

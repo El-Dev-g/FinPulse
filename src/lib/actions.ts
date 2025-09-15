@@ -96,7 +96,7 @@ export async function getSmartAlerts(): Promise<SmartAlert[]> {
 }
 
 
-export async function getStockData(symbols: string[]): Promise<{ symbol: string; price: number; logo: string; }[]> {
+export async function getStockData(symbols: string[]): Promise<{ symbol: string; name: string; price: number; change: number; dayLow: number; dayHigh: number; volume: number; logo: string; }[]> {
     if (symbols.length === 0) {
         return [];
     }
@@ -124,22 +124,53 @@ export async function getStockData(symbols: string[]): Promise<{ symbol: string;
                 
                 if (!quoteData || !profileData) {
                     console.warn(`No data returned for symbol: ${symbol}`);
-                    return { symbol, price: 0, logo: '' };
+                    return { symbol, name: '', price: 0, change: 0, dayLow: 0, dayHigh: 0, volume: 0, logo: '' };
                 }
 
                 return {
                     symbol: symbol,
+                    name: profileData.companyName || symbol,
                     price: quoteData.price || 0,
+                    change: quoteData.change || 0,
+                    dayLow: quoteData.dayLow || 0,
+                    dayHigh: quoteData.dayHigh || 0,
+                    volume: quoteData.volume || 0,
                     logo: profileData.image || '',
                 };
 
             } catch (error) {
                 console.error(`Failed to fetch data for symbol ${symbol}:`, error);
                 // Return a default object for this symbol so the whole process doesn't fail
-                return { symbol, price: 0, logo: '' };
+                return { symbol, name: symbol, price: 0, change: 0, dayLow: 0, dayHigh: 0, volume: 0, logo: '' };
             }
         })
     );
 
     return results;
+}
+
+export async function getStockHistory(symbol: string): Promise<{ date: string; close: number }[]> {
+    if (!symbol) return [];
+
+    const apiKey = process.env.FINANCIAL_MODELING_PREP_API_KEY;
+    if (!apiKey) {
+        throw new Error("Financial Modeling Prep API key is not configured.");
+    }
+
+    // Fetch daily data for the last 3 months (approx 90 days)
+    const url = `https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?timeseries=90&apikey=${apiKey}`;
+
+    try {
+        const response = await axios.get(url);
+        if (response.data && Array.isArray(response.data.historical)) {
+            return response.data.historical.map((item: any) => ({
+                date: item.date,
+                close: item.close,
+            }));
+        }
+        return [];
+    } catch (error) {
+        console.error(`Failed to fetch historical data for ${symbol}:`, error);
+        throw new Error(`Could not load historical data for ${symbol}. The API may be unavailable or the symbol may be invalid.`);
+    }
 }
