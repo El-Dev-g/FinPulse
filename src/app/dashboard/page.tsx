@@ -12,11 +12,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Loader } from 'lucide-react';
 import Link from 'next/link';
-import { getTransactions, getGoals } from '@/lib/db';
+import { getTransactions, getGoals, getAccounts } from '@/lib/db';
 import type { Account, Goal, Transaction, ClientGoal, ClientTransaction } from '@/lib/types';
 import { processGoals, processTransactions } from '@/lib/utils';
-
-const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
 
 export default function DashboardPage() {
   const { user, subscriptionStatus } = useAuth();
@@ -30,20 +28,14 @@ export default function DashboardPage() {
     setLoading(true);
     try {
       // Fetch data from Firestore
-      const [dbTransactions, dbGoals] = await Promise.all([
+      const [dbTransactions, dbGoals, dbAccounts] = await Promise.all([
         getTransactions(),
         getGoals(),
+        getAccounts(),
       ]);
       setTransactions(processTransactions(dbTransactions as any[]));
       setGoals(processGoals(dbGoals as any[]));
-
-      // Fetch accounts from Local Storage - only on client
-      if (typeof window !== 'undefined') {
-        const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (storedAccounts) {
-          setAccounts(JSON.parse(storedAccounts));
-        }
-      }
+      setAccounts(dbAccounts as Account[]);
 
     } catch (error) {
       console.error("Failed to fetch dashboard data", error);
