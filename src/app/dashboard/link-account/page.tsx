@@ -23,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Landmark, Loader, CheckCircle, MoreVertical, Info, ArrowRight, Wallet, Trash2 } from 'lucide-react';
+import { Landmark, Loader, CheckCircle, MoreVertical, Info, ArrowRight, Wallet, Trash2, Copy, Check, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import type { Account } from '@/lib/types';
 import {
@@ -44,9 +44,34 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
 import { addAccount, getAccounts, deleteAccount } from '@/lib/db';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
 
 
 const partner = { name: 'Fintech Partner', termsUrl: '#', privacyUrl: '#' };
+
+function AccountDetailsRow({ label, value, onCopy }: { label: string; value: string, onCopy: () => void }) {
+    const [copied, setCopied] = useState(false);
+    
+    const handleCopy = () => {
+        navigator.clipboard.writeText(value);
+        setCopied(true);
+        onCopy();
+        setTimeout(() => setCopied(false), 2000);
+    }
+    
+    return (
+        <div className="flex justify-between items-center text-sm">
+            <span className="text-muted-foreground">{label}</span>
+            <div className="flex items-center gap-2">
+                <span className="font-mono">{value}</span>
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleCopy}>
+                    {copied ? <Check className="h-4 w-4 text-green-500"/> : <Copy className="h-4 w-4" />}
+                </Button>
+            </div>
+        </div>
+    )
+}
 
 function LinkAccountPageContent() {
     const [loading, setLoading] = useState(false);
@@ -205,29 +230,46 @@ function LinkAccountPageContent() {
                         {connectedAccounts.length > 0 ? (
                             <div className="space-y-4">
                                 {connectedAccounts.map(account => (
-                                    <div key={account.id} className="flex items-center justify-between rounded-lg border p-4">
-                                        <div className="flex items-center gap-4">
-                                            <Landmark className="h-6 w-6 text-muted-foreground" />
-                                            <div>
-                                                <p className="font-semibold">{account.name} (...{account.last4})</p>
-                                                <p className="text-sm text-muted-foreground">{account.type} - {formatCurrency(account.balance || 0)}</p>
+                                    <Collapsible key={account.id} asChild>
+                                        <div className="rounded-lg border">
+                                            <div className="flex items-center p-4">
+                                                <div className="flex items-center gap-4 flex-grow">
+                                                    <Landmark className="h-6 w-6 text-muted-foreground" />
+                                                    <div>
+                                                        <p className="font-semibold">{account.name} (...{account.last4})</p>
+                                                        <p className="text-sm text-muted-foreground">{account.type} - {formatCurrency(account.balance || 0)}</p>
+                                                    </div>
+                                                </div>
+                                                <CollapsibleTrigger asChild>
+                                                    <Button variant="ghost" size="sm" className="mr-2">
+                                                        Details
+                                                        <ChevronDown className="h-4 w-4 ml-2 transition-transform ui-open:rotate-180" />
+                                                    </Button>
+                                                </CollapsibleTrigger>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent>
+                                                        <DropdownMenuItem>Refresh</DropdownMenuItem>
+                                                        <DropdownMenuItem onSelect={() => setIsUnlinking(account)} className="text-destructive">
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Unlink
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </div>
+                                            <CollapsibleContent>
+                                                <div className="border-t p-4 space-y-3">
+                                                    <AccountDetailsRow label="Account Holder" value={account.bankUserName} onCopy={() => toast({ title: "Copied account holder name!" })} />
+                                                    <AccountDetailsRow label="Account Number" value={account.accountNumber} onCopy={() => toast({ title: "Copied account number!" })} />
+                                                    <AccountDetailsRow label="Bank Name" value={account.bank} onCopy={() => toast({ title: "Copied bank name!" })} />
+                                                </div>
+                                            </CollapsibleContent>
                                         </div>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent>
-                                                <DropdownMenuItem>Refresh</DropdownMenuItem>
-                                                <DropdownMenuItem onSelect={() => setIsUnlinking(account)} className="text-destructive">
-                                                    <Trash2 className="mr-2 h-4 w-4" />
-                                                    Unlink
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </div>
+                                    </Collapsible>
                                 ))}
                             </div>
                         ) : (
