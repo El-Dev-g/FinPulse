@@ -230,11 +230,11 @@ function LinkAccountPageContent() {
                                 ))}
                             </div>
                         ) : (
-                             <Alert>
+                            <Alert>
                                 <Wallet className="h-4 w-4" />
-                                <AlertTitle>No Bank Accounts Linked</AlertTitle>
+                                <AlertTitle>No bank accounts connected yet</AlertTitle>
                                 <AlertDescription>
-                                    You need to link a bank account before you can use features like automatic transaction syncing or money transfers.
+                                    Connect an account to automatically sync your transactions and balances.
                                 </AlertDescription>
                             </Alert>
                         )}
