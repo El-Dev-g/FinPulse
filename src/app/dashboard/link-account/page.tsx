@@ -107,6 +107,7 @@ function LinkAccountPageContent() {
         
         async function handleSuccess() {
             setStep('connecting');
+            // This is the mock data structure that we simulate fetching from a bank.
             const fetchedAccountsData: Account[] = [
                 { id: 'acc1', name: 'Monzo', bank: 'Monzo Bank', bankUserName: 'John Doe', last4: '1234', accountNumber: '**** **** **** 1234', type: 'Checking', balance: 2548.75, syncStatus: 'synced' },
                 { id: 'acc2', name: 'Revolut', bank: 'Revolut Ltd', bankUserName: 'John Doe', last4: '5678', accountNumber: '**** **** **** 5678', type: 'Savings', balance: 10500.00, syncStatus: 'synced' },
@@ -114,10 +115,12 @@ function LinkAccountPageContent() {
             ];
             
             try {
-                // Save new accounts to the database
+                // Save new accounts to the database. The `addAccount` function in db.ts
+                // expects the full Account object, including the `id`.
                 await Promise.all(fetchedAccountsData.map(acc => addAccount(acc)));
+
                 setNewlyFetchedAccounts(fetchedAccountsData);
-                fetchAccounts(); // Refetch all accounts from DB
+                fetchAccounts(); // Refetch all accounts from DB to ensure consistency
                 setStep('success');
             } catch (dbError) {
                 console.error("Failed to save accounts:", dbError);
