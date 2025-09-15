@@ -98,57 +98,89 @@ export async function getSmartAlerts(): Promise<SmartAlert[]> {
 }
 
 
-export async function getStockData(symbols: string[]): Promise<{ symbol: string; name: string; price: number; change: number; dayLow: number; dayHigh: number; volume: number; logo: string; }[]> {
-    if (symbols.length === 0) {
-        return [];
-    }
+export async function getStockData(
+  symbols: string[]
+): Promise<
+  {
+    symbol: string;
+    name: string;
+    price: number;
+    change: number;
+    dayLow: number;
+    dayHigh: number;
+    volume: number;
+    logo: string;
+  }[]
+> {
+  if (symbols.length === 0) {
+    return [];
+  }
 
-    const apiKey = process.env.FINANCIAL_MODELING_PREP_API_KEY;
-    if (!apiKey) {
-        console.error("Financial Modeling Prep API key is not configured.");
-        throw new Error("Financial Modeling Prep API key is not configured.");
-    }
-    
-    const results = await Promise.all(
-        symbols.map(async (symbol) => {
-            try {
-                const quoteUrl = `https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${apiKey}`;
-                const profileUrl = `https://financialmodelingprep.com/api/v3/profile/${symbol}?apikey=${apiKey}`;
-                
-                const [quoteResponse, profileResponse] = await Promise.all([
-                    axios.get(quoteUrl),
-                    axios.get(profileUrl)
-                ]);
+  const apiKey = process.env.FINANCIAL_MODELING_PREP_API_KEY;
+  if (!apiKey) {
+    console.error("Financial Modeling Prep API key is not configured.");
+    throw new Error("Financial Modeling Prep API key is not configured.");
+  }
 
-                // The API returns an array, even for a single symbol.
-                const quoteData = quoteResponse.data?.[0];
-                const profileData = profileResponse.data?.[0];
-                
-                if (!quoteData || !profileData) {
-                    console.warn(`No data returned for symbol: ${symbol}`);
-                    return { symbol, name: '', price: 0, change: 0, dayLow: 0, dayHigh: 0, volume: 0, logo: '' };
-                }
+  const results = await Promise.all(
+    symbols.map(async (symbol) => {
+      try {
+        const quoteUrl = `https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${apiKey}`;
+        const profileUrl = `https://financialmodelingprep.com/api/v3/profile/${symbol}?apikey=${apiKey}`;
 
-                return {
-                    symbol: symbol,
-                    name: profileData.companyName || symbol,
-                    price: quoteData.price || 0,
-                    change: quoteData.change || 0,
-                    dayLow: quoteData.dayLow || 0,
-                    dayHigh: quoteData.dayHigh || 0,
-                    volume: quoteData.volume || 0,
-                    logo: profileData.image || '',
-                };
+        const [quoteResponse, profileResponse] = await Promise.all([
+          axios.get(quoteUrl),
+          axios.get(profileUrl),
+        ]);
 
-            } catch (error) {
-                console.error(`Failed to fetch data for symbol ${symbol}:`, error);
-                // Return a default object for this symbol so the whole process doesn't fail
-                return { symbol, name: symbol, price: 0, change: 0, dayLow: 0, dayHigh: 0, volume: 0, logo: '' };
-            }
-        })
-    );
+        const quote = Array.isArray(quoteResponse.data)
+          ? quoteResponse.data[0]
+          : null;
+        const profile = Array.isArray(profileResponse.data)
+          ? profileResponse.data[0]
+          : null;
 
-    return results;
+        if (!quote && !profile) {
+          console.warn(`No data found for symbol: ${symbol}`);
+          return {
+            symbol,
+            name: "",
+            price: 0,
+            change: 0,
+            dayLow: 0,
+            dayHigh: 0,
+            volume: 0,
+            logo: "",
+          };
+        }
+
+        return {
+          symbol: quote?.symbol || symbol,
+          name: quote?.name || profile?.companyName || "",
+          price: quote?.price || 0,
+          change: quote?.change || 0,
+          dayLow: quote?.dayLow || 0,
+          dayHigh: quote?.dayHigh || 0,
+          volume: quote?.volume || 0,
+          logo: profile?.image || "",
+        };
+      } catch (error) {
+        console.error(`Error fetching data for symbol: ${symbol}`, error);
+        return {
+          symbol,
+          name: "",
+          price: 0,
+          change: 0,
+          dayLow: 0,
+          dayHigh: 0,
+          volume: 0,
+          logo: "",
+        };
+      }
+    })
+  );
+
+  return results;
 }
 
 export async function getStockDetails(symbol: string) {
@@ -159,4 +191,3 @@ export async function getStockDetails(symbol: string) {
         return { data: null, error: e.message || "An unknown error occurred while fetching stock details." };
     }
 }
-
