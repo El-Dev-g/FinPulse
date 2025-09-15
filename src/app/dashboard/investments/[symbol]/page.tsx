@@ -1,9 +1,10 @@
+
 // src/app/dashboard/investments/[symbol]/page.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getStockHistory, getStockData } from '@/lib/actions';
+import { getStockDetails } from '@/lib/actions';
 import { useAuth } from '@/hooks/use-auth';
 import Link from 'next/link';
 import {
@@ -31,12 +32,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
-type HistoricalData = {
-    date: string;
-    close: number;
-}
-
-type StockData = {
+type StockDetails = {
     symbol: string;
     price: number;
     change: number;
@@ -45,6 +41,10 @@ type StockData = {
     volume: number;
     logo: string;
     name: string;
+    history: {
+        date: string;
+        close: number;
+    }[];
 };
 
 export default function StockDetailPage() {
@@ -53,49 +53,26 @@ export default function StockDetailPage() {
     const { formatCurrency } = useAuth();
     const symbol = Array.isArray(params.symbol) ? params.symbol[0] : params.symbol;
 
-    const [history, setHistory] = useState<HistoricalData[]>([]);
-    const [stockData, setStockData] = useState<StockData | null>(null);
+    const [stockData, setStockData] = useState<StockDetails | null>(null);
     const [loading, setLoading] = useState(true);
-    const [pageError, setPageError] = useState<string | null>(null);
-    const [chartError, setChartError] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     const fetchData = useCallback(async () => {
         if (!symbol) return;
         setLoading(true);
-        setPageError(null);
-        setChartError(null);
+        setError(null);
         try {
-            const [historyResult, quoteDataArr] = await Promise.all([
-                getStockHistory(symbol),
-                getStockData([symbol])
-            ]);
+            const result = await getStockDetails(symbol);
 
-            if (historyResult.error) {
-                setChartError(historyResult.error);
-            } else if (historyResult.data) {
-                setHistory(historyResult.data.reverse()); // Reverse to have oldest data first
-            }
-
-            const quoteData = quoteDataArr[0];
-            
-            if (!quoteData || !quoteData.name) {
-                throw new Error("Could not load core data for this stock.");
+            if (result.error || !result.data) {
+                throw new Error(result.error || "Could not load data for this stock.");
             }
             
-            setStockData({
-                symbol: quoteData.symbol,
-                price: quoteData.price,
-                change: quoteData.change,
-                dayLow: quoteData.dayLow,
-                dayHigh: quoteData.dayHigh,
-                volume: quoteData.volume,
-                logo: quoteData.logo,
-                name: quoteData.name
-            });
+            setStockData(result.data);
 
         } catch (e: any) {
             console.error("Failed to fetch stock data:", e);
-            setPageError(e.message || "An unexpected error occurred.");
+            setError(e.message || "An unexpected error occurred.");
         } finally {
             setLoading(false);
         }
@@ -115,13 +92,13 @@ export default function StockDetailPage() {
         )
     }
     
-    if (pageError) {
+    if (error) {
         return (
              <main className="flex-1 p-4 md:p-6 lg:p-8 flex flex-col items-center justify-center text-center">
                 <Alert variant="destructive" className="max-w-lg">
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Error Loading Stock Data</AlertTitle>
-                    <AlertDescription>{pageError}</AlertDescription>
+                    <AlertDescription>{error}</AlertDescription>
                 </Alert>
                  <Button asChild variant="outline" className="mt-6">
                     <Link href="/dashboard/investments">
@@ -170,19 +147,9 @@ export default function StockDetailPage() {
                         <CardDescription>Performance over the last 3 months.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {chartError ? (
-                            <div className="h-[350px] flex items-center justify-center">
-                                <Alert variant="destructive" className="max-w-md">
-                                    <AlertCircle className="h-4 w-4" />
-                                    <AlertTitle>Chart Error</AlertTitle>
-                                    <AlertDescription>
-                                        {chartError}
-                                    </AlertDescription>
-                                </Alert>
-                            </div>
-                        ) : (
+                        {stockData && stockData.history.length > 0 ? (
                             <ResponsiveContainer width="100%" height={350}>
-                                <LineChart data={history}>
+                                <LineChart data={stockData.history}>
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="date" tickFormatter={(str) => format(parseISO(str), 'MMM d')} />
                                     <YAxis domain={['dataMin', 'dataMax']} tickFormatter={(num) => formatCurrency(num)} />
@@ -203,6 +170,16 @@ export default function StockDetailPage() {
                                     <Line type="monotone" dataKey="close" name="Closing Price" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
                                 </LineChart>
                             </ResponsiveContainer>
+                        ) : (
+                             <div className="h-[350px] flex items-center justify-center">
+                                <Alert variant="default" className="max-w-md">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertTitle>No Chart Data</AlertTitle>
+                                    <AlertDescription>
+                                        Historical price data could not be loaded for this stock.
+                                    </AlertDescription>
+                                </Alert>
+                            </div>
                         )}
                     </CardContent>
                 </Card>

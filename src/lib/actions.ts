@@ -1,3 +1,4 @@
+
 // src/lib/actions.ts
 "use server";
 
@@ -6,6 +7,7 @@ import { suggestCategory } from "@/ai/flows/suggest-category";
 import { answerQuestion } from "@/ai/flows/chatbot";
 import { generateDescription } from "@/ai/flows/generate-description";
 import { generateSmartAlerts } from "@/ai/flows/generate-smart-alerts";
+import { getStockDetails as getStockDetailsFlow } from "@/ai/flows/get-stock-details";
 import { getBudgets, getCategories, getGoals, getRecurringTransactions, getTransactions } from "./db";
 import type { Advice, Budget, Category, Goal, RecurringTransaction, Transaction } from "./types";
 import { processBudgets } from "./utils";
@@ -149,31 +151,12 @@ export async function getStockData(symbols: string[]): Promise<{ symbol: string;
     return results;
 }
 
-export async function getStockHistory(symbol: string): Promise<{ data: { date: string; close: number }[] | null, error: string | null }> {
-    if (!symbol) return { data: null, error: "No symbol provided." };
-
-    const apiKey = process.env.FINANCIAL_MODELING_PREP_API_KEY;
-    if (!apiKey) {
-        const errorMessage = "Financial Modeling Prep API key is not configured.";
-        console.error(errorMessage);
-        return { data: null, error: errorMessage };
-    }
-
-    const url = `https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?timeseries=90&apikey=${apiKey}`;
-
+export async function getStockDetails(symbol: string) {
     try {
-        const response = await axios.get(url);
-        if (response.data && Array.isArray(response.data.historical)) {
-            const historicalData = response.data.historical.map((item: any) => ({
-                date: item.date,
-                close: item.close,
-            }));
-            return { data: historicalData, error: null };
-        }
-        return { data: [], error: null }; // Return empty data if historical is not an array
-    } catch (error: any) {
-        const errorMessage = `Could not load historical data for ${symbol}. The API may be unavailable or the symbol may be invalid.`;
-        console.error(`Failed to fetch historical data for ${symbol}:`, error.message);
-        return { data: null, error: errorMessage };
+        const details = await getStockDetailsFlow({ symbol });
+        return { data: details, error: null };
+    } catch(e: any) {
+        return { data: null, error: e.message || "An unknown error occurred while fetching stock details." };
     }
 }
+
