@@ -210,7 +210,7 @@ export default function ProjectDetailPage() {
       isOpen={isAddTaskOpen}
       onOpenChange={setIsAddTaskOpen}
       onAddTask={handleAddTask}
-      goals={[]} // This should be adapted if tasks can be linked to goals inside a project
+      goals={[]}
     />
     </>
   );

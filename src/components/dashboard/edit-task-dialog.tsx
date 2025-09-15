@@ -154,27 +154,27 @@ export function EditTaskDialog({
                   />
                 </div>
               </div>
-              {goals.length > 0 && (
-                <div className="space-y-2">
-                    <Label htmlFor="goalId">
-                        Link to Goal (Optional)
-                    </Label>
-                    <Select value={goalId || 'none'} onValueChange={setGoalId} disabled={!!projectId}>
-                        <SelectTrigger>
-                        <SelectValue placeholder="Select a goal" />
-                        </SelectTrigger>
-                        <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        {goals.map((goal) => (
-                            <SelectItem key={goal.id} value={goal.id}>
-                            {goal.title}
-                            </SelectItem>
-                        ))}
-                        </SelectContent>
-                    </Select>
-                     {projectId && <p className="text-xs text-muted-foreground pt-1">This task is linked to a project.</p>}
-                </div>
-              )}
+              
+              <div className="space-y-2">
+                  <Label htmlFor="goalId">
+                      Link to Goal (Optional)
+                  </Label>
+                  <Select value={goalId || 'none'} onValueChange={setGoalId} disabled={!!projectId}>
+                      <SelectTrigger>
+                      <SelectValue placeholder="Select a goal" />
+                      </SelectTrigger>
+                      <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {goals.map((goal) => (
+                          <SelectItem key={goal.id} value={goal.id}>
+                          {goal.title}
+                          </SelectItem>
+                      ))}
+                      </SelectContent>
+                  </Select>
+                   {projectId && <p className="text-xs text-muted-foreground pt-1">This task is linked to a project and cannot be linked to a goal.</p>}
+              </div>
+              
             </div>
             {error && <p className="text-sm text-destructive mb-4">{error}</p>}
             <DialogFooter className="justify-between">

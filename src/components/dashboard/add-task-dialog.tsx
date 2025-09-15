@@ -26,7 +26,7 @@ import {
 interface AddTaskDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddTask: (newTask: Omit<FinancialTask, "id" | "status" | "createdAt">) => Promise<void>;
+  onAddTask: (newTask: Omit<FinancialTask, "id" | "status" | "createdAt" | "projectId">) => Promise<void>;
   goals: Goal[];
 }
 
