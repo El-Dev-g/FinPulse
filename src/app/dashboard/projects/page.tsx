@@ -3,19 +3,30 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { FolderKanban, Plus, Loader } from "lucide-react";
+import { FolderKanban, Plus, Loader, Lock } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
 import type { Project, ClientProject } from '@/lib/types';
 import { getProjects, addProject, updateProject, deleteProject } from '@/lib/db';
 import { AddProjectDialog } from '@/components/dashboard/add-project-dialog';
 import { ProjectCard } from '@/components/dashboard/project-card';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { ProBadge } from "@/components/pro-badge";
+import Link from "next/link";
 
 export default function ProjectsPage() {
-  const { user } = useAuth();
+  const { user, isPro } = useAuth();
   const [projects, setProjects] = useState<ClientProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddProjectDialogOpen, setIsAddProjectDialogOpen] = useState(false);
+
+  const projectLimit = 3;
+  const hasReachedProjectLimit = !isPro && projects.length >= projectLimit;
 
   const processProjects = (projects: Project[]): ClientProject[] => {
     return projects.map(p => ({
@@ -60,11 +71,36 @@ export default function ProjectsPage() {
                 Manage your large financial undertakings in one place.
               </p>
             </div>
-            <Button onClick={() => setIsAddProjectDialogOpen(true)}>
-              <Plus className="mr-2" />
-              New Project
-            </Button>
+             <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="relative">
+                    <Button onClick={() => setIsAddProjectDialogOpen(true)} disabled={hasReachedProjectLimit}>
+                      {hasReachedProjectLimit ? <Lock className="mr-2" /> : <Plus className="mr-2" />}
+                      New Project
+                    </Button>
+                    {hasReachedProjectLimit && (
+                      <div className="absolute -top-2 -right-2">
+                        <ProBadge />
+                      </div>
+                    )}
+                  </div>
+                </TooltipTrigger>
+                {hasReachedProjectLimit && (
+                  <TooltipContent>
+                    <p>Upgrade to Pro to create unlimited projects.</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
           </div>
+          
+           {hasReachedProjectLimit && (
+            <div className="mb-6 p-4 bg-accent/30 border border-accent/50 rounded-lg text-center text-sm">
+                <p className="font-semibold text-accent-foreground">You've reached your project limit!</p>
+                <p className="text-muted-foreground mt-1">The free plan allows for up to {projectLimit} projects. <Button variant="link" className="p-0 h-auto" asChild><Link href="/dashboard/billing">Upgrade to Pro</Link></Button> to create more.</p>
+            </div>
+          )}
 
           {loading ? (
              <div className="flex justify-center items-center h-96">
