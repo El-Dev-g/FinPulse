@@ -48,7 +48,6 @@ export function OverviewCards({ transactions, goals, accounts }: OverviewCardsPr
         }
     });
 
-    const totalGoalSavings = goals.reduce((acc, goal) => acc + goal.current, 0);
     const totalAccountBalances = accounts.reduce((acc, account) => acc + (account.balance || 0), 0);
 
     const incomeChange = lastMonthIncome > 0 ? ((currentMonthIncome - lastMonthIncome) / lastMonthIncome) * 100 : currentMonthIncome > 0 ? 100 : 0;
@@ -57,11 +56,11 @@ export function OverviewCards({ transactions, goals, accounts }: OverviewCardsPr
     return {
         income: currentMonthIncome,
         expenses: currentMonthExpenses,
-        netWorth: totalGoalSavings + totalAccountBalances,
+        netWorth: totalAccountBalances,
         incomeChange,
         expenseChange
     };
-  }, [transactions, goals, accounts]);
+  }, [transactions, accounts]);
 
   const formatPercentage = (value: number) => {
       if (!isFinite(value)) return "0.0%";
@@ -105,7 +104,7 @@ export function OverviewCards({ transactions, goals, accounts }: OverviewCardsPr
             {formatCurrency(overviewData.netWorth)}
           </div>
           <p className="text-xs text-muted-foreground">
-            Your financial independence tracker
+            Total of all connected account balances
           </p>
         </CardContent>
       </Card>
