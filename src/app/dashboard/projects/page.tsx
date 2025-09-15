@@ -25,7 +25,7 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [isAddProjectDialogOpen, setIsAddProjectDialogOpen] = useState(false);
 
-  const projectLimit = 3;
+  const projectLimit = 10;
   const hasReachedProjectLimit = !isPro && projects.length >= projectLimit;
 
   const processProjects = (projects: Project[]): ClientProject[] => {
