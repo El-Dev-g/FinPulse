@@ -1,7 +1,7 @@
 // src/components/dashboard/add-goal-dialog.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { getAccounts } from "@/lib/db";
 
 
 interface AddGoalDialogProps {
@@ -33,8 +35,6 @@ interface AddGoalDialogProps {
   aiPlans?: AIPlan[];
 }
 
-const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
-
 export function AddGoalDialog({
   isOpen,
   onOpenChange,
@@ -42,6 +42,7 @@ export function AddGoalDialog({
   isSubmitting = false,
   aiPlans = [],
 }: AddGoalDialogProps) {
+  const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [target, setTarget] = useState("");
   const [current, setCurrent] = useState("");
@@ -52,19 +53,18 @@ export function AddGoalDialog({
   const [accounts, setAccounts] = useState<Account[]>([]);
   const { toast } = useToast();
   
+  const fetchAccounts = useCallback(async () => {
+    if (user) {
+        const accountsFromDb = (await getAccounts()) as Account[];
+        setAccounts(accountsFromDb);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (isOpen) {
-       try {
-            const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
-            if (storedAccounts) {
-                setAccounts(JSON.parse(storedAccounts));
-            }
-        } catch (error) {
-            console.error("Could not access localStorage:", error);
-            setAccounts([]);
-        }
+       fetchAccounts();
     }
-  }, [isOpen]);
+  }, [isOpen, fetchAccounts]);
 
   const handleAccountLink = (accountId: string) => {
     if (accountId === 'none') {
@@ -72,13 +72,11 @@ export function AddGoalDialog({
         return;
     }
     const account = accounts.find(acc => acc.id === accountId);
-    if (account) {
-        // In a real app, you would fetch the account balance. Here, we'll use a mock balance.
-        const mockBalance = parseFloat((Math.random() * 5000 + 500).toFixed(2));
-        setCurrent(String(mockBalance));
+    if (account && account.balance) {
+        setCurrent(String(account.balance));
         toast({
             title: "Balance Pre-filled",
-            description: `Current amount set to ${mockBalance} from ${account.name}.`
+            description: `Current amount set to ${account.balance} from ${account.name}.`
         })
     }
   }

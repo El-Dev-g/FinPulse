@@ -1,7 +1,7 @@
 // src/app/dashboard/transfer/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -24,15 +24,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Send, Wallet, Loader, Copy, Check, ArrowRight, ArrowLeftRight, RefreshCw } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import type { Account, Transaction } from "@/lib/types";
-import { addTransaction, getTransactions } from "@/lib/db";
+import { addTransaction, getTransactions, getAccounts, updateAccount } from "@/lib/db";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getIconForCategory } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-
-const LOCAL_STORAGE_KEY = "finpulse_connected_accounts";
 
 function SendMoneyForm({ accounts, onTransaction: onTransactionSent }: { accounts: Account[]; onTransaction: () => void }) {
   const { formatCurrency } = useAuth();
@@ -76,14 +74,9 @@ function SendMoneyForm({ accounts, onTransaction: onTransactionSent }: { account
         source: selectedAccount.id,
       });
 
-      // 2. Update the local storage balance
+      // 2. Update the balance in Firestore
       const newBalance = (selectedAccount.balance || 0) - sendAmount;
-      const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
-      const allAccounts = storedAccounts ? JSON.parse(storedAccounts) : [];
-      const updatedAccounts = allAccounts.map((acc: Account) => 
-        acc.id === fromAccountId ? { ...acc, balance: newBalance } : acc
-      );
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedAccounts));
+      await updateAccount(selectedAccount.id, { balance: newBalance });
       
       onTransactionSent();
 
@@ -217,19 +210,13 @@ function InternalTransferForm({ accounts, onTransaction: onTransactionSent }: { 
         source: toAccount.id,
       });
 
-      // 3. Update local storage balances
-      const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
-      const allAccounts = storedAccounts ? JSON.parse(storedAccounts) : [];
-      const updatedAccounts = allAccounts.map((acc: Account) => {
-        if (acc.id === fromAccountId) {
-          return { ...acc, balance: (acc.balance || 0) - transferAmount };
-        }
-        if (acc.id === toAccountId) {
-          return { ...acc, balance: (acc.balance || 0) + transferAmount };
-        }
-        return acc;
-      });
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedAccounts));
+      // 3. Update balances in Firestore
+      const newFromBalance = (fromAccount.balance || 0) - transferAmount;
+      const newToBalance = (toAccount.balance || 0) + transferAmount;
+      await Promise.all([
+          updateAccount(fromAccount.id, { balance: newFromBalance }),
+          updateAccount(toAccount.id, { balance: newToBalance }),
+      ]);
       
       onTransactionSent();
 
@@ -490,42 +477,27 @@ export default function TransferPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [refundCooldowns, setRefundCooldowns] = useState<Record<string, number>>({});
-  const { toast, formatCurrency } = useAuth();
+  const { user, toast, formatCurrency } = useAuth();
   
   const COOLDOWN_SECONDS = 10;
 
-  const fetchAccounts = () => {
+  const fetchAllData = useCallback(async () => {
+    if (!user) return;
     try {
-      const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (storedAccounts) {
-        setAccounts(JSON.parse(storedAccounts));
-      } else {
-        setAccounts([]);
-      }
-    } catch (error) {
-      console.error("Could not access localStorage:", error);
-      setAccounts([]);
-    }
-  }
-
-  const fetchTransactions = async () => {
-    try {
-        const dbTransactions = (await getTransactions()) as Transaction[];
+        const [dbAccounts, dbTransactions] = await Promise.all([
+            getAccounts() as Promise<Account[]>,
+            getTransactions() as Promise<Transaction[]>,
+        ]);
+        setAccounts(dbAccounts);
         setTransactions(dbTransactions.filter(t => t.category === 'Transfer' && t.amount < 0).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5));
     } catch (error) {
-        console.error("Could not fetch transactions:", error);
+        console.error("Could not fetch data:", error);
     }
-  }
-
-  const handleTransaction = () => {
-    fetchAccounts();
-    fetchTransactions();
-  }
+  }, [user]);
 
   useEffect(() => {
-    fetchAccounts();
-    fetchTransactions();
-  }, []);
+    fetchAllData();
+  }, [fetchAllData]);
 
   const handleRefund = async (transaction: Transaction) => {
     const refundAmount = Math.abs(transaction.amount);
@@ -548,14 +520,9 @@ export default function TransferPage() {
         });
 
         const newBalance = (sourceAccount.balance || 0) + refundAmount;
-        const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
-        const allAccounts = storedAccounts ? JSON.parse(storedAccounts) : [];
-        const updatedAccounts = allAccounts.map((acc: Account) => 
-            acc.id === transaction.source ? { ...acc, balance: newBalance } : acc
-        );
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedAccounts));
+        await updateAccount(sourceAccount.id, { balance: newBalance });
 
-        handleTransaction();
+        fetchAllData();
 
         toast({
             title: "Refund Processed",
@@ -620,11 +587,11 @@ export default function TransferPage() {
                 <TabsTrigger value="internal">Internal Transfer</TabsTrigger>
               </TabsList>
               <TabsContent value="external">
-                <SendMoneyForm accounts={accounts} onTransaction={handleTransaction}/>
+                <SendMoneyForm accounts={accounts} onTransaction={fetchAllData}/>
               </TabsContent>
               <TabsContent value="internal">
                 {accounts.length > 1 ? (
-                    <InternalTransferForm accounts={accounts} onTransaction={handleTransaction}/>
+                    <InternalTransferForm accounts={accounts} onTransaction={fetchAllData}/>
                 ) : (
                     <Alert className="mt-4">
                         <Wallet className="h-4 w-4" />

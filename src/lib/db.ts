@@ -1,7 +1,7 @@
 // src/lib/db.ts
 import { db } from './firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy, setDoc, writeBatch } from 'firebase/firestore';
-import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category, AIPlan, UserProfile, Advice, Investment, Project } from './types';
+import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category, AIPlan, UserProfile, Advice, Investment, Project, Account } from './types';
 import { auth } from './firebase';
 import { getFinancialAdvice } from './actions';
 
@@ -94,6 +94,7 @@ export const deleteUserData = async (uid: string): Promise<void> => {
         'investments',
         'projects',
         'integrations',
+        'accounts',
         'profile' // This will also delete the profile/settings doc
     ];
 
@@ -245,3 +246,9 @@ export const addProject = (project: Omit<Project, 'id'>) => addDataItem('project
 export const getProjects = () => getData<Project>('projects');
 export const updateProject = (id: string, project: Partial<Project>) => updateDataItem('projects', id, project);
 export const deleteProject = (id: string) => deleteDataItem('projects', id);
+
+// --- Linked Accounts ---
+export const addAccount = (account: Omit<Account, 'id'>) => addDataItem<Omit<Account, 'id'>>('accounts', account);
+export const getAccounts = () => getData<Account>('accounts');
+export const updateAccount = (id: string, account: Partial<Account>) => updateDataItem('accounts', id, account);
+export const deleteAccount = (id: string) => deleteDataItem('accounts', id);

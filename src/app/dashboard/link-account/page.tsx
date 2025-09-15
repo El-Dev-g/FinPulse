@@ -1,7 +1,7 @@
 // src/app/dashboard/link-account/page.tsx
 "use client";
 
-import React, { useState, useEffect, Suspense, useMemo } from 'react';
+import React, { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,7 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Landmark, Loader, CheckCircle, MoreVertical, Info, ArrowRight, Wallet } from 'lucide-react';
+import { Landmark, Loader, CheckCircle, MoreVertical, Info, ArrowRight, Wallet, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import type { Account } from '@/lib/types';
 import {
@@ -42,9 +42,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
+import { addAccount, getAccounts, deleteAccount } from '@/lib/db';
 
-
-const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
 
 const partner = { name: 'Fintech Partner', termsUrl: '#', privacyUrl: '#' };
 
@@ -52,52 +51,60 @@ function LinkAccountPageContent() {
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState<'initial' | 'connecting' | 'success'>('initial');
     const [connectedAccounts, setConnectedAccounts] = useState<Account[]>([]);
-    const [newlyFetchedAccounts, setNewlyFetchedAccounts] = useState<any[]>([]);
+    const [newlyFetchedAccounts, setNewlyFetchedAccounts] = useState<Account[]>([]);
     const [isConfirming, setIsConfirming] = useState(false);
+    const [isUnlinking, setIsUnlinking] = useState<Account | null>(null);
 
-    const { formatCurrency } = useAuth();
+    const { user, formatCurrency } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
     
-
-    // Fetch existing accounts from local storage on mount
-    useEffect(() => {
+    const fetchAccounts = useCallback(async () => {
+        if (!user) return;
         try {
-            const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
-            if (storedAccounts) {
-                setConnectedAccounts(JSON.parse(storedAccounts));
-            }
+            const accountsFromDb = (await getAccounts()) as Account[];
+            setConnectedAccounts(accountsFromDb);
         } catch (error) {
-            console.error("Could not access localStorage:", error);
+            console.error("Could not fetch accounts:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not load your connected accounts.'});
         }
-    }, []);
+    }, [user, toast]);
 
-    // Handle the redirect back from the API route
+    useEffect(() => {
+        fetchAccounts();
+    }, [fetchAccounts]);
+
     useEffect(() => {
         const success = searchParams.get('success');
         const error = searchParams.get('error');
         
-        if (success === 'true') {
+        async function handleSuccess() {
             setStep('connecting');
-            // Simulate fetching accounts and store them in local storage
-            const fetchedAccounts = [
+            const fetchedAccountsData = [
                 { id: 'acc1', name: 'Monzo', bank: 'Monzo Bank', bankUserName: 'John Doe', last4: '1234', accountNumber: '**** **** **** 1234', type: 'Checking', balance: 2548.75, syncStatus: 'synced' },
                 { id: 'acc2', name: 'Revolut', bank: 'Revolut Ltd', bankUserName: 'John Doe', last4: '5678', accountNumber: '**** **** **** 5678', type: 'Savings', balance: 10500.00, syncStatus: 'synced' },
                 { id: 'acc3', name: 'AMEX', bank: 'American Express', bankUserName: 'John Doe', last4: '0005', accountNumber: '**** ****** *0005', type: 'Credit Card', balance: -450.23, syncStatus: 'pending' },
             ];
             
-            const existingAccounts = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
-            const updatedAccounts = [...existingAccounts, ...fetchedAccounts];
-            const uniqueAccounts = Array.from(new Set(updatedAccounts.map(a => a.id))).map(id => updatedAccounts.find(a => a.id === id));
-            
-            setNewlyFetchedAccounts(fetchedAccounts);
-            setConnectedAccounts(uniqueAccounts as Account[]);
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(uniqueAccounts));
-
-            setStep('success');
-             // Clean the URL
-            router.replace('/dashboard/link-account', { scroll: false });
+            try {
+                // Save new accounts to the database
+                await Promise.all(fetchedAccountsData.map(acc => addAccount(acc)));
+                setNewlyFetchedAccounts(fetchedAccountsData);
+                fetchAccounts(); // Refetch all accounts from DB
+                setStep('success');
+            } catch (dbError) {
+                console.error("Failed to save accounts:", dbError);
+                toast({ variant: 'destructive', title: 'Connection Failed', description: 'Could not save your new accounts. Please try again.' });
+                setStep('initial');
+            } finally {
+                // Clean the URL
+                router.replace('/dashboard/link-account', { scroll: false });
+            }
+        }
+        
+        if (success === 'true') {
+            handleSuccess();
         } else if (error) {
             toast({
                 variant: 'destructive',
@@ -106,25 +113,36 @@ function LinkAccountPageContent() {
             });
             router.replace('/dashboard/link-account', { scroll: false });
         }
-
-    }, [searchParams, router, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams, router, toast, fetchAccounts]);
 
 
     const handleConnect = async () => {
-        setIsConfirming(false); // Close the dialog first
-        
+        setIsConfirming(false);
         setLoading(true);
         toast({
             title: "Demo Feature",
             description: "In a real app, this would securely redirect you to your bank.",
         });
-        // Simulate a delay for the connection process
         setTimeout(() => {
             const params = new URLSearchParams(window.location.search);
             params.set('success', 'true');
             router.push(`?${params.toString()}`);
         }, 2000);
     };
+
+    const handleUnlink = async () => {
+        if (!isUnlinking) return;
+        try {
+            await deleteAccount(isUnlinking.id);
+            toast({ title: 'Account Unlinked', description: `${isUnlinking.name} has been disconnected.` });
+            fetchAccounts();
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not unlink account.' });
+        } finally {
+            setIsUnlinking(null);
+        }
+    }
     
     if (step === 'connecting') {
         return (
@@ -202,7 +220,10 @@ function LinkAccountPageContent() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent>
                                                 <DropdownMenuItem>Refresh</DropdownMenuItem>
-                                                <DropdownMenuItem className="text-destructive">Unlink</DropdownMenuItem>
+                                                <DropdownMenuItem onSelect={() => setIsUnlinking(account)} className="text-destructive">
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    Unlink
+                                                </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </div>
@@ -264,6 +285,22 @@ function LinkAccountPageContent() {
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handleConnect}>Allow</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            <AlertDialog open={!!isUnlinking} onOpenChange={() => setIsUnlinking(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will unlink the {isUnlinking?.name} account. You will no longer see its balance or receive automatic transactions.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleUnlink} className="bg-destructive hover:bg-destructive/90">
+                           Yes, Unlink Account
+                        </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
