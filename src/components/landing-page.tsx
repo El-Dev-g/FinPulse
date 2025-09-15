@@ -76,11 +76,11 @@ export default function LandingPage() {
             </div>
             <div className="relative h-64 md:h-96 rounded-2xl overflow-hidden shadow-2xl">
               <Image
-                src="https://picsum.photos/800/600"
-                alt="A person reviewing their finances on a laptop with charts and graphs."
+                src="https://picsum.photos/seed/123/800/600"
+                alt="A financial management dashboard showing charts and graphs."
                 fill
                 className="object-cover"
-                data-ai-hint="financial tracking"
+                data-ai-hint="financial dashboard"
                 priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-transparent" />
