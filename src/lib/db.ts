@@ -1,7 +1,7 @@
 // src/lib/db.ts
 import { db } from './firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy, setDoc, writeBatch } from 'firebase/firestore';
-import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category, AIPlan, UserProfile, Advice, Investment, Project, TruelayerToken } from './types';
+import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category, AIPlan, UserProfile, Advice, Investment, Project } from './types';
 import { auth } from './firebase';
 import { getFinancialAdvice } from './actions';
 
@@ -245,25 +245,3 @@ export const addProject = (project: Omit<Project, 'id'>) => addDataItem('project
 export const getProjects = () => getData<Project>('projects');
 export const updateProject = (id: string, project: Partial<Project>) => updateDataItem('projects', id, project);
 export const deleteProject = (id: string) => deleteDataItem('projects', id);
-
-// --- Integrations (e.g., Truelayer Token) ---
-export const saveTruelayerToken = async (tokenData: Omit<TruelayerToken, 'createdAt'>) => {
-    const uid = await getUid();
-    if (!uid) throw new Error("User not authenticated");
-    const tokenRef = doc(db, `users/${uid}/integrations`, 'truelayer');
-    await setDoc(tokenRef, {
-        ...tokenData,
-        createdAt: new Date(),
-    }, { merge: true });
-};
-
-export const getTruelayerToken = async (): Promise<TruelayerToken | null> => {
-    const uid = await getUid();
-    if (!uid) return null;
-    const tokenRef = doc(db, `users/${uid}/integrations`, 'truelayer');
-    const docSnap = await getDoc(tokenRef);
-    if (docSnap.exists()) {
-        return docSnap.data() as TruelayerToken;
-    }
-    return null;
-};

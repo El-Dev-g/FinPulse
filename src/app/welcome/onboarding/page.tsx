@@ -20,14 +20,16 @@ import { AddBudgetDialog } from "@/components/dashboard/add-budget-dialog";
 import { addGoal, addBudget } from "@/lib/db";
 import type { Goal, Budget } from "@/lib/types";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
 export default function OnboardingPage() {
-  const { user, getTruelayerAuthUrl } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const [count, setCount] = useState(0);
   const [progress, setProgress] = useState(0);
+  const { toast } = useToast();
 
   const [isAddGoalDialogOpen, setIsAddGoalDialogOpen] = useState(false);
   const [isAddBudgetDialogOpen, setIsAddBudgetDialogOpen] = useState(false);
@@ -90,8 +92,13 @@ export default function OnboardingPage() {
   }
 
   const handleConnectBank = () => {
-    const authUrl = getTruelayerAuthUrl();
-    router.push(authUrl);
+    toast({
+      title: "Demo Feature",
+      description: "In a real app, this would securely redirect you to your bank.",
+    });
+     setTimeout(() => {
+        api?.scrollNext();
+    }, 1500);
   };
 
 

@@ -30,7 +30,6 @@ interface AuthContextType {
   setSubscriptionStatus: (status: SubscriptionStatus) => void;
   formatCurrency: (amount: number) => string;
   refreshProfile: () => Promise<void>;
-  getTruelayerAuthUrl: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -45,7 +44,6 @@ const AuthContext = createContext<AuthContextType>({
   setSubscriptionStatus: () => {},
   formatCurrency: (amount: number) => String(amount),
   refreshProfile: async () => {},
-  getTruelayerAuthUrl: () => {},
 });
 
 const unprotectedRoutes = [
@@ -165,16 +163,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [currency]
   );
   
-  const getTruelayerAuthUrl = useCallback(() => {
-    // This function simply navigates to our own API route.
-    // The server-side route will handle building the full Truelayer URL.
-    // This keeps sensitive details and logic off the client.
-    router.push('/api/truelayer/auth');
-  }, [router]);
-
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, checked, currency, isPro, subscriptionStatus, setCurrency, setSubscriptionStatus: handleSetSubscriptionStatus, formatCurrency, refreshProfile, getTruelayerAuthUrl }}
+      value={{ user, profile, loading, checked, currency, isPro, subscriptionStatus, setCurrency, setSubscriptionStatus: handleSetSubscriptionStatus, formatCurrency, refreshProfile }}
     >
       {children}
     </AuthContext.Provider>

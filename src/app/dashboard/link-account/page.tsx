@@ -22,7 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Landmark, Loader, CheckCircle, MoreVertical, Info } from 'lucide-react';
+import { Landmark, Loader, CheckCircle, MoreVertical, Info, ArrowRight, Wallet } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import type { Account } from '@/lib/types';
 import {
@@ -40,11 +40,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import Link from 'next/link';
 
 
 const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
 
-const partner = { name: 'Truelayer', termsUrl: '#', privacyUrl: '#' };
+const partner = { name: 'Fintech Partner', termsUrl: '#', privacyUrl: '#' };
 
 function LinkAccountPageContent() {
     const [loading, setLoading] = useState(false);
@@ -53,7 +55,7 @@ function LinkAccountPageContent() {
     const [newlyFetchedAccounts, setNewlyFetchedAccounts] = useState<any[]>([]);
     const [isConfirming, setIsConfirming] = useState(false);
 
-    const { getTruelayerAuthUrl, formatCurrency } = useAuth();
+    const { formatCurrency } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
@@ -112,18 +114,16 @@ function LinkAccountPageContent() {
         setIsConfirming(false); // Close the dialog first
         
         setLoading(true);
-        try {
-            getTruelayerAuthUrl();
-            // The getTruelayerAuthUrl now handles the redirection
-        } catch (e: any) {
-            console.error("Failed to get Truelayer auth URL:", e);
-            toast({
-                variant: 'destructive',
-                title: 'Connection Error',
-                description: e.message || 'Could not start the connection process.'
-            })
-            setLoading(false);
-        }
+        toast({
+            title: "Demo Feature",
+            description: "In a real app, this would securely redirect you to your bank.",
+        });
+        // Simulate a delay for the connection process
+        setTimeout(() => {
+            const params = new URLSearchParams(window.location.search);
+            params.set('success', 'true');
+            router.push(`?${params.toString()}`);
+        }, 2000);
     };
     
     if (step === 'connecting') {
@@ -209,9 +209,13 @@ function LinkAccountPageContent() {
                                 ))}
                             </div>
                         ) : (
-                            <div className="text-center py-10">
-                                <p className="text-muted-foreground">No accounts connected yet.</p>
-                            </div>
+                             <Alert>
+                                <Wallet className="h-4 w-4" />
+                                <AlertTitle>No Bank Accounts Linked</AlertTitle>
+                                <AlertDescription>
+                                    You need to link a bank account before you can use features like automatic transaction syncing or money transfers.
+                                </AlertDescription>
+                            </Alert>
                         )}
                     </CardContent>
                 </Card>
@@ -220,13 +224,13 @@ function LinkAccountPageContent() {
                     <CardHeader>
                         <CardTitle>Connect a New Account</CardTitle>
                         <CardDescription>
-                        We use our trusted partner, Truelayer, to securely connect to your bank and protect your data.
+                        We use a trusted partner to securely connect to your bank and protect your data.
                         </CardDescription>
                     </CardHeader>
                     <CardFooter>
                         <Button onClick={() => setIsConfirming(true)} disabled={loading} className="w-full">
                             {loading ? <Loader className="mr-2 animate-spin" /> : <Landmark className="mr-2" />}
-                            Connect Securely via Truelayer
+                            Connect Securely
                         </Button>
                     </CardFooter>
                 </Card>

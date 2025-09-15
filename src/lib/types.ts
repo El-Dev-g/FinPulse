@@ -19,17 +19,6 @@ export type Account = {
   balance?: number; // Optional balance for mock data
 };
 
-export interface TruelayerToken {
-  id?: string; // Will be the user's UID
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  token_type: string;
-  scope: string;
-  createdAt: any; // Firestore timestamp
-}
-
-
 export interface Transaction {
   id: string;
   description: string;
