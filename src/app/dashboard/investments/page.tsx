@@ -1,8 +1,7 @@
-
 // src/app/dashboard/investments/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -21,27 +20,28 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Plus, Loader, TrendingUp, MoreHorizontal, FileText } from "lucide-react";
+import { Plus, Loader, TrendingUp, MoreHorizontal, FileText, Search, X, SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import type { Investment, ClientInvestment } from "@/lib/types";
 import { getInvestments, addInvestment, updateInvestment, deleteInvestment } from "@/lib/db";
 import { getStockData } from "@/lib/actions";
 import { InvestmentHoldingsTable } from "@/components/dashboard/investment-holdings-table";
-import { PortfolioSummary } from "@/components/dashboard/portfolio-summary";
 import { AddInvestmentDialog } from "@/components/dashboard/add-investment-dialog";
 import { EditInvestmentDialog } from "@/components/dashboard/edit-investment-dialog";
-import { InvestmentPerformanceChart } from "@/components/dashboard/investment-performance-chart";
 import { Alert, AlertTitle, AlertDescription as AlertDescriptionComponent } from "@/components/ui/alert";
-
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 export default function InvestmentsPage() {
-  const { user, formatCurrency } = useAuth();
+  const { user, isPro } = useAuth();
   const [investments, setInvestments] = useState<ClientInvestment[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingInvestment, setEditingInvestment] = useState<ClientInvestment | null>(null);
   const [deletingInvestment, setDeletingInvestment] = useState<ClientInvestment | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -92,6 +92,13 @@ export default function InvestmentsPage() {
     fetchData();
   }, [fetchData]);
 
+  const filteredInvestments = useMemo(() => {
+    return investments.filter(inv => 
+      inv.symbol.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [investments, searchTerm]);
+
+
   const handleAddInvestment = async (investment: Omit<Investment, "id" | "createdAt">) => {
     await addInvestment(investment);
     fetchData();
@@ -109,28 +116,82 @@ export default function InvestmentsPage() {
     fetchData();
   };
 
+  if (!isPro) {
+    return (
+        <main className="flex-1 p-4 md:p-6 lg:p-8">
+            <div className="max-w-7xl mx-auto">
+                 <Card className="mt-8 text-center">
+                    <CardHeader>
+                        <CardTitle className="flex items-center justify-center gap-2 font-headline">
+                        <TrendingUp className="h-6 w-6 text-primary" />
+                        Unlock Your Investment Portfolio
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground mb-4">
+                        This is a Pro feature. Upgrade your plan to track your stock portfolio, analyze performance, and more.
+                        </p>
+                        <Button>Upgrade to Pro</Button>
+                    </CardContent>
+                </Card>
+            </div>
+        </main>
+    )
+  }
+
 
   return (
     <>
-    <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
-              <TrendingUp className="h-8 w-8" />
-              Investment Portfolio
+    <div className="relative min-h-[calc(100vh-4rem)] md:min-h-0">
+    <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold tracking-tight font-headline">
+              Invest
             </h2>
-            <p className="text-muted-foreground">
-              Track and manage your investment holdings.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="mr-2" />
-              Add Holding
+             <Button onClick={() => setIsAddDialogOpen(true)} size="sm">
+              <Plus className="mr-2 h-4 w-4" />
+              Add
             </Button>
-          </div>
         </div>
+        
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input 
+            placeholder="Search stocks" 
+            className="pl-10 h-12 text-base"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {searchTerm && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
+              onClick={() => setSearchTerm('')}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          )}
+        </div>
+        
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+            <Button 
+              variant={activeFilter === 'all' ? 'default' : 'outline'}
+              className={cn("shrink-0", activeFilter === 'all' && 'bg-primary text-primary-foreground')}
+              onClick={() => setActiveFilter('all')}
+            >
+              The Moneystart Portfolio
+            </Button>
+            <Button 
+              variant={activeFilter === 'motorsport' ? 'default' : 'outline'}
+              className="shrink-0"
+              onClick={() => setActiveFilter('motorsport')}
+            >
+              Motorsport: Formula One
+            </Button>
+        </div>
+
 
         {error && (
              <Alert variant="destructive" className="mb-6">
@@ -147,36 +208,22 @@ export default function InvestmentsPage() {
                 <Loader className="h-8 w-8 animate-spin text-primary" />
             </div>
         ) : investments.length === 0 ? (
-             <Card className="text-center py-20">
-                <CardHeader>
-                    <CardTitle>Your Portfolio is Empty</CardTitle>
-                    <CardDescription>
-                        Add your first holding to start tracking your investments.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Button onClick={() => setIsAddDialogOpen(true)}>
-                        <Plus className="mr-2" />
-                        Add Investment
-                    </Button>
-                </CardContent>
-             </Card>
+             <div className="text-center py-20">
+                <h3 className="text-lg font-semibold">Your Portfolio is Empty</h3>
+                <p className="text-muted-foreground mt-2">
+                    Add your first holding to start tracking your investments.
+                </p>
+                <Button onClick={() => setIsAddDialogOpen(true)} className="mt-6">
+                    <Plus className="mr-2" />
+                    Add Investment
+                </Button>
+             </div>
         ) : (
-            <div className="space-y-8">
-                <PortfolioSummary investments={investments} />
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                    <div className="xl:col-span-2">
-                         <InvestmentHoldingsTable 
-                            investments={investments} 
-                            onEdit={setEditingInvestment}
-                            onDelete={setDeletingInvestment}
-                        />
-                    </div>
-                    <div className="xl:col-span-1">
-                        <InvestmentPerformanceChart investments={investments} />
-                    </div>
-                </div>
-            </div>
+             <InvestmentHoldingsTable 
+                investments={filteredInvestments} 
+                onEdit={setEditingInvestment}
+                onDelete={setDeletingInvestment}
+            />
         )}
       </div>
 
@@ -193,6 +240,19 @@ export default function InvestmentsPage() {
         onDeleteInvestment={handleDeleteInvestment}
       />
     </main>
+    <div className="sticky bottom-6 flex justify-center">
+        <div className="bg-foreground text-background rounded-full shadow-lg flex items-center p-1">
+            <Button variant="ghost" className="rounded-full gap-2 text-background hover:bg-background/20 hover:text-background">
+                <ArrowUpDown className="h-4 w-4" />
+                Sort
+            </Button>
+            <Button variant="ghost" className="rounded-full gap-2 text-background hover:bg-background/20 hover:text-background">
+                <SlidersHorizontal className="h-4 w-4" />
+                Filter
+            </Button>
+        </div>
+      </div>
+    </div>
     <AlertDialog open={!!deletingInvestment} onOpenChange={() => setDeletingInvestment(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
