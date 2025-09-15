@@ -1,3 +1,4 @@
+
 // src/lib/db.ts
 import { db } from './firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy, setDoc, writeBatch } from 'firebase/firestore';
@@ -204,7 +205,7 @@ export const deleteTransaction = (id: string) => deleteDataItem('transactions', 
 
 // --- Tasks ---
 export const addTask = (task: Omit<FinancialTask, 'id'>) => {
-    const taskData: Omit<FinancialTask, 'id'> = {
+    const taskData: Omit<FinancialTask, 'id' | 'createdAt'> = {
         title: task.title,
         status: task.status,
     };
@@ -213,7 +214,7 @@ export const addTask = (task: Omit<FinancialTask, 'id'>) => {
     if (task.goalId) taskData.goalId = task.goalId;
     if (task.projectId) taskData.projectId = task.projectId;
     
-    return addDataItem<Omit<FinancialTask, 'id'>>('tasks', taskData);
+    return addDataItem<Omit<FinancialTask, 'id' | 'createdAt'>>('tasks', taskData);
 }
 export const getTasks = () => getData<FinancialTask>('tasks');
 export const updateTask = (id: string, task: Partial<FinancialTask>) => updateDataItem('tasks', id, task);
@@ -273,3 +274,4 @@ export const addAccount = (account: Omit<Account, 'id'>) => addDataItem<Omit<Acc
 export const getAccounts = () => getData<Account>('accounts');
 export const updateAccount = (id: string, account: Partial<Account>) => updateDataItem('accounts', id, account);
 export const deleteAccount = (id: string) => deleteDataItem('accounts', id);
+
