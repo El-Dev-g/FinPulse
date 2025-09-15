@@ -26,7 +26,7 @@ import {
 interface AddTaskDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddTask: (newTask: Omit<FinancialTask, "id" | "status" | "createdAt" | "projectId">) => Promise<void>;
+  onAddTask: (newTask: Omit<FinancialTask, "id" | "status" | "createdAt">) => Promise<void>;
   goals: Goal[];
 }
 
@@ -55,7 +55,14 @@ export function AddTaskDialog({
     setLoading(true);
 
     try {
-        await onAddTask({ title, dueDate, dueTime, goalId: goalId === "none" ? undefined : goalId });
+        const taskData: Omit<FinancialTask, "id" | "status" | "createdAt"> = { 
+            title, 
+            dueDate, 
+            dueTime, 
+            goalId: goalId === "none" ? undefined : goalId,
+        };
+
+        await onAddTask(taskData);
         onOpenChange(false);
         setTitle("");
         setDueDate("");

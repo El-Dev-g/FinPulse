@@ -203,7 +203,18 @@ export const getTransactions = () => getData<Transaction>('transactions');
 export const deleteTransaction = (id: string) => deleteDataItem('transactions', id);
 
 // --- Tasks ---
-export const addTask = (task: Omit<FinancialTask, 'id'>) => addDataItem<Omit<FinancialTask, 'id'>>('tasks', task);
+export const addTask = (task: Omit<FinancialTask, 'id'>) => {
+    const taskData: Omit<FinancialTask, 'id'> = {
+        title: task.title,
+        status: task.status,
+    };
+    if (task.dueDate) taskData.dueDate = task.dueDate;
+    if (task.dueTime) taskData.dueTime = task.dueTime;
+    if (task.goalId) taskData.goalId = task.goalId;
+    if (task.projectId) taskData.projectId = task.projectId;
+    
+    return addDataItem<Omit<FinancialTask, 'id'>>('tasks', taskData);
+}
 export const getTasks = () => getData<FinancialTask>('tasks');
 export const updateTask = (id: string, task: Partial<FinancialTask>) => updateDataItem('tasks', id, task);
 export const deleteTask = (id: string) => deleteDataItem('tasks', id);
