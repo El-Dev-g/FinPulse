@@ -19,7 +19,11 @@ export type StockDetailsRequest = z.infer<typeof StockDetailsRequestSchema>;
 
 const HistoricalDataSchema = z.object({
   date: z.string(),
+  open: z.number(),
+  high: z.number(),
+  low: z.number(),
   close: z.number(),
+  volume: z.number(),
 });
 
 const StockDetailsResponseSchema = z.object({
@@ -31,6 +35,10 @@ const StockDetailsResponseSchema = z.object({
   dayHigh: z.number(),
   volume: z.number(),
   logo: z.string(),
+  description: z.string(),
+  sector: z.string(),
+  industry: z.string(),
+  ceo: z.string(),
   history: z.array(HistoricalDataSchema),
 });
 export type StockDetailsResponse = z.infer<typeof StockDetailsResponseSchema>;
@@ -64,7 +72,7 @@ const fetchStockDataTool = ai.defineTool(
 
       const quoteData = quoteResponse.data?.[0];
       const profileData = profileResponse.data?.[0];
-      const historyData = historyResponse.data?.historical;
+      const historyData = historyResponse.data?.historical || [];
       
       if (!quoteData || !profileData) {
         throw new Error(`No quote or profile data returned for symbol: ${symbol}`);
@@ -79,9 +87,17 @@ const fetchStockDataTool = ai.defineTool(
         dayHigh: quoteData.dayHigh || 0,
         volume: quoteData.volume || 0,
         logo: profileData.image || '',
+        description: profileData.description || "",
+        sector: profileData.sector || "",
+        industry: profileData.industry || "",
+        ceo: profileData.ceo || "",
         history: Array.isArray(historyData) ? historyData.map((item: any) => ({
             date: item.date,
+            open: item.open,
+            high: item.high,
+            low: item.low,
             close: item.close,
+            volume: item.volume,
         })).reverse() : [],
       };
     } catch (error) {
@@ -99,7 +115,6 @@ const getStockDetailsFlow = ai.defineFlow(
     tools: [fetchStockDataTool]
   },
   async (input) => {
-    // Correctly call the tool to fetch the data
     return await fetchStockDataTool(input);
   }
 );
@@ -110,6 +125,3 @@ export async function getStockDetails(
 ): Promise<StockDetailsResponse> {
   return getStockDetailsFlow(request);
 }
-
-
-
