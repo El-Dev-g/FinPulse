@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader, TrendingUp, TrendingDown, AlertCircle, Plus, Repeat, Heart, ArrowUpRight, Info } from 'lucide-react';
+import { ArrowLeft, Loader, TrendingUp, TrendingDown, AlertCircle, Plus, Repeat, Heart, ArrowUpRight, Info, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -38,6 +38,7 @@ type StockDetails = {
     description: string;
     sector: string;
     industry: string;
+    ceo: string;
     marketCap: string;
     peRatio: string;
     dividendYield: string;
@@ -188,6 +189,10 @@ export default function StockDetailPage() {
                         MARKET OPEN
                     </div>
 
+                    <div className="mb-6">
+                        <StockPriceChart data={stockData.history} isPositive={isPositiveChange}/>
+                    </div>
+
 
                     <Tabs defaultValue="about">
                         <TabsList className="grid w-full grid-cols-3">
@@ -197,16 +202,27 @@ export default function StockDetailPage() {
                         </TabsList>
                         <TabsContent value="about">
                             <div className="py-6 space-y-6">
-                                <StockPriceChart data={stockData.history} isPositive={isPositiveChange}/>
-
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>About {stockData.name}</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="text-muted-foreground">{stockData.description}</p>
-                                    </CardContent>
-                                </Card>
+                                {stockData.industry && (
+                                     <div className="space-y-2">
+                                        <h3 className="text-lg font-semibold font-headline">Featured In</h3>
+                                        <Button variant="outline" className="bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 hover:bg-green-200/60 dark:hover:bg-green-900/50">
+                                            <Zap className="mr-2 h-4 w-4"/> {stockData.industry}
+                                        </Button>
+                                    </div>
+                                )}
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold font-headline">About {stockData.symbol}</h3>
+                                    <p className="text-muted-foreground text-sm">{stockData.description}</p>
+                                </div>
+                                 <div className="space-y-2">
+                                    <h4 className="text-sm font-medium text-muted-foreground">CEO</h4>
+                                    <p className="font-semibold">{stockData.ceo || 'N/A'}</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <h4 className="text-sm font-medium text-muted-foreground">Sector</h4>
+                                    <p className="font-semibold">{stockData.sector || 'N/A'}</p>
+                                </div>
+                                <Button variant="link" className="p-0 text-green-600 dark:text-green-400">Read More</Button>
                             </div>
                         </TabsContent>
                          <TabsContent value="financials">
@@ -280,12 +296,6 @@ export default function StockDetailPage() {
             </div>
 
             <div className="sticky bottom-0 mt-auto bg-background/80 backdrop-blur-sm border-t p-4 space-y-3">
-                <Button variant="outline" className="w-full h-14 bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50 hover:text-green-900 dark:hover:text-green-200" asChild>
-                    <Link href="/dashboard/recurring">
-                         <Repeat className="mr-2" />
-                        Set a recurring purchase
-                    </Link>
-                </Button>
                 <Button className="w-full h-14 text-base" asChild style={{backgroundColor: '#006A44'}}>
                     <Link href={`/dashboard/investments/trade?symbol=${symbol}&action=buy`}>
                         <Plus className="mr-2" />
