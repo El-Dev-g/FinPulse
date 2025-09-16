@@ -1,23 +1,16 @@
 
 'use server';
-/**
- * @fileOverview A flow to retrieve comprehensive details for a given stock symbol.
- *
- * - getStockDetails - Fetches company profile, quote, and historical data.
- * - StockDetailsRequest - Input schema for the flow.
- * - StockDetailsResponse - Output schema for the flow.
- */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import axios from 'axios';
 
 const StockDetailsRequestSchema = z.object({
-  symbol: z.string().describe('The stock ticker symbol, e.g., AAPL.'),
+  symbol: z.string(),
 });
 export type StockDetailsRequest = z.infer<typeof StockDetailsRequestSchema>;
 
-const HistoricalDataSchema = z.object({
+const StockHistoryItemSchema = z.object({
   date: z.string(),
   open: z.number(),
   high: z.number(),
@@ -39,15 +32,21 @@ const StockDetailsResponseSchema = z.object({
   sector: z.string(),
   industry: z.string(),
   ceo: z.string(),
-  history: z.array(HistoricalDataSchema),
+  history: z.array(StockHistoryItemSchema),
 });
 export type StockDetailsResponse = z.infer<typeof StockDetailsResponseSchema>;
 
-// This is a tool that the flow will use. It's not exported.
+export async function getStockDetails(
+  input: StockDetailsRequest
+): Promise<StockDetailsResponse> {
+  return getStockDetailsFlow(input);
+}
+
 const fetchStockDataTool = ai.defineTool(
   {
     name: 'fetchStockData',
-    description: 'Fetches quote, profile, and historical data for a stock symbol from the Financial Modeling Prep API.',
+    description:
+      'Fetches quote, profile, and historical data for a stock symbol from the Financial Modeling Prep API (stable endpoints).',
     inputSchema: StockDetailsRequestSchema,
     outputSchema: StockDetailsResponseSchema,
   },
@@ -58,52 +57,63 @@ const fetchStockDataTool = ai.defineTool(
     }
 
     try {
-      const quoteUrl = `https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${apiKey}`;
-      const profileUrl = `https://financialmodelingprep.com/api/v3/profile/${symbol}?apikey=${apiKey}`;
-      const historyUrl = `https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?timeseries=90&apikey=${apiKey}`;
-      
-      const [quoteResponse, profileResponse, historyResponse] = await Promise.all([
-        axios.get(quoteUrl),
-        axios.get(profileUrl),
+      const historyUrl = `https://financialmodelingprep.com/stable/historical-price?symbol=${symbol}&limit=90&apikey=${apiKey}`;
+      const profileUrl = `https://financialmodelingprep.com/stable/profile?symbol=${symbol}&apikey=${apiKey}`;
+
+      const [historyResponse, profileResponse] = await Promise.all([
         axios.get(historyUrl),
+        axios.get(profileUrl),
       ]);
 
-      const quoteData = quoteResponse.data?.[0];
-      const profileData = profileResponse.data?.[0];
-      const historyData = historyResponse.data?.historical || [];
-      
-      if (!quoteData || !profileData) {
-        throw new Error(`No quote or profile data returned for symbol: ${symbol}`);
+      const historyData = Array.isArray(historyResponse.data)
+        ? historyResponse.data
+        : [];
+      const profileData = Array.isArray(profileResponse.data)
+        ? profileResponse.data[0]
+        : null;
+
+      if (historyData.length === 0 || !profileData) {
+        throw new Error(`No historical or profile data for symbol: ${symbol}`);
       }
 
+      const today = historyData[0]; // most recent trading day
+      const yesterday = historyData[1]; // previous trading day
+      const change =
+        today && yesterday ? today.close - yesterday.close : 0;
+
       return {
-        symbol: symbol,
+        symbol,
         name: profileData.companyName || symbol,
-        price: quoteData.price || 0,
-        change: quoteData.change || 0,
-        dayLow: quoteData.dayLow || 0,
-        dayHigh: quoteData.dayHigh || 0,
-        volume: quoteData.volume || 0,
+        price: today?.close || 0,
+        change,
+        dayLow: today?.low || 0,
+        dayHigh: today?.high || 0,
+        volume: today?.volume || 0,
         logo: profileData.image || '',
-        description: profileData.description || "",
-        sector: profileData.sector || "",
-        industry: profileData.industry || "",
-        ceo: profileData.ceo || "",
-        history: Array.isArray(historyData) ? historyData.map((item: any) => ({
+        description: profileData.description || '',
+        sector: profileData.sector || '',
+        industry: profileData.industry || '',
+        ceo: profileData.ceo || '',
+        history: historyData
+          .map((item: any) => ({
             date: item.date,
             open: item.open,
             high: item.high,
             low: item.low,
             close: item.close,
             volume: item.volume,
-        })).reverse() : [],
+          }))
+          .reverse(),
       };
     } catch (error) {
       console.error(`Failed to fetch all data for symbol ${symbol}:`, error);
-      throw new Error(`Could not load data for ${symbol}. The API may be unavailable or the symbol may be invalid.`);
+      throw new Error(
+        `Could not load data for ${symbol}. The API may be unavailable or the symbol may be invalid.`
+      );
     }
   }
 );
+
 
 const getStockDetailsFlow = ai.defineFlow(
   {
@@ -115,10 +125,3 @@ const getStockDetailsFlow = ai.defineFlow(
     return await fetchStockDataTool(input);
   }
 );
-
-
-export async function getStockDetails(
-  request: StockDetailsRequest
-): Promise<StockDetailsResponse> {
-  return getStockDetailsFlow(request);
-}

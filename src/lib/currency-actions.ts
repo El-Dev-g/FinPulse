@@ -1,52 +1,44 @@
-// src/lib/currency-actions.ts
-"use server";
-
+import axios from "axios";
 import { z } from "zod";
-import axios from 'axios';
+import { ConvertCurrencyRequestSchema } from "@/lib/schemas";
 
-const ConvertCurrencyRequestSchema = z.object({
-  from: z.string(),
-  to: z.string(),
-  amount: z.number(),
-});
+export async function convertCurrency(
+  request: z.infer<typeof ConvertCurrencyRequestSchema>
+  ) {
+    const parsedRequest = ConvertCurrencyRequestSchema.safeParse(request);
+      if (!parsedRequest.success) {
+          throw new Error("Invalid request format for currency conversion.");
+            }
 
-export async function convertCurrency(request: z.infer<typeof ConvertCurrencyRequestSchema>) {
-  const parsedRequest = ConvertCurrencyRequestSchema.safeParse(request);
-  if (!parsedRequest.success) {
-    throw new Error("Invalid request");
-  }
+              const { from, to, amount } = parsedRequest.data;
 
-  const { from, to, amount } = parsedRequest.data;
+                if (from === to) {
+                    return { from, to, amount, result: amount };
+                      }
 
-  if (amount === 0 || from === to) {
-    return { convertedAmount: amount };
-  }
+                        const apiKey = process.env.FINANCIAL_MODELING_PREP_API_KEY;
+                          if (!apiKey) {
+                              throw new Error(
+                                    "Currency conversion service is not configured. Missing API key."
+                                        );
+                                          }
 
-  const apiKey = process.env.FINANCIAL_MODELING_PREP_API_KEY;
+                                            const pair = `${from}${to}`;
+                                              const url = `https://financialmodelingprep.com/stable/fx?pair=${pair}&apikey=${apiKey}`;
 
-  if (!apiKey) {
-    throw new Error("Currency conversion service is not configured. Missing API key.");
-  }
-  
-  const symbol = `${from}${to}`;
-  const url = `https://financialmodelingprep.com/api/v3/fx/${symbol}?apikey=${apiKey}`;
+                                                try {
+                                                    const response = await axios.get(url);
+                                                        const fxData = Array.isArray(response.data) ? response.data[0] : null;
 
-  try {
-    const response = await axios.get(url);
+                                                            if (!fxData || !fxData.price) {
+                                                                  throw new Error(`No FX data available for pair ${pair}`);
+                                                                      }
 
-    if (response.data.length === 0) {
-      throw new Error(`No exchange rate found for the pair ${from}/${to}.`);
-    }
-
-    const rate = response.data[0].rate;
-    if (typeof rate !== 'number') {
-        throw new Error("Failed to retrieve a valid exchange rate from API.");
-    }
-    
-    return { convertedAmount: amount * rate };
-  } catch (error: any) {
-    console.error("Currency conversion error:", error);
-    const errorMessage = error.response?.data?.['Error Message'] || error.message || "Failed to convert currency.";
-    throw new Error(errorMessage);
-  }
-}
+                                                                          const result = amount * fxData.price;
+                                                                              return { from, to, amount, rate: fxData.price, result };
+                                                                                } catch (error: any) {
+                                                                                    console.error(`Error converting currency ${from} -> ${to}`, error);
+                                                                                        throw new Error(`Currency conversion failed: ${error.message || error}`);
+                                                                                          }
+                                                                                          }
+                                                                                          
