@@ -3,6 +3,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { getStockDetails } from '@/lib/actions';
 import { useAuth } from '@/hooks/use-auth';
@@ -15,12 +16,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader, TrendingUp, TrendingDown, AlertCircle, Plus, Repeat, Heart } from 'lucide-react';
+import { ArrowLeft, Loader, TrendingUp, TrendingDown, AlertCircle, Plus, Repeat, Heart, ArrowUpRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StockPriceChart } from '@/components/dashboard/stock-price-chart';
+import { format, parseISO } from 'date-fns';
+import type { NewsArticle } from '@/lib/types';
+
 
 type StockDetails = {
     symbol: string;
@@ -42,6 +46,7 @@ type StockDetails = {
         close: number;
         volume: number;
     }[];
+    news: NewsArticle[];
 };
 
 export default function StockDetailPage() {
@@ -111,6 +116,14 @@ export default function StockDetailPage() {
     if (!stockData) {
         return null;
     }
+    
+    const formatPublishedDate = (dateString: string) => {
+        const year = dateString.substring(0, 4);
+        const month = dateString.substring(4, 6);
+        const day = dateString.substring(6, 8);
+        const date = new Date(`${year}-${month}-${day}`);
+        return format(date, 'LLL dd, yyyy');
+    }
 
     return (
         <main className="flex-1 flex flex-col">
@@ -136,13 +149,13 @@ export default function StockDetailPage() {
                         <TabsList className="grid w-full grid-cols-3">
                             <TabsTrigger value="about">About</TabsTrigger>
                             <TabsTrigger value="financials" disabled>Financials</TabsTrigger>
-                            <TabsTrigger value="news" disabled>News</TabsTrigger>
+                            <TabsTrigger value="news">News</TabsTrigger>
                         </TabsList>
                         <TabsContent value="about">
                             <div className="py-6 space-y-6">
                                 <div className="flex items-start gap-4">
                                      <Avatar className="h-12 w-12">
-                                        <AvatarImage src={stockData.logo} alt={symbol as string} />
+                                        <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
                                         <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
                                     </Avatar>
                                     <div className="flex-grow">
@@ -210,15 +223,43 @@ export default function StockDetailPage() {
                             </Card>
                         </TabsContent>
                          <TabsContent value="news">
-                             <Card className="mt-4">
-                                <CardHeader>
-                                    <CardTitle>News</CardTitle>
-                                    <CardDescription>This feature is coming soon.</CardDescription>
-                                </CardHeader>
-                                <CardContent className="h-60 flex items-center justify-center">
-                                    <p className="text-muted-foreground">Related news articles will be displayed here.</p>
-                                </CardContent>
-                            </Card>
+                             <div className="py-6 space-y-4">
+                                <h3 className="text-xl font-bold font-headline">Related News</h3>
+                                {stockData.news && stockData.news.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {stockData.news.map((article, index) => (
+                                            <a key={index} href={article.url} target="_blank" rel="noopener noreferrer" className="block p-4 rounded-lg border hover:bg-muted/50">
+                                                <div className="flex gap-4 items-start">
+                                                    <div className="flex-grow">
+                                                        <p className="font-semibold leading-snug">{article.title}</p>
+                                                        <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
+                                                            <span>{formatPublishedDate(article.time_published)}</span>
+                                                            <span className="flex items-center gap-1.5"><ArrowUpRight className="h-3 w-3" />{article.source}</span>
+                                                        </div>
+                                                    </div>
+                                                    {article.banner_image && (
+                                                        <div className="relative w-24 h-16 flex-shrink-0">
+                                                            <Image
+                                                                src={article.banner_image}
+                                                                alt={article.title}
+                                                                fill
+                                                                className="object-cover rounded-md"
+                                                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </a>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <Card>
+                                        <CardContent className="h-40 flex items-center justify-center">
+                                            <p className="text-muted-foreground">No recent news found for {stockData.symbol}.</p>
+                                        </CardContent>
+                                    </Card>
+                                )}
+                            </div>
                         </TabsContent>
                     </Tabs>
                 </div>

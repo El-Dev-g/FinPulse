@@ -157,6 +157,14 @@ export interface ClientInvestment extends Omit<Investment, 'createdAt'> {
   createdAt: Date;
 }
 
+export interface NewsArticle {
+    title: string;
+    url: string;
+    banner_image?: string;
+    source: string;
+    time_published: string;
+}
+
 
 export const spendingChartConfig = {
   amount: {

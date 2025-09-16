@@ -19,6 +19,14 @@ const StockHistoryItemSchema = z.object({
   volume: z.number(),
 });
 
+const NewsArticleSchema = z.object({
+    title: z.string(),
+    url: z.string().url(),
+    banner_image: z.string().url().optional().or(z.literal("")),
+    source: z.string(),
+    time_published: z.string(),
+})
+
 const StockDetailsResponseSchema = z.object({
   symbol: z.string(),
   name: z.string(),
@@ -33,6 +41,7 @@ const StockDetailsResponseSchema = z.object({
   industry: z.string(),
   ceo: z.string(),
   history: z.array(StockHistoryItemSchema),
+  news: z.array(NewsArticleSchema),
 });
 export type StockDetailsResponse = z.infer<typeof StockDetailsResponseSchema>;
 
@@ -46,7 +55,7 @@ const fetchStockDataTool = ai.defineTool(
   {
     name: "fetchStockData",
     description:
-      "Fetches quote, profile, and historical data for a stock symbol from the Alpha Vantage API.",
+      "Fetches quote, profile, historical, and news data for a stock symbol from the Alpha Vantage API.",
     inputSchema: StockDetailsRequestSchema,
     outputSchema: StockDetailsResponseSchema,
   },
@@ -60,16 +69,19 @@ const fetchStockDataTool = ai.defineTool(
       const overviewUrl = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${symbol}&apikey=${apiKey}`;
       const historyUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&apikey=${apiKey}`;
       const quoteUrl = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKey}`;
+      const newsUrl = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${symbol}&limit=5&apikey=${apiKey}`;
 
-      const [overviewResponse, historyResponse, quoteResponse] = await Promise.all([
+      const [overviewResponse, historyResponse, quoteResponse, newsResponse] = await Promise.all([
         axios.get(overviewUrl),
         axios.get(historyUrl),
         axios.get(quoteUrl),
+        axios.get(newsUrl),
       ]);
       
       const overviewData = overviewResponse.data;
       const historyData = historyResponse.data['Time Series (Daily)'];
       const quoteData = quoteResponse.data['Global Quote'];
+      const newsData = newsResponse.data.feed || [];
 
       if (!overviewData || Object.keys(overviewData).length === 0) {
         throw new Error(`No overview data found for symbol: ${symbol}`);
@@ -105,6 +117,7 @@ const fetchStockDataTool = ai.defineTool(
         industry: overviewData.Industry || "",
         ceo: overviewData.CEO || "",
         history,
+        news: newsData,
       };
     } catch (error: any) {
       console.error(`Failed to fetch all data for symbol ${symbol}:`, error.message);
