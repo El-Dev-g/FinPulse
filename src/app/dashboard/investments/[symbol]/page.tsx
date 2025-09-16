@@ -173,38 +173,39 @@ export default function StockDetailPage() {
                         </Button>
                     </div>
 
-                    <div className="px-4 md:px-6 lg:px-8 mt-4">
-                         <div className="flex items-start gap-4">
-                            <Avatar className="h-12 w-12">
-                                <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
-                                <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-grow">
-                                <p className="text-4xl font-bold">{formatCurrency(stockData.price)}</p>
-                                {currency === 'USD' && (
-                                    <p className="text-sm text-muted-foreground">~{ghsCurrencyFormat.format(priceInGhs)}</p>
-                                )}
-                                <div className="flex items-center gap-2">
-                                    <p className={cn("font-semibold text-base", isPositiveChange ? "text-green-600" : "text-destructive")}>
-                                        {isPositiveChange ? '+' : ''}{formatCurrency(stockData.change)} ({isPositiveChange ? '+' : ''}{((stockData.change) / ((stockData.price) - (stockData.change)) * 100).toFixed(2)}%)
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">today</p>
-                                </div>
-                            </div>
-                        </div>
-                         <div className="flex items-center gap-2 text-sm font-semibold text-green-600 my-4">
-                            <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
-                            MARKET OPEN
-                        </div>
-                    </div>
-
-
                     <Tabs defaultValue="about" className="w-full">
                         <TabsList className="w-full justify-start gap-4 px-4 md:px-6 lg:px-8" variant="underline">
                             <TabsTrigger value="about">About</TabsTrigger>
                             <TabsTrigger value="financials">Financials</TabsTrigger>
                             <TabsTrigger value="news">News</TabsTrigger>
                         </TabsList>
+                        
+                        <div className="px-4 md:px-6 lg:px-8 mt-4">
+                            <div className="flex items-start gap-4">
+                                <Avatar className="h-12 w-12">
+                                    <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
+                                    <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-grow">
+                                    <p className="text-4xl font-bold">{formatCurrency(stockData.price)}</p>
+                                    {currency === 'USD' && (
+                                        <p className="text-sm text-muted-foreground">~{ghsCurrencyFormat.format(priceInGhs)}</p>
+                                    )}
+                                    <div className="flex items-center gap-2">
+                                        <p className={cn("font-semibold text-base", isPositiveChange ? "text-green-600" : "text-destructive")}>
+                                            {isPositiveChange ? '+' : ''}{formatCurrency(stockData.change)} ({isPositiveChange ? '+' : ''}{((stockData.change) / ((stockData.price) - (stockData.change)) * 100).toFixed(2)}%)
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">today</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm font-semibold text-green-600 my-4">
+                                <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
+                                MARKET OPEN
+                            </div>
+                        </div>
+
+
                         <TabsContent value="about" className="w-full mt-6 px-4 md:px-6 lg:px-8">
                              <div className="space-y-6">
                                  <StockPriceChart data={stockData.history} isPositive={isPositiveChange}/>
