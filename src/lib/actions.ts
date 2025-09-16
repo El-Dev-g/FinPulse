@@ -1,4 +1,3 @@
-
 // src/lib/actions.ts
 "use server";
 
@@ -125,22 +124,22 @@ export async function getStockData(
   const results = await Promise.all(
     symbols.map(async (symbol) => {
       try {
-        const quoteUrl = `https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${apiKey}`;
-        const profileUrl = `https://financialmodelingprep.com/api/v3/profile/${symbol}?apikey=${apiKey}`;
+        const historyUrl = `https://financialmodelingprep.com/stable/historical-price?symbol=${symbol}&limit=2&apikey=${apiKey}`;
+        const profileUrl = `https://financialmodelingprep.com/stable/profile?symbol=${symbol}&apikey=${apiKey}`;
 
-        const [quoteResponse, profileResponse] = await Promise.all([
-          axios.get(quoteUrl),
+        const [historyResponse, profileResponse] = await Promise.all([
+          axios.get(historyUrl),
           axios.get(profileUrl),
         ]);
 
-        const quote = Array.isArray(quoteResponse.data)
-          ? quoteResponse.data[0]
-          : null;
+        const history = Array.isArray(historyResponse.data)
+          ? historyResponse.data
+          : [];
         const profile = Array.isArray(profileResponse.data)
           ? profileResponse.data[0]
           : null;
 
-        if (!quote && !profile) {
+        if (history.length === 0 && !profile) {
           console.warn(`No data found for symbol: ${symbol}`);
           return {
             symbol,
@@ -154,14 +153,19 @@ export async function getStockData(
           };
         }
 
+        const today = history[0];
+        const yesterday = history[1];
+        const change =
+          today && yesterday ? today.close - yesterday.close : 0;
+
         return {
-          symbol: quote?.symbol || symbol,
-          name: quote?.name || profile?.companyName || "",
-          price: quote?.price || 0,
-          change: quote?.change || 0,
-          dayLow: quote?.dayLow || 0,
-          dayHigh: quote?.dayHigh || 0,
-          volume: quote?.volume || 0,
+          symbol: profile?.symbol || symbol,
+          name: profile?.companyName || symbol,
+          price: today?.close || 0,
+          change,
+          dayLow: today?.low || 0,
+          dayHigh: today?.high || 0,
+          volume: today?.volume || 0,
           logo: profile?.image || "",
         };
       } catch (error) {
