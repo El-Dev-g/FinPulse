@@ -11,21 +11,17 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/use-auth";
 import type { ClientInvestment } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Separator } from '../ui/separator';
 
 interface InvestmentHoldingsTableProps {
   investments: ClientInvestment[];
-  onBuy: (investment: ClientInvestment) => void;
-  onSell: (investment: ClientInvestment) => void;
   onDelete: (investment: ClientInvestment) => void;
 }
 
-export function InvestmentHoldingsTable({ investments, onBuy, onSell, onDelete }: InvestmentHoldingsTableProps) {
+export function InvestmentHoldingsTable({ investments, onDelete }: InvestmentHoldingsTableProps) {
   const { formatCurrency } = useAuth();
 
   return (
@@ -49,10 +45,6 @@ export function InvestmentHoldingsTable({ investments, onBuy, onSell, onDelete }
                         <p className="text-base font-semibold">{formatCurrency(inv.currentValue)}</p>
                         <p className="text-xs text-muted-foreground">{inv.quantity} shares</p>
                     </div>
-                     <div className="hidden sm:flex items-center gap-2">
-                        <Button size="sm" variant="outline" onClick={() => onBuy(inv)}>Buy</Button>
-                        <Button size="sm" variant="outline" onClick={() => onSell(inv)}>Sell</Button>
-                    </div>
                     <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button 
@@ -64,16 +56,9 @@ export function InvestmentHoldingsTable({ investments, onBuy, onSell, onDelete }
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => onBuy(inv)} className="sm:hidden">
-                            Buy
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => onSell(inv)} className="sm:hidden">
-                            Sell
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator className="sm:hidden" />
                         <DropdownMenuItem onSelect={() => onDelete(inv)} className="text-destructive">
                         <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
+                        Delete Holding
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                     </DropdownMenu>

@@ -3,6 +3,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -20,20 +21,60 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Plus, Loader, TrendingUp, FileText, Search, X } from "lucide-react";
+import { Plus, Loader, TrendingUp, FileText, Search, X, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import type { Investment, ClientInvestment, Transaction, Account } from "@/lib/types";
 import { getInvestments, addInvestment, updateInvestment, deleteInvestment, addTransaction, getAccounts, updateAccount } from "@/lib/db";
 import { getStockData } from "@/lib/actions";
 import { InvestmentHoldingsTable } from "@/components/dashboard/investment-holdings-table";
 import { AddInvestmentDialog } from "@/components/dashboard/add-investment-dialog";
-import { ManageInvestmentDialog } from "@/components/dashboard/manage-investment-dialog";
 import { Alert, AlertTitle, AlertDescription as AlertDescriptionComponent } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { PortfolioSummary } from "@/components/dashboard/portfolio-summary";
 import { InvestmentPerformanceChart } from "@/components/dashboard/investment-performance-chart";
 import { useToast } from "@/hooks/use-toast";
+
+function TradeButton({ investments }: { investments: ClientInvestment[] }) {
+    const router = useRouter();
+
+    if (investments.length === 0) {
+        return null; // Don't show trade button if no investments
+    }
+
+    if (investments.length === 1) {
+        return (
+            <Button onClick={() => router.push(`/dashboard/investments/trade?symbol=${investments[0].symbol}`)}>
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Trade
+            </Button>
+        )
+    }
+
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button>
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    Trade
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+                {investments.map(inv => (
+                    <DropdownMenuItem key={inv.id} onSelect={() => router.push(`/dashboard/investments/trade?symbol=${inv.symbol}`)}>
+                        {inv.symbol} - {inv.name}
+                    </DropdownMenuItem>
+                ))}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    )
+}
 
 export default function InvestmentsPage() {
   const { user, isPro } = useAuth();
@@ -41,9 +82,7 @@ export default function InvestmentsPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [managingInvestment, setManagingInvestment] = useState<ClientInvestment | null>(null);
   const [deletingInvestment, setDeletingInvestment] = useState<ClientInvestment | null>(null);
-  const [manageDialogTab, setManageDialogTab] = useState<'buy' | 'sell'>('buy');
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
@@ -66,8 +105,7 @@ export default function InvestmentsPage() {
         return;
       }
 
-      const symbols = dbInvestments.map(inv => inv.symbol);
-      const stockData = await getStockData(symbols);
+      const stockData = await getStockData(dbInvestments.map(inv => inv.symbol));
       
       const clientInvestments = dbInvestments.map(inv => {
         const data = stockData.find(d => d.symbol === inv.symbol);
@@ -158,95 +196,6 @@ export default function InvestmentsPage() {
     });
     fetchData();
   };
-  
-  const handleBuyShares = async (investment: ClientInvestment, quantity: number, price: number, accountId?: string) => {
-    const cost = quantity * price;
-    if (accountId) {
-        const sourceAccount = accounts.find(acc => acc.id === accountId);
-        if (!sourceAccount) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Selected account not found.'});
-            throw new Error('Selected account not found');
-        }
-        if ((sourceAccount.balance || 0) < cost) {
-            toast({ variant: 'destructive', title: 'Insufficient Funds', description: `Not enough funds in ${sourceAccount.name}.`});
-            throw new Error('Insufficient Funds');
-        }
-        await updateAccount(accountId, { balance: (sourceAccount.balance || 0) - cost });
-    }
-
-    const totalShares = investment.quantity + quantity;
-    const totalCost = (investment.purchasePrice * investment.quantity) + (price * quantity);
-    const newAveragePrice = totalCost / totalShares;
-    
-    await updateInvestment(investment.id, {
-        quantity: totalShares,
-        purchasePrice: newAveragePrice
-    });
-
-    await addTransaction({
-        description: `Buy ${quantity} shares of ${investment.symbol}`,
-        amount: -cost,
-        category: "Investments",
-        date: new Date().toISOString().split('T')[0],
-        source: accountId || 'manual',
-    });
-    
-    toast({
-        title: "Shares Purchased",
-        description: `Bought ${quantity} shares of ${investment.symbol}.`,
-    });
-    fetchData();
-  };
-  
-  const handleSellShares = async (investment: ClientInvestment, quantity: number, price: number, accountId?: string) => {
-    if (quantity > investment.quantity) {
-        toast({ variant: 'destructive', title: "Error", description: "Cannot sell more shares than you own."});
-        return;
-    }
-    const proceeds = quantity * price;
-
-    if (accountId) {
-        const destAccount = accounts.find(acc => acc.id === accountId);
-        if (!destAccount) {
-             toast({ variant: 'destructive', title: 'Error', description: 'Selected destination account not found.'});
-            throw new Error('Destination account not found');
-        }
-        await updateAccount(accountId, { balance: (destAccount.balance || 0) + proceeds });
-    }
-
-    if (quantity === investment.quantity) {
-        await deleteInvestment(investment.id);
-    } else {
-        await updateInvestment(investment.id, {
-            quantity: investment.quantity - quantity,
-        });
-    }
-
-    await addTransaction({
-        description: `Sell ${quantity} shares of ${investment.symbol}`,
-        amount: proceeds,
-        category: "Investments",
-        date: new Date().toISOString().split('T')[0],
-        source: accountId || 'manual',
-    });
-
-    toast({
-        title: "Shares Sold",
-        description: `Sold ${quantity} shares of ${investment.symbol}.`,
-    });
-    fetchData();
-  }
-
-  const handleBuyClick = (investment: ClientInvestment) => {
-    setManageDialogTab('buy');
-    setManagingInvestment(investment);
-  };
-
-  const handleSellClick = (investment: ClientInvestment) => {
-    setManageDialogTab('sell');
-    setManagingInvestment(investment);
-  };
-
 
   if (!isPro) {
     return (
@@ -283,10 +232,13 @@ export default function InvestmentsPage() {
                 </h2>
                 <p className="text-muted-foreground">Track and manage your stock holdings.</p>
             </div>
-             <Button onClick={() => setIsAddDialogOpen(true)} size="sm">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Holding
-            </Button>
+            <div className="flex gap-2">
+                <TradeButton investments={investments} />
+                <Button onClick={() => setIsAddDialogOpen(true)} size="sm" variant="outline">
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Holding
+                </Button>
+            </div>
         </div>
 
         {error && (
@@ -294,7 +246,7 @@ export default function InvestmentsPage() {
                 <FileText className="h-4 w-4" />
                 <AlertTitle>Data Fetching Error</AlertTitle>
                 <AlertDescriptionComponent>
-                    {error}. You can get a free key from the Alpha Vantage website.
+                    {error}. You can get a free key from your Alpha Vantage dashboard.
                 </AlertDescriptionComponent>
              </Alert>
         )}
@@ -346,8 +298,6 @@ export default function InvestmentsPage() {
                                 </div>
                                 <InvestmentHoldingsTable 
                                     investments={filteredInvestments}
-                                    onBuy={handleBuyClick}
-                                    onSell={handleSellClick}
                                     onDelete={setDeletingInvestment}
                                 />
                             </CardContent>
@@ -366,15 +316,6 @@ export default function InvestmentsPage() {
         onOpenChange={setIsAddDialogOpen}
         onAddInvestment={handleAddInvestment}
         accounts={accounts}
-      />
-      <ManageInvestmentDialog
-        investment={managingInvestment}
-        isOpen={!!managingInvestment}
-        onOpenChange={() => setManagingInvestment(null)}
-        onBuy={handleBuyShares}
-        onSell={handleSellShares}
-        accounts={accounts}
-        defaultTab={manageDialogTab}
       />
     </main>
     <AlertDialog open={!!deletingInvestment} onOpenChange={() => setDeletingInvestment(null)}>
