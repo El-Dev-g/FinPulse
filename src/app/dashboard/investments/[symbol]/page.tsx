@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StockPriceChart } from '@/components/dashboard/stock-price-chart';
 import { format, parseISO } from 'date-fns';
 import type { NewsArticle } from '@/lib/types';
+import { RecurringPurchaseCard } from '@/components/dashboard/recurring-purchase-card';
 
 
 type StockDetails = {
@@ -199,20 +200,19 @@ export default function StockDetailPage() {
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 text-sm font-semibold text-green-600 my-4">
-                                <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
-                                MARKET OPEN
-                            </div>
                         </div>
 
 
                         <TabsContent value="about" className="w-full mt-6 px-4 md:px-6 lg:px-8">
                              <div className="space-y-6">
                                  <StockPriceChart data={stockData.history} isPositive={isPositiveChange}/>
+                                <div className="pt-6">
+                                    <RecurringPurchaseCard />
+                                </div>
                                 {stockData.industry && (
                                      <div className="space-y-2">
                                         <h3 className="text-lg font-semibold font-headline">Featured In</h3>
-                                        <Button variant="outline" className="bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 hover:bg-green-200/60 dark:hover:bg-green-900/50">
+                                        <Button variant="outline" className="bg-primary/10 dark:bg-primary/20 border-primary/20 dark:border-primary/30 text-primary dark:text-primary-foreground/80 hover:bg-primary/20 dark:hover:bg-primary/30">
                                             <Zap className="mr-2 h-4 w-4"/> {stockData.industry}
                                         </Button>
                                     </div>
@@ -229,7 +229,7 @@ export default function StockDetailPage() {
                                     <h4 className="text-sm font-medium text-muted-foreground">Sector</h4>
                                     <p className="font-semibold">{stockData.sector || 'N/A'}</p>
                                 </div>
-                                <Button variant="link" className="p-0 text-green-600 dark:text-green-400">Read More</Button>
+                                <Button variant="link" className="p-0 text-primary dark:text-green-400">Read More</Button>
                             </div>
                         </TabsContent>
                          <TabsContent value="financials" className="w-full mt-6">
@@ -267,7 +267,7 @@ export default function StockDetailPage() {
                                                         <p className="font-semibold leading-snug">{article.title}</p>
                                                         <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
                                                             <span>{formatPublishedDate(article.time_published)}</span>
-                                                            <span className="flex items-center gap-1.5 text-green-600"><ArrowUpRight className="h-3 w-3" />{article.source}</span>
+                                                            <span className="flex items-center gap-1.5 text-primary"><ArrowUpRight className="h-3 w-3" />{article.source}</span>
                                                         </div>
                                                     </div>
                                                     {article.banner_image && (
@@ -296,7 +296,7 @@ export default function StockDetailPage() {
                 </div>
             </div>
 
-            <div className="sticky bottom-0 mt-auto bg-background/80 backdrop-blur-sm border-t p-4">
+            <div className="sticky bottom-0 mt-auto bg-transparent p-4">
                  <Button className="w-full h-14 text-base flex-grow" asChild style={{backgroundColor: '#006A44'}}>
                     <Link href={`/dashboard/investments/trade?symbol=${symbol}&action=buy`}>
                         <Plus className="mr-2" />
