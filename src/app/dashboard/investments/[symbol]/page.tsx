@@ -152,7 +152,7 @@ export default function StockDetailPage() {
     return (
         <main className="flex-1 flex flex-col">
             <div className="flex-grow p-4 md:p-6 lg:p-8 space-y-6 overflow-y-auto pb-40">
-                <div className="max-w-7xl mx-auto w-full">
+                <div className="w-full">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-4">
                          <Button asChild variant="ghost" size="icon" className="h-9 w-9 flex-shrink-0">
@@ -167,11 +167,6 @@ export default function StockDetailPage() {
                         <Button variant="ghost" size="icon" className="h-9 w-9 flex-shrink-0" onClick={() => setIsFavorite(!isFavorite)}>
                             <Heart className={cn("h-5 w-5", isFavorite && "fill-red-500 text-red-500")} />
                         </Button>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-sm font-semibold text-green-600 mb-6">
-                        <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
-                        MARKET OPEN
                     </div>
 
                     <Tabs defaultValue="about">

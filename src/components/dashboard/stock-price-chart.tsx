@@ -1,3 +1,4 @@
+
 // src/components/dashboard/stock-price-chart.tsx
 "use client";
 
@@ -66,6 +67,10 @@ export const StockPriceChart = ({ data, isPositive }: StockPriceChartProps) => {
 
   return (
     <div>
+        <div className="flex items-center gap-2 text-sm font-semibold text-green-600 mb-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
+            MARKET OPEN
+        </div>
         <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                  <defs>
