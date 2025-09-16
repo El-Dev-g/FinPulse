@@ -23,8 +23,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plus, Loader, TrendingUp, FileText, Search, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import type { Investment, ClientInvestment, Transaction } from "@/lib/types";
-import { getInvestments, addInvestment, updateInvestment, deleteInvestment, addTransaction } from "@/lib/db";
+import type { Investment, ClientInvestment, Transaction, Account } from "@/lib/types";
+import { getInvestments, addInvestment, updateInvestment, deleteInvestment, addTransaction, getAccounts, updateAccount } from "@/lib/db";
 import { getStockData } from "@/lib/actions";
 import { InvestmentHoldingsTable } from "@/components/dashboard/investment-holdings-table";
 import { AddInvestmentDialog } from "@/components/dashboard/add-investment-dialog";
@@ -38,6 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function InvestmentsPage() {
   const { user, isPro } = useAuth();
   const [investments, setInvestments] = useState<ClientInvestment[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [managingInvestment, setManagingInvestment] = useState<ClientInvestment | null>(null);
@@ -52,7 +53,13 @@ export default function InvestmentsPage() {
     setLoading(true);
     setError(null);
     try {
-      const dbInvestments = (await getInvestments()) as Investment[];
+      const [dbInvestments, dbAccounts] = await Promise.all([
+        getInvestments() as Promise<Investment[]>,
+        getAccounts() as Promise<Account[]>
+      ]);
+
+      setAccounts(dbAccounts);
+      
       if (dbInvestments.length === 0) {
         setInvestments([]);
         setLoading(false);
@@ -105,18 +112,33 @@ export default function InvestmentsPage() {
   }, [investments, searchTerm]);
 
 
-  const handleAddInvestment = async (investment: Omit<Investment, "id" | "createdAt">) => {
+  const handleAddInvestment = async (investment: Omit<Investment, "id" | "createdAt">, accountId?: string) => {
+    const cost = investment.quantity * investment.purchasePrice;
+
+    if (accountId) {
+        const sourceAccount = accounts.find(acc => acc.id === accountId);
+        if (!sourceAccount) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Selected account not found.'});
+            throw new Error('Selected account not found');
+        }
+        if ((sourceAccount.balance || 0) < cost) {
+            toast({ variant: 'destructive', title: 'Insufficient Funds', description: `Not enough funds in ${sourceAccount.name}.`});
+            throw new Error('Insufficient Funds');
+        }
+        // Deduct from account balance
+        await updateAccount(accountId, { balance: (sourceAccount.balance || 0) - cost });
+    }
+    
     // 1. Add the holding
     await addInvestment(investment);
 
     // 2. Add a corresponding transaction
-    const cost = investment.quantity * investment.purchasePrice;
     await addTransaction({
         description: `Buy ${investment.quantity} shares of ${investment.symbol}`,
         amount: -cost,
         category: "Investments",
         date: new Date().toISOString().split('T')[0],
-        source: 'manual',
+        source: accountId || 'manual',
     });
 
     toast({
@@ -327,6 +349,7 @@ export default function InvestmentsPage() {
         isOpen={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onAddInvestment={handleAddInvestment}
+        accounts={accounts}
       />
       <ManageInvestmentDialog
         investment={managingInvestment}
