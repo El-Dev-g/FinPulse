@@ -122,7 +122,7 @@ export default function StockDetailPage() {
     if (error) {
         return (
              <main className="flex-1 p-4 md:p-6 lg:p-8 flex flex-col items-center justify-center text-center">
-                <Alert variant="destructive" className="max-w-lg">
+                <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Error Loading Stock Data</AlertTitle>
                     <AlertDescription>{error}</AlertDescription>
@@ -162,7 +162,7 @@ export default function StockDetailPage() {
                         </Button>
                         <div className="text-center">
                              <h2 className="text-lg font-bold tracking-tight font-headline">{stockData.symbol}</h2>
-                             <p className="text-sm text-muted-foreground">{stockData.name}</p>
+                             <p className="text-sm text-muted-foreground">{stockData.symbol}</p>
                         </div>
                         <Button variant="ghost" size="icon" className="h-9 w-9 flex-shrink-0" onClick={() => setIsFavorite(!isFavorite)}>
                             <Heart className={cn("h-5 w-5", isFavorite && "fill-red-500 text-red-500")} />
@@ -175,7 +175,7 @@ export default function StockDetailPage() {
                             <TabsTrigger value="financials">Financials</TabsTrigger>
                             <TabsTrigger value="news">News</TabsTrigger>
                         </TabsList>
-                        <TabsContent value="about">
+                        <TabsContent value="about" className="w-full">
                             <div className="space-y-6">
                                 <div className="flex items-start gap-4 mt-6">
                                     <Avatar className="h-12 w-12">
@@ -218,7 +218,7 @@ export default function StockDetailPage() {
                                 <Button variant="link" className="p-0 text-green-600 dark:text-green-400">Read More</Button>
                             </div>
                         </TabsContent>
-                         <TabsContent value="financials">
+                         <TabsContent value="financials" className="w-full">
                             <div className="space-y-6">
                                 <Card>
                                     <CardHeader>
@@ -245,7 +245,7 @@ export default function StockDetailPage() {
                                 </Card>
                             </div>
                         </TabsContent>
-                         <TabsContent value="news">
+                         <TabsContent value="news" className="w-full">
                              <div className="space-y-4">
                                 <h3 className="text-xl font-bold font-headline">Related News</h3>
                                 {stockData.news && stockData.news.length > 0 ? (
