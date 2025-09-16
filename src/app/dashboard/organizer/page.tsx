@@ -213,7 +213,7 @@ export default function OrganizerPage() {
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8 flex flex-col relative">
       {showConfetti && <Confetti recycle={false} numberOfPieces={200} />}
-      <div className="max-w-7xl mx-auto w-full">
+      <div className="w-full">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
@@ -230,7 +230,7 @@ export default function OrganizerPage() {
           </Button>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto w-full flex-grow">
+      <div className="w-full flex-grow">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="board">

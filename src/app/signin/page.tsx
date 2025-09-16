@@ -126,7 +126,7 @@ export default function SignInPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full space-y-6">
          <div className="flex flex-col items-center text-center">
           <Link href="/">
             <Logo />

@@ -264,7 +264,7 @@ export default function BillingPage() {
   return (
     <>
     <main className="flex-1 p-4 md:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="w-full space-y-8">
         <div className="mb-8">
           <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
             <FileText className="h-8 w-8" />

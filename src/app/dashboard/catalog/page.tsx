@@ -86,7 +86,7 @@ export default function CategoriesPage() {
   return (
     <>
       <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
-        <div className="max-w-2xl mx-auto">
+        <div className="w-full">
           <div className="mb-8">
             <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
               <ListTree className="h-8 w-8" />

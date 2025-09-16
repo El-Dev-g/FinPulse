@@ -233,7 +233,7 @@ export default function ReportsPage() {
 
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>
                 <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">

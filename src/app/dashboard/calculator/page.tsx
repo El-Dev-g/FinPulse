@@ -376,7 +376,7 @@ function CalculatorPageContent() {
 
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8 flex flex-col">
-      <div className="max-w-4xl mx-auto w-full">
+      <div className="w-full">
         <div className="flex items-center justify-between mb-8">
             <div>
                 <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
