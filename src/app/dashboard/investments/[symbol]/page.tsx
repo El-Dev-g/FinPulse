@@ -232,8 +232,8 @@ export default function StockDetailPage() {
                                 <Button variant="link" className="p-0 text-primary dark:text-green-400">Read More</Button>
                             </div>
                         </TabsContent>
-                         <TabsContent value="financials" className="w-full mt-6">
-                            <div className="space-y-6 px-4 md:px-6 lg:px-8">
+                         <TabsContent value="financials" className="w-full mt-6 px-4 md:px-6 lg:px-8">
+                            <div className="space-y-6">
                                 <h3 className="text-xl font-bold font-headline flex items-center gap-2">
                                     Stats <Info className="h-4 w-4 text-muted-foreground" />
                                 </h3>
@@ -255,11 +255,11 @@ export default function StockDetailPage() {
                                 </div>
                             </div>
                         </TabsContent>
-                         <TabsContent value="news" className="w-full mt-6">
+                         <TabsContent value="news" className="w-full mt-6 px-4 md:px-6 lg:px-8">
                              <div className="space-y-4">
-                                <h3 className="text-xl font-bold font-headline px-4 md:px-6 lg:px-8">Related News</h3>
+                                <h3 className="text-xl font-bold font-headline">Related News</h3>
                                 {stockData.news && stockData.news.length > 0 ? (
-                                    <div className="space-y-4 px-4 md:px-6 lg:px-8">
+                                    <div className="space-y-4">
                                         {stockData.news.map((article, index) => (
                                             <a key={index} href={article.url} target="_blank" rel="noopener noreferrer" className="block p-4 rounded-lg border hover:bg-muted/50">
                                                 <div className="flex gap-4 items-start">
@@ -286,7 +286,7 @@ export default function StockDetailPage() {
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="h-40 flex items-center justify-center border rounded-lg mx-4 md:mx-6 lg:px-8">
+                                    <div className="h-40 flex items-center justify-center border rounded-lg">
                                         <p className="text-muted-foreground">No recent news found for {stockData.symbol}.</p>
                                     </div>
                                 )}
