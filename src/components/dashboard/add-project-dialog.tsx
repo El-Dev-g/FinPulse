@@ -1,3 +1,4 @@
+
 // src/components/dashboard/add-project-dialog.tsx
 "use client";
 
@@ -16,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader } from "lucide-react";
 import type { Project } from "@/lib/types";
+import { generateProjectImage } from "@/ai/flows/generate-project-image";
 
 interface AddProjectDialogProps {
   isOpen: boolean;
@@ -60,18 +62,22 @@ export function AddProjectDialog({
     setLoading(true);
 
     try {
+      // Generate AI image first
+      const { imageUrl } = await generateProjectImage({ projectName: name });
+
       await onAddProject({
         name,
         description,
         targetAmount: numTargetAmount,
         currentAmount: 0,
-        imageUrl: `https://picsum.photos/seed/${Math.random()}/600/400`,
+        imageUrl,
         status: 'active',
       });
       onOpenChange(false);
       resetForm();
     } catch (err) {
-      setError("Failed to add project. Please try again.");
+      console.error("Failed to add project:", err);
+      setError("Failed to add project. The AI image generator may be unavailable. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -87,7 +93,7 @@ export function AddProjectDialog({
           <DialogHeader>
             <DialogTitle>Create a New Project</DialogTitle>
             <DialogDescription>
-              Start planning your next big financial milestone.
+              Start planning your next big financial milestone. An AI-generated image will be created for you.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -124,7 +130,7 @@ export function AddProjectDialog({
           <DialogFooter>
             <Button type="submit" disabled={loading}>
               {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-              Create Project
+              {loading ? 'Generating Image...' : 'Create Project'}
             </Button>
           </DialogFooter>
         </form>
