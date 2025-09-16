@@ -22,6 +22,7 @@ import { InvestmentTradeForm } from '@/components/dashboard/investment-trade-for
 import { getAccounts, getInvestments, addTransaction, updateAccount, addInvestment, updateInvestment, deleteInvestment } from '@/lib/db';
 import type { Account, Investment, ClientInvestment } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 type StockDetails = {
     symbol: string;
@@ -182,7 +183,7 @@ function TradePageContent() {
     }
 
     return (
-        <Card className="max-w-xl mx-auto">
+        <Card>
             <CardHeader>
                  <div className="flex items-center gap-4">
                     <Avatar className="h-12 w-12">
@@ -211,8 +212,8 @@ function TradePageContent() {
 
 export default function TradePage() {
     return (
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
-            <div className="max-w-xl mx-auto">
+        <main className="flex-1 flex flex-col p-4 md:p-6 lg:p-8">
+            <div className="flex-grow">
                  <div className="mb-6">
                     <Button asChild variant="outline" size="sm">
                         <Link href="/dashboard/investments">
