@@ -170,13 +170,13 @@ export default function StockDetailPage() {
                     </div>
 
                     <Tabs defaultValue="about" className="w-full">
-                        <TabsList className="w-full justify-start px-4 md:px-6 lg:px-8">
+                        <TabsList className="w-full justify-start gap-4 px-4 md:px-6 lg:px-8">
                             <TabsTrigger value="about">About</TabsTrigger>
                             <TabsTrigger value="financials">Financials</TabsTrigger>
                             <TabsTrigger value="news">News</TabsTrigger>
                         </TabsList>
                         <TabsContent value="about" className="w-full mt-6 px-4 md:px-6 lg:px-8">
-                            <div className="space-y-6">
+                             <div className="space-y-6">
                                 <div className="flex items-start gap-4">
                                     <Avatar className="h-12 w-12">
                                         <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
@@ -192,9 +192,7 @@ export default function StockDetailPage() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="mb-6">
-                                    <StockPriceChart data={stockData.history} isPositive={isPositiveChange}/>
-                                </div>
+                                 <StockPriceChart data={stockData.history} isPositive={isPositiveChange}/>
                                 {stockData.industry && (
                                      <div className="space-y-2">
                                         <h3 className="text-lg font-semibold font-headline">Featured In</h3>
