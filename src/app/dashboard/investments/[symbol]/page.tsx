@@ -162,7 +162,7 @@ export default function StockDetailPage() {
                         </Button>
                         <div className="text-center">
                              <h2 className="text-lg font-bold tracking-tight font-headline">{stockData.symbol}</h2>
-                             <p className="text-sm text-muted-foreground">{stockData.symbol}</p>
+                             <p className="text-sm text-muted-foreground">{stockData.name}</p>
                         </div>
                         <Button variant="ghost" size="icon" className="h-9 w-9 flex-shrink-0" onClick={() => setIsFavorite(!isFavorite)}>
                             <Heart className={cn("h-5 w-5", isFavorite && "fill-red-500 text-red-500")} />
@@ -288,13 +288,19 @@ export default function StockDetailPage() {
                 </div>
             </div>
 
-            <div className="sticky bottom-0 mt-auto bg-background/80 backdrop-blur-sm border-t p-4 space-y-3">
-                <Button className="w-full h-14 text-base" asChild style={{backgroundColor: '#006A44'}}>
-                    <Link href={`/dashboard/investments/trade?symbol=${symbol}&action=buy`}>
-                        <Plus className="mr-2" />
-                        Buy
-                    </Link>
-                </Button>
+            <div className="sticky bottom-0 mt-auto bg-background/80 backdrop-blur-sm border-t p-4">
+                <div className="flex items-center gap-4">
+                    <Avatar className="h-12 w-12 flex-shrink-0">
+                        <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
+                        <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
+                    </Avatar>
+                    <Button className="w-full h-14 text-base flex-grow" asChild style={{backgroundColor: '#006A44'}}>
+                        <Link href={`/dashboard/investments/trade?symbol=${symbol}&action=buy`}>
+                            <Plus className="mr-2" />
+                            Buy
+                        </Link>
+                    </Button>
+                </div>
             </div>
         </main>
     )
