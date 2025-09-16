@@ -169,15 +169,15 @@ export default function StockDetailPage() {
                         </Button>
                     </div>
 
-                    <Tabs defaultValue="about">
+                    <Tabs defaultValue="about" className="w-full">
                         <TabsList className="grid w-full grid-cols-3">
                             <TabsTrigger value="about">About</TabsTrigger>
                             <TabsTrigger value="financials">Financials</TabsTrigger>
                             <TabsTrigger value="news">News</TabsTrigger>
                         </TabsList>
                         <TabsContent value="about">
-                            <div className="py-6 space-y-6">
-                                <div className="flex items-start gap-4 mb-6">
+                            <div className="space-y-6">
+                                <div className="flex items-start gap-4 mt-6">
                                     <Avatar className="h-12 w-12">
                                         <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
                                         <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
@@ -219,7 +219,7 @@ export default function StockDetailPage() {
                             </div>
                         </TabsContent>
                          <TabsContent value="financials">
-                            <div className="py-6 space-y-6">
+                            <div className="space-y-6">
                                 <Card>
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
@@ -246,7 +246,7 @@ export default function StockDetailPage() {
                             </div>
                         </TabsContent>
                          <TabsContent value="news">
-                             <div className="py-6 space-y-4">
+                             <div className="space-y-4">
                                 <h3 className="text-xl font-bold font-headline">Related News</h3>
                                 {stockData.news && stockData.news.length > 0 ? (
                                     <div className="space-y-4">
