@@ -169,21 +169,6 @@ export default function StockDetailPage() {
                         </Button>
                     </div>
                     
-                    <div className="flex items-start gap-4 mb-6">
-                        <Avatar className="h-12 w-12">
-                            <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
-                            <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-grow">
-                            <p className="text-4xl font-bold">{formatCurrency(stockData.price)}</p>
-                            <div className="flex items-center gap-2">
-                                <p className={cn("font-semibold text-base", isPositiveChange ? "text-green-600" : "text-destructive")}>
-                                    {isPositiveChange ? '+' : ''}{formatCurrency(stockData.change)} ({isPositiveChange ? '+' : ''}{((stockData.change) / ((stockData.price) - (stockData.change)) * 100).toFixed(2)}%)
-                                </p>
-                                <p className="text-sm text-muted-foreground">today</p>
-                            </div>
-                        </div>
-                    </div>
                     <div className="flex items-center gap-2 text-sm font-semibold text-green-600 mb-6">
                         <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
                         MARKET OPEN
@@ -197,6 +182,21 @@ export default function StockDetailPage() {
                         </TabsList>
                         <TabsContent value="about">
                             <div className="py-6 space-y-6">
+                                <div className="flex items-start gap-4 mb-6">
+                                    <Avatar className="h-12 w-12">
+                                        <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
+                                        <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-grow">
+                                        <p className="text-4xl font-bold">{formatCurrency(stockData.price)}</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className={cn("font-semibold text-base", isPositiveChange ? "text-green-600" : "text-destructive")}>
+                                                {isPositiveChange ? '+' : ''}{formatCurrency(stockData.change)} ({isPositiveChange ? '+' : ''}{((stockData.change) / ((stockData.price) - (stockData.change)) * 100).toFixed(2)}%)
+                                            </p>
+                                            <p className="text-sm text-muted-foreground">today</p>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div className="mb-6">
                                     <StockPriceChart data={stockData.history} isPositive={isPositiveChange}/>
                                 </div>
