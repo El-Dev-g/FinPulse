@@ -189,11 +189,6 @@ export default function StockDetailPage() {
                         MARKET OPEN
                     </div>
 
-                    <div className="mb-6">
-                        <StockPriceChart data={stockData.history} isPositive={isPositiveChange}/>
-                    </div>
-
-
                     <Tabs defaultValue="about">
                         <TabsList className="grid w-full grid-cols-3">
                             <TabsTrigger value="about">About</TabsTrigger>
@@ -202,6 +197,9 @@ export default function StockDetailPage() {
                         </TabsList>
                         <TabsContent value="about">
                             <div className="py-6 space-y-6">
+                                <div className="mb-6">
+                                    <StockPriceChart data={stockData.history} isPositive={isPositiveChange}/>
+                                </div>
                                 {stockData.industry && (
                                      <div className="space-y-2">
                                         <h3 className="text-lg font-semibold font-headline">Featured In</h3>
