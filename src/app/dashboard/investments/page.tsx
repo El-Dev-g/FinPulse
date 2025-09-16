@@ -159,24 +159,36 @@ export default function InvestmentsPage() {
     fetchData();
   };
   
-  const handleBuyShares = async (investment: ClientInvestment, quantity: number, price: number) => {
+  const handleBuyShares = async (investment: ClientInvestment, quantity: number, price: number, accountId?: string) => {
+    const cost = quantity * price;
+    if (accountId) {
+        const sourceAccount = accounts.find(acc => acc.id === accountId);
+        if (!sourceAccount) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Selected account not found.'});
+            throw new Error('Selected account not found');
+        }
+        if ((sourceAccount.balance || 0) < cost) {
+            toast({ variant: 'destructive', title: 'Insufficient Funds', description: `Not enough funds in ${sourceAccount.name}.`});
+            throw new Error('Insufficient Funds');
+        }
+        await updateAccount(accountId, { balance: (sourceAccount.balance || 0) - cost });
+    }
+
     const totalShares = investment.quantity + quantity;
     const totalCost = (investment.purchasePrice * investment.quantity) + (price * quantity);
     const newAveragePrice = totalCost / totalShares;
     
-    // 1. Update the holding
     await updateInvestment(investment.id, {
         quantity: totalShares,
         purchasePrice: newAveragePrice
     });
 
-    // 2. Add transaction
     await addTransaction({
         description: `Buy ${quantity} shares of ${investment.symbol}`,
-        amount: -(quantity * price),
+        amount: -cost,
         category: "Investments",
         date: new Date().toISOString().split('T')[0],
-        source: 'manual',
+        source: accountId || 'manual',
     });
     
     toast({
@@ -186,32 +198,36 @@ export default function InvestmentsPage() {
     fetchData();
   };
   
-  const handleSellShares = async (investment: ClientInvestment, quantity: number, price: number) => {
+  const handleSellShares = async (investment: ClientInvestment, quantity: number, price: number, accountId?: string) => {
     if (quantity > investment.quantity) {
         toast({ variant: 'destructive', title: "Error", description: "Cannot sell more shares than you own."});
         return;
     }
-
     const proceeds = quantity * price;
 
+    if (accountId) {
+        const destAccount = accounts.find(acc => acc.id === accountId);
+        if (!destAccount) {
+             toast({ variant: 'destructive', title: 'Error', description: 'Selected destination account not found.'});
+            throw new Error('Destination account not found');
+        }
+        await updateAccount(accountId, { balance: (destAccount.balance || 0) + proceeds });
+    }
+
     if (quantity === investment.quantity) {
-        // Selling all shares, delete the holding
         await deleteInvestment(investment.id);
     } else {
-        // Selling partial shares, update quantity
-        // Average cost basis does not change on sale
         await updateInvestment(investment.id, {
             quantity: investment.quantity - quantity,
         });
     }
 
-    // Add income transaction
     await addTransaction({
         description: `Sell ${quantity} shares of ${investment.symbol}`,
         amount: proceeds,
         category: "Investments",
         date: new Date().toISOString().split('T')[0],
-        source: 'manual',
+        source: accountId || 'manual',
     });
 
     toast({
@@ -357,6 +373,7 @@ export default function InvestmentsPage() {
         onOpenChange={() => setManagingInvestment(null)}
         onBuy={handleBuyShares}
         onSell={handleSellShares}
+        accounts={accounts}
         defaultTab={manageDialogTab}
       />
     </main>
