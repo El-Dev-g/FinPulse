@@ -175,13 +175,13 @@ export default function StockDetailPage() {
                     </div>
 
                     <Tabs defaultValue="about" className="w-full">
-                        <TabsList className="w-full justify-start px-4 md:px-6 lg:px-8 gap-4" variant="underline">
-                            <TabsTrigger value="about">About</TabsTrigger>
-                            <TabsTrigger value="financials">Financials</TabsTrigger>
-                            <TabsTrigger value="news">News</TabsTrigger>
+                        <TabsList className="w-full justify-start border-b gap-4" variant="underline">
+                            <TabsTrigger value="about" className="flex-grow">About</TabsTrigger>
+                            <TabsTrigger value="financials" className="flex-grow">Financials</TabsTrigger>
+                            <TabsTrigger value="news" className="flex-grow">News</TabsTrigger>
                         </TabsList>
                         
-                        <div className="px-4 md:px-6 lg:px-8 mt-4">
+                        <div className="px-4 md:px-6 lg:px-8 mt-6">
                             <div className="flex items-start gap-4">
                                 <Avatar className="h-12 w-12">
                                     <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
@@ -201,7 +201,6 @@ export default function StockDetailPage() {
                                 </div>
                             </div>
                         </div>
-
 
                         <TabsContent value="about" className="w-full mt-6 px-4 md:px-6 lg:px-8">
                              <div className="space-y-6">
@@ -237,21 +236,17 @@ export default function StockDetailPage() {
                                 <h3 className="text-xl font-bold font-headline flex items-center gap-2">
                                     Stats <Info className="h-4 w-4 text-muted-foreground" />
                                 </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 text-sm">
-                                    <div>
-                                        <FinancialsStat label="Open" value={formatCurrency(stockData.dayHigh > 0 ? stockData.history.at(-1)?.open ?? 0 : 0)} />
-                                        <FinancialsStat label="High" value={formatCurrency(stockData.dayHigh)} />
-                                        <FinancialsStat label="Low" value={formatCurrency(stockData.dayLow)} />
-                                        <FinancialsStat label="52 Wk High" value={formatCurrency(parseFloat(stockData.week52High))} />
-                                        <FinancialsStat label="52 Wk Low" value={formatCurrency(parseFloat(stockData.week52Low))} />
-                                    </div>
-                                    <div>
-                                        <FinancialsStat label="Volume" value={stockData.volume.toLocaleString()} />
-                                        <FinancialsStat label="Avg Vol" value="N/A" />
-                                        <FinancialsStat label="Mkt Cap" value={formatMarketCap(stockData.marketCap)} />
-                                        <FinancialsStat label="P/E Ratio" value={stockData.peRatio} />
-                                        <FinancialsStat label="Div/Yield" value={stockData.dividendYield === "N/A" ? "N/A" : `${(parseFloat(stockData.dividendYield) * 100).toFixed(2)}%`} />
-                                    </div>
+                                <div className="text-sm">
+                                    <FinancialsStat label="Open" value={formatCurrency(stockData.dayHigh > 0 ? stockData.history.at(-1)?.open ?? 0 : 0)} />
+                                    <FinancialsStat label="High" value={formatCurrency(stockData.dayHigh)} />
+                                    <FinancialsStat label="Low" value={formatCurrency(stockData.dayLow)} />
+                                    <FinancialsStat label="52 Wk High" value={formatCurrency(parseFloat(stockData.week52High))} />
+                                    <FinancialsStat label="52 Wk Low" value={formatCurrency(parseFloat(stockData.week52Low))} />
+                                    <FinancialsStat label="Volume" value={stockData.volume.toLocaleString()} />
+                                    <FinancialsStat label="Avg Vol" value="N/A" />
+                                    <FinancialsStat label="Mkt Cap" value={formatMarketCap(stockData.marketCap)} />
+                                    <FinancialsStat label="P/E Ratio" value={stockData.peRatio} />
+                                    <FinancialsStat label="Div/Yield" value={stockData.dividendYield === "N/A" ? "N/A" : `${(parseFloat(stockData.dividendYield) * 100).toFixed(2)}%`} />
                                 </div>
                             </div>
                         </TabsContent>
@@ -298,7 +293,7 @@ export default function StockDetailPage() {
 
             <div className="sticky bottom-0 mt-auto bg-transparent p-4">
                 <div className="flex items-center gap-4 max-w-7xl mx-auto">
-                    <Avatar className="hidden sm:block h-12 w-12">
+                    <Avatar className="h-12 w-12">
                         <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
                         <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
                     </Avatar>
