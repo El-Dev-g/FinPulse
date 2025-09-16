@@ -170,14 +170,14 @@ export default function StockDetailPage() {
                     </div>
 
                     <Tabs defaultValue="about" className="w-full">
-                        <TabsList className="grid w-full grid-cols-3">
+                        <TabsList className="w-full">
                             <TabsTrigger value="about">About</TabsTrigger>
                             <TabsTrigger value="financials">Financials</TabsTrigger>
                             <TabsTrigger value="news">News</TabsTrigger>
                         </TabsList>
-                        <TabsContent value="about" className="w-full">
+                        <TabsContent value="about" className="w-full mt-6">
                             <div className="space-y-6">
-                                <div className="flex items-start gap-4 mt-6">
+                                <div className="flex items-start gap-4">
                                     <Avatar className="h-12 w-12">
                                         <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
                                         <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
@@ -218,7 +218,7 @@ export default function StockDetailPage() {
                                 <Button variant="link" className="p-0 text-green-600 dark:text-green-400">Read More</Button>
                             </div>
                         </TabsContent>
-                         <TabsContent value="financials" className="w-full">
+                         <TabsContent value="financials" className="w-full mt-6">
                             <div className="space-y-6">
                                 <Card>
                                     <CardHeader>
@@ -245,7 +245,7 @@ export default function StockDetailPage() {
                                 </Card>
                             </div>
                         </TabsContent>
-                         <TabsContent value="news" className="w-full">
+                         <TabsContent value="news" className="w-full mt-6">
                              <div className="space-y-4">
                                 <h3 className="text-xl font-bold font-headline">Related News</h3>
                                 {stockData.news && stockData.news.length > 0 ? (
