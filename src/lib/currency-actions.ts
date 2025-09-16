@@ -2,6 +2,7 @@
 "use server";
 
 import { z } from "zod";
+import axios from 'axios';
 
 const ConvertCurrencyRequestSchema = z.object({
   from: z.string(),
@@ -21,31 +22,31 @@ export async function convertCurrency(request: z.infer<typeof ConvertCurrencyReq
     return { convertedAmount: amount };
   }
 
-  const accessKey = process.env.EXCHANGERATE_API_KEY;
+  const apiKey = process.env.FINANCIAL_MODELING_PREP_API_KEY;
 
-  if (!accessKey) {
+  if (!apiKey) {
     throw new Error("Currency conversion service is not configured. Missing API key.");
   }
   
-  // Use the /convert endpoint for direct conversion.
-  const url = `http://api.exchangerate.host/convert?access_key=${accessKey}&from=${from}&to=${to}&amount=${amount}`;
+  const symbol = `${from}${to}`;
+  const url = `https://financialmodelingprep.com/api/v3/fx/${symbol}?apikey=${apiKey}`;
 
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      const errorData = await response.json();
-      const errorMessage = errorData?.error?.info || errorData?.message || `API call failed with status: ${response.status}`;
-      throw new Error(errorMessage);
+    const response = await axios.get(url);
+
+    if (response.data.length === 0) {
+      throw new Error(`No exchange rate found for the pair ${from}/${to}.`);
     }
-    const data = await response.json();
-    
-    if (!data.success || typeof data.result !== 'number') {
-        throw new Error("Failed to retrieve a valid conversion result from API.");
+
+    const rate = response.data[0].rate;
+    if (typeof rate !== 'number') {
+        throw new Error("Failed to retrieve a valid exchange rate from API.");
     }
     
-    return { convertedAmount: data.result };
+    return { convertedAmount: amount * rate };
   } catch (error: any) {
     console.error("Currency conversion error:", error);
-    throw new Error(error.message || "Failed to convert currency.");
+    const errorMessage = error.response?.data?.['Error Message'] || error.message || "Failed to convert currency.";
+    throw new Error(errorMessage);
   }
 }
