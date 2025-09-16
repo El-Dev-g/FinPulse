@@ -1,4 +1,3 @@
-
 // src/components/dashboard/candlestick-chart.tsx
 "use client";
 
@@ -13,10 +12,8 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Rectangle,
 } from 'recharts';
 import { format, parseISO } from 'date-fns';
-import { scaleLinear } from 'd3-scale';
 import { useAuth } from '@/hooks/use-auth';
 
 interface CandlestickChartProps {
@@ -34,19 +31,15 @@ const Candlestick = (props: any) => {
   const { x, y, width, height, low, high, open, close } = props;
   const isGrowing = open < close;
   const color = isGrowing ? 'hsl(var(--chart-1))' : 'hsl(var(--destructive))';
-  const ratio = Math.abs(height / (open - close));
 
   return (
-    <g stroke={color} fill={isGrowing ? 'transparent' : color} strokeWidth="1">
-      <path
-        d={`M${x},${y} L${x},${y + height} M${x + width / 2},${y} L${x + width / 2},${y - (high - Math.max(open, close)) * ratio
-          } M${x + width / 2},${y + height} L${x + width / 2},${y + height + (Math.min(open, close) - low) * ratio}`}
-      />
-      <rect x={x} y={y} width={width} height={height} />
+    <g stroke={color} fill="none" strokeWidth="1">
+      <path d={`M${x + width / 2},${y} L${x + width / 2},${y - (high - Math.max(open, close))}`} />
+      <path d={`M${x + width / 2},${y + height} L${x + width / 2},${y + height + (Math.min(open, close) - low)}`} />
+      <rect x={x} y={y} width={width} height={height} fill={isGrowing ? 'transparent' : color} />
     </g>
   );
 };
-
 
 const CustomTooltip = ({ active, payload, label }: any) => {
     const { formatCurrency } = useAuth();
@@ -80,8 +73,6 @@ export const CandlestickChart = ({ data }: CandlestickChartProps) => {
   const maxPrice = Math.max(...data.map(d => d.high));
   const yDomain = [minPrice * 0.98, maxPrice * 1.02];
 
-  const yAxisScale = scaleLinear().domain(yDomain).range([300, 0]);
-
   const candleData = data.map(d => ({
     ...d,
     candle: [d.open, d.close],
@@ -102,24 +93,11 @@ export const CandlestickChart = ({ data }: CandlestickChartProps) => {
         <Bar
           dataKey="candle"
           shape={(props: any) => {
-            const { x, width } = props;
-            const { open, close, low, high } = props.payload;
-            const y = yAxisScale(Math.max(open, close));
-            const height = Math.abs(yAxisScale(open) - yAxisScale(close));
-
-            return (
-              <Candlestick
-                {...props}
-                x={x}
-                y={y}
-                width={width}
-                height={height}
-                low={low}
-                high={high}
-                open={open}
-                close={close}
-              />
-            );
+            const { x, width, payload } = props;
+            const { open, close, high, low } = payload;
+            const y = props.y;
+            const height = props.height;
+            return <Candlestick {...props} y={y} height={height} open={open} close={close} high={high} low={low} />;
           }}
         />
       </ComposedChart>
