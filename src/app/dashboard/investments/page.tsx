@@ -1,3 +1,4 @@
+
 // src/app/dashboard/investments/page.tsx
 "use client";
 
@@ -41,6 +42,7 @@ export default function InvestmentsPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [managingInvestment, setManagingInvestment] = useState<ClientInvestment | null>(null);
   const [deletingInvestment, setDeletingInvestment] = useState<ClientInvestment | null>(null);
+  const [manageDialogTab, setManageDialogTab] = useState<'buy' | 'sell'>('buy');
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
@@ -85,7 +87,7 @@ export default function InvestmentsPage() {
 
     } catch (e: any) {
       console.error("Error fetching investments:", e);
-       setError("Could not fetch real-time stock data. Prices may not be current. Please ensure your API key is configured correctly in .env");
+       setError("Could not fetch real-time stock data. Prices may not be current. Please check your API key in .env");
     } finally {
       setLoading(false);
     }
@@ -197,6 +199,16 @@ export default function InvestmentsPage() {
     fetchData();
   }
 
+  const handleBuyClick = (investment: ClientInvestment) => {
+    setManageDialogTab('buy');
+    setManagingInvestment(investment);
+  };
+
+  const handleSellClick = (investment: ClientInvestment) => {
+    setManageDialogTab('sell');
+    setManagingInvestment(investment);
+  };
+
 
   if (!isPro) {
     return (
@@ -295,8 +307,9 @@ export default function InvestmentsPage() {
                                   )}
                                 </div>
                                 <InvestmentHoldingsTable 
-                                    investments={filteredInvestments} 
-                                    onEdit={setManagingInvestment}
+                                    investments={filteredInvestments}
+                                    onBuy={handleBuyClick}
+                                    onSell={handleSellClick}
                                     onDelete={setDeletingInvestment}
                                 />
                             </CardContent>
@@ -321,6 +334,7 @@ export default function InvestmentsPage() {
         onOpenChange={() => setManagingInvestment(null)}
         onBuy={handleBuyShares}
         onSell={handleSellShares}
+        defaultTab={manageDialogTab}
       />
     </main>
     <AlertDialog open={!!deletingInvestment} onOpenChange={() => setDeletingInvestment(null)}>

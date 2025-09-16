@@ -1,3 +1,4 @@
+
 // src/components/dashboard/manage-investment-dialog.tsx
 "use client";
 
@@ -22,16 +23,19 @@ interface ManageInvestmentDialogProps {
   onOpenChange: () => void;
   onBuy: (investment: ClientInvestment, quantity: number, price: number) => Promise<void>;
   onSell: (investment: ClientInvestment, quantity: number, price: number) => Promise<void>;
+  defaultTab?: 'buy' | 'sell';
 }
 
 function BuySellForm({
     investment,
     action,
     onSubmit,
+    onDone,
 }: {
     investment: ClientInvestment;
     action: "buy" | "sell";
-    onSubmit: (quantity: number, price: number) => void;
+    onSubmit: (quantity: number, price: number) => Promise<void>;
+    onDone: () => void;
 }) {
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
@@ -59,6 +63,7 @@ function BuySellForm({
     setLoading(true);
     try {
       await onSubmit(numQuantity, numPrice);
+      onDone(); // Close dialog on success
     } catch (err) {
       setError(`Failed to ${action} shares.`);
     } finally {
@@ -97,7 +102,15 @@ export function ManageInvestmentDialog({
   onOpenChange,
   onBuy,
   onSell,
+  defaultTab = 'buy',
 }: ManageInvestmentDialogProps) {
+    const [activeTab, setActiveTab] = useState(defaultTab);
+
+    useEffect(() => {
+        if(isOpen) {
+            setActiveTab(defaultTab);
+        }
+    }, [isOpen, defaultTab]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -105,19 +118,19 @@ export function ManageInvestmentDialog({
           <DialogHeader>
             <DialogTitle>Manage {investment?.symbol} Holding</DialogTitle>
             <DialogDescription>
-              Buy or sell shares for this position. Current holding: {investment?.quantity} shares.
+              Current holding: {investment?.quantity} shares.
             </DialogDescription>
           </DialogHeader>
-          <Tabs defaultValue="buy">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'buy' | 'sell')}>
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="buy">Buy</TabsTrigger>
                 <TabsTrigger value="sell">Sell</TabsTrigger>
             </TabsList>
             <TabsContent value="buy">
-                {investment && <BuySellForm investment={investment} action="buy" onSubmit={(quantity, price) => onBuy(investment, quantity, price)} />}
+                {investment && <BuySellForm investment={investment} action="buy" onSubmit={(q,p) => onBuy(investment, q, p)} onDone={onOpenChange} />}
             </TabsContent>
             <TabsContent value="sell">
-                {investment && <BuySellForm investment={investment} action="sell" onSubmit={(quantity, price) => onSell(investment, quantity, price)} />}
+                {investment && <BuySellForm investment={investment} action="sell" onSubmit={(q,p) => onSell(investment, q, p)} onDone={onOpenChange} />}
             </TabsContent>
           </Tabs>
       </DialogContent>
