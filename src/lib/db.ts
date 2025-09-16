@@ -290,6 +290,3 @@ export const addAccount = (account: Account) => {
 export const getAccounts = () => getData<Account>('accounts');
 export const updateAccount = (id: string, account: Partial<Account>) => updateDataItem('accounts', id, account);
 export const deleteAccount = (id: string) => deleteDataItem('accounts', id);
-
-
-

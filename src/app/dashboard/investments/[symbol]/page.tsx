@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader, TrendingUp, TrendingDown, AreaChart, BarChart, Clock, Badge, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Loader, TrendingUp, TrendingDown, AreaChart, BarChart, Clock, Badge, AlertCircle, Plus, Repeat } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -42,6 +42,9 @@ type StockDetails = {
     volume: number;
     logo: string;
     name: string;
+    description: string;
+    sector: string;
+    industry: string;
     history: {
         date: string;
         open: number;
@@ -67,7 +70,7 @@ export default function StockDetailPage() {
         setLoading(true);
         setError(null);
         try {
-            const result = await getStockDetails(symbol);
+            const result = await getStockDetails(symbol as string);
 
             if (result.error || !result.data) {
                 throw new Error(result.error || "Could not load data for this stock.");
@@ -116,88 +119,126 @@ export default function StockDetailPage() {
     }
 
     return (
-        <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
-            <div className="max-w-7xl mx-auto">
-                <div className="mb-6">
-                    <Button asChild variant="outline" size="sm">
-                        <Link href="/dashboard/investments">
-                            <ArrowLeft className="mr-2" />
-                            Back to Portfolio
+        <main className="flex-1 flex flex-col">
+            <div className="flex-grow p-4 md:p-6 lg:p-8 space-y-6">
+                <div className="max-w-7xl mx-auto">
+                    <div className="mb-6">
+                        <Button asChild variant="outline" size="sm">
+                            <Link href="/dashboard/investments">
+                                <ArrowLeft className="mr-2" />
+                                Back to Portfolio
+                            </Link>
+                        </Button>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                        <div className="flex items-center gap-4">
+                            <Avatar className="h-12 w-12">
+                                <AvatarImage src={stockData?.logo} alt={symbol as string} />
+                                <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <h2 className="text-3xl font-bold tracking-tight font-headline">{stockData?.name}</h2>
+                                <p className="text-muted-foreground">{stockData?.symbol}</p>
+                            </div>
+                        </div>
+                        <div className="text-left sm:text-right">
+                            <p className="text-3xl font-bold">{formatCurrency(stockData?.price || 0)}</p>
+                            <p className={cn("font-semibold", isPositiveChange ? "text-green-600" : "text-destructive")}>
+                                {isPositiveChange ? '+' : ''}{formatCurrency(stockData?.change || 0)} ({isPositiveChange ? '+' : ''}{((stockData?.change || 0) / ((stockData?.price || 0) - (stockData?.change || 0)) * 100).toFixed(2)}%)
+                            </p>
+                        </div>
+                    </div>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Price History</CardTitle>
+                            <CardDescription>Performance over the last 3 months.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {stockData && stockData.history.length > 0 ? (
+                                <CandlestickChart data={stockData.history} />
+                            ) : (
+                                <div className="h-[350px] flex items-center justify-center">
+                                    <Alert variant="default" className="max-w-md">
+                                        <AlertCircle className="h-4 w-4" />
+                                        <AlertTitle>No Chart Data</AlertTitle>
+                                        <AlertDescription>
+                                            Historical price data could not be loaded for this stock.
+                                        </AlertDescription>
+                                    </Alert>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium">Day High</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-2xl font-bold">{formatCurrency(stockData?.dayHigh || 0)}</p>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium">Day Low</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-2xl font-bold">{formatCurrency(stockData?.dayLow || 0)}</p>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium">Volume</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-2xl font-bold">{(stockData?.volume || 0).toLocaleString()}</p>
+                            </CardContent>
+                        </Card>
+                         <Card>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium">Sector</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-lg font-bold truncate">{stockData?.sector || "N/A"}</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                     <Card className="mt-6">
+                        <CardHeader>
+                            <CardTitle>About {stockData?.name}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground line-clamp-4">{stockData?.description}</p>
+                        </CardContent>
+                    </Card>
+
+                </div>
+            </div>
+
+            <div className="sticky bottom-0 mt-auto bg-background/80 backdrop-blur-sm border-t p-4 space-y-3">
+                <Button variant="outline" className="w-full h-14 bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50 hover:text-green-900 dark:hover:text-green-200" asChild>
+                    <Link href="/dashboard/recurring">
+                         <Repeat className="mr-2" />
+                        Set a recurring purchase
+                    </Link>
+                </Button>
+                <div className="grid grid-cols-2 gap-3">
+                    <Button variant="secondary" className="w-full h-14 text-base" asChild>
+                        <Link href={`/dashboard/investments/trade?symbol=${symbol}&action=sell`}>
+                            Sell
+                        </Link>
+                    </Button>
+                     <Button className="w-full h-14 text-base" asChild>
+                        <Link href={`/dashboard/investments/trade?symbol=${symbol}&action=buy`}>
+                            <Plus className="mr-2" />
+                            Buy
                         </Link>
                     </Button>
                 </div>
-                
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                    <div className="flex items-center gap-4">
-                        <Avatar className="h-12 w-12">
-                            <AvatarImage src={stockData?.logo} alt={symbol} />
-                            <AvatarFallback>{symbol.slice(0, 2)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <h2 className="text-3xl font-bold tracking-tight font-headline">{stockData?.name}</h2>
-                            <p className="text-muted-foreground">{stockData?.symbol}</p>
-                        </div>
-                    </div>
-                     <div className="text-left sm:text-right">
-                        <p className="text-3xl font-bold">{formatCurrency(stockData?.price || 0)}</p>
-                        <p className={cn("font-semibold", isPositiveChange ? "text-green-600" : "text-destructive")}>
-                            {isPositiveChange ? '+' : ''}{formatCurrency(stockData?.change || 0)} ({isPositiveChange ? '+' : ''}{((stockData?.change || 0) / ((stockData?.price || 0) - (stockData?.change || 0)) * 100).toFixed(2)}%)
-                        </p>
-                    </div>
-                </div>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Price History</CardTitle>
-                        <CardDescription>Performance over the last 3 months.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {stockData && stockData.history.length > 0 ? (
-                            <CandlestickChart data={stockData.history} />
-                        ) : (
-                             <div className="h-[350px] flex items-center justify-center">
-                                <Alert variant="default" className="max-w-md">
-                                    <AlertCircle className="h-4 w-4" />
-                                    <AlertTitle>No Chart Data</AlertTitle>
-                                    <AlertDescription>
-                                        Historical price data could not be loaded for this stock.
-                                    </AlertDescription>
-                                </Alert>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-
-                 <div className="grid md:grid-cols-3 gap-6 mt-6">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium">Day High</CardTitle>
-                            <TrendingUp className="h-4 w-4 text-muted-foreground"/>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-2xl font-bold">{formatCurrency(stockData?.dayHigh || 0)}</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium">Day Low</CardTitle>
-                            <TrendingDown className="h-4 w-4 text-muted-foreground"/>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-2xl font-bold">{formatCurrency(stockData?.dayLow || 0)}</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium">Volume</CardTitle>
-                            <BarChart className="h-4 w-4 text-muted-foreground"/>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-2xl font-bold">{(stockData?.volume || 0).toLocaleString()}</p>
-                        </CardContent>
-                    </Card>
-                 </div>
-
             </div>
         </main>
     )

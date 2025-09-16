@@ -19,6 +19,7 @@ interface InvestmentTradeFormProps {
   accounts: Account[];
   currentPrice: number;
   onTrade: (action: 'buy' | 'sell', quantity: number, price: number, accountId?: string) => Promise<void>;
+  defaultAction?: 'buy' | 'sell';
 }
 
 function TradeForm({
@@ -142,11 +143,15 @@ function TradeForm({
     );
 }
 
-export function InvestmentTradeForm({ holding, accounts, currentPrice, onTrade }: InvestmentTradeFormProps) {
-    const defaultTab = holding ? 'buy' : 'buy'; // Default to buy, could be smarter
+export function InvestmentTradeForm({ holding, accounts, currentPrice, onTrade, defaultAction = 'buy' }: InvestmentTradeFormProps) {
+    const [activeTab, setActiveTab] = useState(defaultAction);
+
+    useEffect(() => {
+        setActiveTab(defaultAction);
+    }, [defaultAction]);
 
     return (
-        <Tabs defaultValue={defaultTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="buy">Buy</TabsTrigger>
                 <TabsTrigger value="sell" disabled={!holding}>Sell</TabsTrigger>

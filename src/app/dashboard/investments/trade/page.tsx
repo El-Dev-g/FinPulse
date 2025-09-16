@@ -19,7 +19,7 @@ import { ArrowLeft, Loader, AlertCircle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { InvestmentTradeForm } from '@/components/dashboard/investment-trade-form';
-import { getAccounts, getInvestments, addTransaction, updateAccount, updateInvestment, deleteInvestment } from '@/lib/db';
+import { getAccounts, getInvestments, addTransaction, updateAccount, addInvestment, updateInvestment, deleteInvestment } from '@/lib/db';
 import type { Account, Investment, ClientInvestment } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -37,6 +37,7 @@ function TradePageContent() {
     const { toast } = useToast();
 
     const symbol = searchParams.get('symbol');
+    const action = searchParams.get('action');
 
     const [stockDetails, setStockDetails] = useState<StockDetails | null>(null);
     const [accounts, setAccounts] = useState<Account[]>([]);
@@ -87,13 +88,13 @@ function TradePageContent() {
         fetchData();
     }, [fetchData]);
 
-    const handleTrade = async (action: 'buy' | 'sell', quantity: number, price: number, accountId?: string) => {
-        if (!symbol || !holding) {
-             toast({ variant: "destructive", title: "Error", description: "Cannot execute trade, holding not found." });
+    const handleTrade = async (tradeAction: 'buy' | 'sell', quantity: number, price: number, accountId?: string) => {
+        if (!symbol) {
+             toast({ variant: "destructive", title: "Error", description: "Cannot execute trade, symbol not found." });
              return;
         }
         
-        if (action === 'buy') {
+        if (tradeAction === 'buy') {
             const cost = quantity * price;
             if (accountId) {
                 const sourceAccount = accounts.find(acc => acc.id === accountId);
@@ -103,12 +104,16 @@ function TradePageContent() {
                 }
                 await updateAccount(accountId, { balance: (sourceAccount.balance || 0) - cost });
             }
-
-            const totalShares = holding.quantity + quantity;
-            const totalCost = (holding.purchasePrice * holding.quantity) + (price * quantity);
-            const newAveragePrice = totalCost / totalShares;
             
-            await updateInvestment(holding.id!, { quantity: totalShares, purchasePrice: newAveragePrice });
+            if (holding) {
+                 const totalShares = holding.quantity + quantity;
+                const totalCost = (holding.purchasePrice * holding.quantity) + (price * quantity);
+                const newAveragePrice = totalCost / totalShares;
+                await updateInvestment(holding.id!, { quantity: totalShares, purchasePrice: newAveragePrice });
+            } else {
+                await addInvestment({ symbol, quantity, purchasePrice: price });
+            }
+
             await addTransaction({
                 description: `Buy ${quantity} ${symbol}`,
                 amount: -cost,
@@ -120,6 +125,10 @@ function TradePageContent() {
             toast({ title: "Purchase Successful", description: `Bought ${quantity} shares of ${symbol}.` });
 
         } else { // Sell
+            if (!holding) {
+                toast({ variant: "destructive", title: "Error", description: "You do not own this stock." });
+                return;
+            }
             if (!accountId) {
                  toast({ variant: "destructive", title: "Error", description: "Please select an account to receive funds." });
                  throw new Error("Destination account not selected");
@@ -192,6 +201,7 @@ function TradePageContent() {
                     accounts={accounts}
                     currentPrice={stockDetails.price}
                     onTrade={handleTrade}
+                    defaultAction={(action === 'buy' || action === 'sell') ? action : 'buy'}
                 />
             </CardContent>
         </Card>
