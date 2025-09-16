@@ -48,9 +48,7 @@ const fetchStockDataTool = ai.defineTool(
   {
     name: 'fetchStockData',
     description: 'Fetches quote, profile, and historical data for a stock symbol from the Financial Modeling Prep API.',
-    inputSchema: z.object({
-      symbol: z.string(),
-    }),
+    inputSchema: StockDetailsRequestSchema,
     outputSchema: StockDetailsResponseSchema,
   },
   async ({ symbol }) => {
