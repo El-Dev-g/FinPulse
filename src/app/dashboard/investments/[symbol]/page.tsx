@@ -76,7 +76,7 @@ function formatMarketCap(marketCap: string) {
 export default function StockDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const { formatCurrency } = useAuth();
+    const { formatCurrency, currency } = useAuth();
     const symbol = Array.isArray(params.symbol) ? params.symbol[0] : params.symbol;
 
     const [stockData, setStockData] = useState<StockDetails | null>(null);
@@ -149,12 +149,16 @@ export default function StockDetailPage() {
         return format(date, 'LLL dd, yyyy');
     }
 
+    const mockGhsRate = 15.0; // Example rate
+    const priceInGhs = stockData.price * mockGhsRate;
+    const ghsCurrencyFormat = new Intl.NumberFormat('en-GH', { style: 'currency', currency: 'GHS' });
+
     return (
         <main className="flex-1 flex flex-col">
             <div className="flex-grow space-y-6 overflow-y-auto pb-40">
                 <div className="w-full">
                     {/* Header */}
-                    <div className="flex items-center justify-between p-4 md:p-6 lg:p-8">
+                    <div className="flex items-center justify-between p-4">
                          <Button asChild variant="ghost" size="icon" className="h-9 w-9 flex-shrink-0">
                             <Link href="/dashboard/investments">
                                 <ArrowLeft className="h-5 w-5" />
@@ -169,29 +173,40 @@ export default function StockDetailPage() {
                         </Button>
                     </div>
 
+                    <div className="px-4 md:px-6 lg:px-8 mt-4">
+                         <div className="flex items-start gap-4">
+                            <Avatar className="h-12 w-12">
+                                <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
+                                <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-grow">
+                                <p className="text-4xl font-bold">{formatCurrency(stockData.price)}</p>
+                                {currency === 'USD' && (
+                                    <p className="text-sm text-muted-foreground">~{ghsCurrencyFormat.format(priceInGhs)}</p>
+                                )}
+                                <div className="flex items-center gap-2">
+                                    <p className={cn("font-semibold text-base", isPositiveChange ? "text-green-600" : "text-destructive")}>
+                                        {isPositiveChange ? '+' : ''}{formatCurrency(stockData.change)} ({isPositiveChange ? '+' : ''}{((stockData.change) / ((stockData.price) - (stockData.change)) * 100).toFixed(2)}%)
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">today</p>
+                                </div>
+                            </div>
+                        </div>
+                         <div className="flex items-center gap-2 text-sm font-semibold text-green-600 my-4">
+                            <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
+                            MARKET OPEN
+                        </div>
+                    </div>
+
+
                     <Tabs defaultValue="about" className="w-full">
-                        <TabsList className="w-full justify-start gap-4 px-4 md:px-6 lg:px-8">
+                        <TabsList className="w-full justify-start gap-4 px-4 md:px-6 lg:px-8" variant="underline">
                             <TabsTrigger value="about">About</TabsTrigger>
                             <TabsTrigger value="financials">Financials</TabsTrigger>
                             <TabsTrigger value="news">News</TabsTrigger>
                         </TabsList>
                         <TabsContent value="about" className="w-full mt-6 px-4 md:px-6 lg:px-8">
                              <div className="space-y-6">
-                                <div className="flex items-start gap-4">
-                                    <Avatar className="h-12 w-12">
-                                        <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
-                                        <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-grow">
-                                        <p className="text-4xl font-bold">{formatCurrency(stockData.price)}</p>
-                                        <div className="flex items-center gap-2">
-                                            <p className={cn("font-semibold text-base", isPositiveChange ? "text-green-600" : "text-destructive")}>
-                                                {isPositiveChange ? '+' : ''}{formatCurrency(stockData.change)} ({isPositiveChange ? '+' : ''}{((stockData.change) / ((stockData.price) - (stockData.change)) * 100).toFixed(2)}%)
-                                            </p>
-                                            <p className="text-sm text-muted-foreground">today</p>
-                                        </div>
-                                    </div>
-                                </div>
                                  <StockPriceChart data={stockData.history} isPositive={isPositiveChange}/>
                                 {stockData.industry && (
                                      <div className="space-y-2">
@@ -217,11 +232,11 @@ export default function StockDetailPage() {
                             </div>
                         </TabsContent>
                          <TabsContent value="financials" className="w-full mt-6">
-                            <div className="space-y-6">
-                                <h3 className="text-xl font-bold font-headline flex items-center gap-2 px-4 md:px-6 lg:px-8">
+                            <div className="space-y-6 px-4 md:px-6 lg:px-8">
+                                <h3 className="text-xl font-bold font-headline flex items-center gap-2">
                                     Stats <Info className="h-4 w-4 text-muted-foreground" />
                                 </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 text-sm px-4 md:px-6 lg:px-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 text-sm">
                                     <div>
                                         <FinancialsStat label="Open" value={formatCurrency(stockData.dayHigh > 0 ? stockData.history.at(-1)?.open ?? 0 : 0)} />
                                         <FinancialsStat label="High" value={formatCurrency(stockData.dayHigh)} />
@@ -251,7 +266,7 @@ export default function StockDetailPage() {
                                                         <p className="font-semibold leading-snug">{article.title}</p>
                                                         <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
                                                             <span>{formatPublishedDate(article.time_published)}</span>
-                                                            <span className="flex items-center gap-1.5"><ArrowUpRight className="h-3 w-3" />{article.source}</span>
+                                                            <span className="flex items-center gap-1.5 text-green-600"><ArrowUpRight className="h-3 w-3" />{article.source}</span>
                                                         </div>
                                                     </div>
                                                     {article.banner_image && (
@@ -270,7 +285,7 @@ export default function StockDetailPage() {
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="h-40 flex items-center justify-center border rounded-lg mx-4 md:mx-6 lg:mx-8">
+                                    <div className="h-40 flex items-center justify-center border rounded-lg mx-4 md:mx-6 lg:px-8">
                                         <p className="text-muted-foreground">No recent news found for {stockData.symbol}.</p>
                                     </div>
                                 )}
@@ -281,18 +296,12 @@ export default function StockDetailPage() {
             </div>
 
             <div className="sticky bottom-0 mt-auto bg-background/80 backdrop-blur-sm border-t p-4">
-                <div className="flex items-center gap-4">
-                    <Avatar className="h-12 w-12 flex-shrink-0">
-                        <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
-                        <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
-                    </Avatar>
-                    <Button className="w-full h-14 text-base flex-grow" asChild style={{backgroundColor: '#006A44'}}>
-                        <Link href={`/dashboard/investments/trade?symbol=${symbol}&action=buy`}>
-                            <Plus className="mr-2" />
-                            Buy
-                        </Link>
-                    </Button>
-                </div>
+                 <Button className="w-full h-14 text-base flex-grow" asChild style={{backgroundColor: '#006A44'}}>
+                    <Link href={`/dashboard/investments/trade?symbol=${symbol}&action=buy`}>
+                        <Plus className="mr-2" />
+                        Buy
+                    </Link>
+                </Button>
             </div>
         </main>
     )
