@@ -68,7 +68,7 @@ export default function StockDetailPage() {
             
             setStockData(result.data);
 
-        } catch (e: any) => {
+        } catch (e: any) {
             console.error("Failed to fetch stock data:", e);
             setError(e.message || "An unexpected error occurred.");
         } finally {
