@@ -211,7 +211,7 @@ function TradePageContent() {
 
 export default function TradePage() {
     return (
-        <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
+        <main className="flex-1 p-4 md:p-6 lg:p-8">
             <div className="max-w-xl mx-auto">
                  <div className="mb-6">
                     <Button asChild variant="outline" size="sm">
