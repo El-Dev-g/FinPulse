@@ -220,29 +220,25 @@ export default function StockDetailPage() {
                         </TabsContent>
                          <TabsContent value="financials" className="w-full mt-6">
                             <div className="space-y-6">
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            Stats <Info className="h-4 w-4 text-muted-foreground" />
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8 text-sm">
-                                        <div>
-                                            <FinancialsStat label="Open" value={formatCurrency(stockData.dayHigh > 0 ? stockData.history.at(-1)?.open ?? 0 : 0)} />
-                                            <FinancialsStat label="High" value={formatCurrency(stockData.dayHigh)} />
-                                            <FinancialsStat label="Low" value={formatCurrency(stockData.dayLow)} />
-                                            <FinancialsStat label="52 Wk High" value={formatCurrency(parseFloat(stockData.week52High))} />
-                                            <FinancialsStat label="52 Wk Low" value={formatCurrency(parseFloat(stockData.week52Low))} />
-                                        </div>
-                                        <div>
-                                            <FinancialsStat label="Volume" value={stockData.volume.toLocaleString()} />
-                                            <FinancialsStat label="Avg Vol" value="N/A" />
-                                            <FinancialsStat label="Mkt Cap" value={formatMarketCap(stockData.marketCap)} />
-                                            <FinancialsStat label="P/E Ratio" value={stockData.peRatio} />
-                                            <FinancialsStat label="Div/Yield" value={stockData.dividendYield === "N/A" ? "N/A" : `${(parseFloat(stockData.dividendYield) * 100).toFixed(2)}%`} />
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                <h3 className="text-xl font-bold font-headline flex items-center gap-2">
+                                    Stats <Info className="h-4 w-4 text-muted-foreground" />
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 text-sm">
+                                    <div>
+                                        <FinancialsStat label="Open" value={formatCurrency(stockData.dayHigh > 0 ? stockData.history.at(-1)?.open ?? 0 : 0)} />
+                                        <FinancialsStat label="High" value={formatCurrency(stockData.dayHigh)} />
+                                        <FinancialsStat label="Low" value={formatCurrency(stockData.dayLow)} />
+                                        <FinancialsStat label="52 Wk High" value={formatCurrency(parseFloat(stockData.week52High))} />
+                                        <FinancialsStat label="52 Wk Low" value={formatCurrency(parseFloat(stockData.week52Low))} />
+                                    </div>
+                                    <div>
+                                        <FinancialsStat label="Volume" value={stockData.volume.toLocaleString()} />
+                                        <FinancialsStat label="Avg Vol" value="N/A" />
+                                        <FinancialsStat label="Mkt Cap" value={formatMarketCap(stockData.marketCap)} />
+                                        <FinancialsStat label="P/E Ratio" value={stockData.peRatio} />
+                                        <FinancialsStat label="Div/Yield" value={stockData.dividendYield === "N/A" ? "N/A" : `${(parseFloat(stockData.dividendYield) * 100).toFixed(2)}%`} />
+                                    </div>
+                                </div>
                             </div>
                         </TabsContent>
                          <TabsContent value="news" className="w-full mt-6">
@@ -276,11 +272,9 @@ export default function StockDetailPage() {
                                         ))}
                                     </div>
                                 ) : (
-                                    <Card>
-                                        <CardContent className="h-40 flex items-center justify-center">
-                                            <p className="text-muted-foreground">No recent news found for {stockData.symbol}.</p>
-                                        </CardContent>
-                                    </Card>
+                                    <div className="h-40 flex items-center justify-center border rounded-lg">
+                                        <p className="text-muted-foreground">No recent news found for {stockData.symbol}.</p>
+                                    </div>
                                 )}
                             </div>
                         </TabsContent>
