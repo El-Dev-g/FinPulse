@@ -126,4 +126,3 @@ const getStockDetailsFlow = ai.defineFlow(
     return await fetchStockDataTool(input);
   }
 );
-

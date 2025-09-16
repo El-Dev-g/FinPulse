@@ -30,6 +30,7 @@ import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { CandlestickChart } from '@/components/dashboard/candlestick-chart';
 
 
 type StockDetails = {
@@ -43,7 +44,11 @@ type StockDetails = {
     name: string;
     history: {
         date: string;
+        open: number;
+        high: number;
+        low: number;
         close: number;
+        volume: number;
     }[];
 };
 
@@ -148,28 +153,7 @@ export default function StockDetailPage() {
                     </CardHeader>
                     <CardContent>
                         {stockData && stockData.history.length > 0 ? (
-                            <ResponsiveContainer width="100%" height={350}>
-                                <LineChart data={stockData.history}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="date" tickFormatter={(str) => format(parseISO(str), 'MMM d')} />
-                                    <YAxis domain={['dataMin', 'dataMax']} tickFormatter={(num) => formatCurrency(num)} />
-                                    <Tooltip 
-                                        content={({ active, payload, label }) => {
-                                            if (active && payload && payload.length) {
-                                                return (
-                                                <div className="rounded-lg border bg-background p-2 shadow-sm">
-                                                    <p className="font-bold">{formatCurrency(payload[0].value as number)}</p>
-                                                    <p className="text-sm text-muted-foreground">{format(parseISO(label), 'PPP')}</p>
-                                                </div>
-                                                );
-                                            }
-                                            return null;
-                                        }}
-                                    />
-                                    <Legend />
-                                    <Line type="monotone" dataKey="close" name="Closing Price" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
-                                </LineChart>
-                            </ResponsiveContainer>
+                            <CandlestickChart data={stockData.history} />
                         ) : (
                              <div className="h-[350px] flex items-center justify-center">
                                 <Alert variant="default" className="max-w-md">
