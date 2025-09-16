@@ -58,7 +58,7 @@ type StockDetails = {
 
 function FinancialsStat({ label, value }: { label: string, value: string | number}) {
     return (
-        <div className="flex justify-between py-3 border-b">
+        <div className="flex justify-between py-4 border-b px-4 md:px-6 lg:px-8">
             <span className="text-muted-foreground">{label}</span>
             <span className="font-medium">{value}</span>
         </div>
@@ -175,7 +175,7 @@ export default function StockDetailPage() {
                     </div>
 
                     <Tabs defaultValue="about" className="w-full">
-                        <TabsList className="w-full justify-start border-b gap-4" variant="underline">
+                        <TabsList className="w-full justify-start border-b gap-4 px-4 md:px-6 lg:px-8" variant="underline">
                             <TabsTrigger value="about">About</TabsTrigger>
                             <TabsTrigger value="financials">Financials</TabsTrigger>
                             <TabsTrigger value="news">News</TabsTrigger>
@@ -231,57 +231,49 @@ export default function StockDetailPage() {
                                 <Button variant="link" className="p-0 text-primary dark:text-green-400">Read More</Button>
                             </div>
                         </TabsContent>
-                         <TabsContent value="financials" className="w-full mt-6 px-4 md:px-6 lg:px-8">
-                             <div className="space-y-6">
-                                <h3 className="text-xl font-bold font-headline flex items-center gap-2">
-                                    Stats <Info className="h-4 w-4 text-muted-foreground" />
-                                </h3>
-                                <div className="text-sm">
-                                    <FinancialsStat label="Open" value={formatCurrency(stockData.dayHigh > 0 ? stockData.history.at(-1)?.open ?? 0 : 0)} />
-                                    <FinancialsStat label="High" value={formatCurrency(stockData.dayHigh)} />
-                                    <FinancialsStat label="Low" value={formatCurrency(stockData.dayLow)} />
-                                    <FinancialsStat label="52 Wk High" value={formatCurrency(parseFloat(stockData.week52High))} />
-                                    <FinancialsStat label="52 Wk Low" value={formatCurrency(parseFloat(stockData.week52Low))} />
-                                    <FinancialsStat label="Volume" value={stockData.volume.toLocaleString()} />
-                                    <FinancialsStat label="Avg Vol" value="N/A" />
-                                    <FinancialsStat label="Mkt Cap" value={formatMarketCap(stockData.marketCap)} />
-                                    <FinancialsStat label="P/E Ratio" value={stockData.peRatio} />
-                                    <FinancialsStat label="Div/Yield" value={stockData.dividendYield === "N/A" ? "N/A" : `${(parseFloat(stockData.dividendYield) * 100).toFixed(2)}%`} />
-                                </div>
+                         <TabsContent value="financials" className="w-full mt-6 p-0">
+                            <div className="text-sm border-t">
+                                <FinancialsStat label="Open" value={formatCurrency(stockData.dayHigh > 0 ? stockData.history.at(-1)?.open ?? 0 : 0)} />
+                                <FinancialsStat label="High" value={formatCurrency(stockData.dayHigh)} />
+                                <FinancialsStat label="Low" value={formatCurrency(stockData.dayLow)} />
+                                <FinancialsStat label="52 Wk High" value={formatCurrency(parseFloat(stockData.week52High))} />
+                                <FinancialsStat label="52 Wk Low" value={formatCurrency(parseFloat(stockData.week52Low))} />
+                                <FinancialsStat label="Volume" value={stockData.volume.toLocaleString()} />
+                                <FinancialsStat label="Avg Vol" value="N/A" />
+                                <FinancialsStat label="Mkt Cap" value={formatMarketCap(stockData.marketCap)} />
+                                <FinancialsStat label="P/E Ratio" value={stockData.peRatio} />
+                                <FinancialsStat label="Div/Yield" value={stockData.dividendYield === "N/A" ? "N/A" : `${(parseFloat(stockData.dividendYield) * 100).toFixed(2)}%`} />
                             </div>
                         </TabsContent>
-                         <TabsContent value="news" className="w-full mt-6 px-4 md:px-6 lg:px-8">
-                             <div className="space-y-4">
-                                <h3 className="text-xl font-bold font-headline">Related News</h3>
+                         <TabsContent value="news" className="w-full mt-6 p-0">
+                            <div className="space-y-0 border-t">
                                 {stockData.news && stockData.news.length > 0 ? (
-                                    <div className="space-y-4">
-                                        {stockData.news.map((article, index) => (
-                                            <a key={index} href={article.url} target="_blank" rel="noopener noreferrer" className="block p-4 rounded-lg border hover:bg-muted/50">
-                                                <div className="flex gap-4 items-start">
-                                                    <div className="flex-grow">
-                                                        <p className="font-semibold leading-snug">{article.title}</p>
-                                                        <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
-                                                            <span>{formatPublishedDate(article.time_published)}</span>
-                                                            <span className="flex items-center gap-1.5 text-primary"><ArrowUpRight className="h-3 w-3" />{article.source}</span>
-                                                        </div>
+                                    stockData.news.map((article, index) => (
+                                        <a key={index} href={article.url} target="_blank" rel="noopener noreferrer" className="block p-4 md:p-6 lg:p-8 border-b hover:bg-muted/50">
+                                            <div className="flex gap-4 items-start">
+                                                <div className="flex-grow">
+                                                    <p className="font-semibold leading-snug">{article.title}</p>
+                                                    <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
+                                                        <span>{formatPublishedDate(article.time_published)}</span>
+                                                        <span className="flex items-center gap-1.5 text-primary"><ArrowUpRight className="h-3 w-3" />{article.source}</span>
                                                     </div>
-                                                    {article.banner_image && (
-                                                        <div className="relative w-24 h-16 flex-shrink-0">
-                                                            <Image
-                                                                src={article.banner_image}
-                                                                alt={article.title}
-                                                                fill
-                                                                className="object-cover rounded-md"
-                                                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                                            />
-                                                        </div>
-                                                    )}
                                                 </div>
-                                            </a>
-                                        ))}
-                                    </div>
+                                                {article.banner_image && (
+                                                    <div className="relative w-24 h-16 flex-shrink-0">
+                                                        <Image
+                                                            src={article.banner_image}
+                                                            alt={article.title}
+                                                            fill
+                                                            className="object-cover rounded-md"
+                                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </a>
+                                    ))
                                 ) : (
-                                    <div className="h-40 flex items-center justify-center border rounded-lg">
+                                    <div className="h-40 flex items-center justify-center border-b">
                                         <p className="text-muted-foreground">No recent news found for {stockData.symbol}.</p>
                                     </div>
                                 )}
