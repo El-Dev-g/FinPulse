@@ -1,3 +1,4 @@
+
 // src/app/dashboard/investments/page.tsx
 "use client";
 

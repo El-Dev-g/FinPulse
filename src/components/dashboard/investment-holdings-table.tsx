@@ -1,3 +1,4 @@
+
 // src/components/dashboard/investment-holdings-table.tsx
 "use client";
 
