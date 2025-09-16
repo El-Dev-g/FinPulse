@@ -175,7 +175,7 @@ export default function StockDetailPage() {
                     </div>
 
                     <Tabs defaultValue="about" className="w-full">
-                        <TabsList className="w-full justify-start gap-4 px-4 md:px-6 lg:px-8" variant="underline">
+                        <TabsList className="w-full justify-start px-4 md:px-6 lg:px-8" variant="underline">
                             <TabsTrigger value="about">About</TabsTrigger>
                             <TabsTrigger value="financials">Financials</TabsTrigger>
                             <TabsTrigger value="news">News</TabsTrigger>
@@ -232,8 +232,8 @@ export default function StockDetailPage() {
                                 <Button variant="link" className="p-0 text-primary dark:text-green-400">Read More</Button>
                             </div>
                         </TabsContent>
-                         <TabsContent value="financials" className="w-full mt-6 px-4 md:px-6 lg:px-8">
-                            <div className="space-y-6">
+                         <TabsContent value="financials" className="w-full mt-6">
+                            <div className="space-y-6 px-4 md:px-6 lg:px-8">
                                 <h3 className="text-xl font-bold font-headline flex items-center gap-2">
                                     Stats <Info className="h-4 w-4 text-muted-foreground" />
                                 </h3>
@@ -255,8 +255,8 @@ export default function StockDetailPage() {
                                 </div>
                             </div>
                         </TabsContent>
-                         <TabsContent value="news" className="w-full mt-6 px-4 md:px-6 lg:px-8">
-                             <div className="space-y-4">
+                         <TabsContent value="news" className="w-full mt-6">
+                             <div className="space-y-4 px-4 md:px-6 lg:px-8">
                                 <h3 className="text-xl font-bold font-headline">Related News</h3>
                                 {stockData.news && stockData.news.length > 0 ? (
                                     <div className="space-y-4">
@@ -297,12 +297,18 @@ export default function StockDetailPage() {
             </div>
 
             <div className="sticky bottom-0 mt-auto bg-transparent p-4">
-                 <Button className="w-full h-14 text-base flex-grow" asChild style={{backgroundColor: '#006A44'}}>
-                    <Link href={`/dashboard/investments/trade?symbol=${symbol}&action=buy`}>
-                        <Plus className="mr-2" />
-                        Buy
-                    </Link>
-                </Button>
+                <div className="flex items-center gap-4 max-w-7xl mx-auto">
+                    <Avatar className="hidden sm:block h-12 w-12">
+                        <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
+                        <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
+                    </Avatar>
+                     <Button className="w-full h-14 text-base flex-grow" asChild style={{backgroundColor: '#006A44'}}>
+                        <Link href={`/dashboard/investments/trade?symbol=${symbol}&action=buy`}>
+                            <Plus className="mr-2" />
+                            Buy
+                        </Link>
+                    </Button>
+                </div>
             </div>
         </main>
     )
