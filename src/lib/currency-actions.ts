@@ -17,26 +17,26 @@ export async function convertCurrency(
     return { from, to, amount, convertedAmount: amount };
   }
 
-  const apiKey = process.env.FINANCIAL_MODELING_PREP_API_KEY;
+  const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
   if (!apiKey) {
     throw new Error(
       "Currency conversion service is not configured. Missing API key."
     );
   }
 
-  const pair = `${from}${to}`;
-  const url = `https://financialmodelingprep.com/stable/fx?pair=${pair}&apikey=${apiKey}`;
+  const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${from}&to_currency=${to}&apikey=${apiKey}`;
 
   try {
     const response = await axios.get(url);
-    const fxData = Array.isArray(response.data) ? response.data[0] : null;
+    const fxData = response.data['Realtime Currency Exchange Rate'];
 
-    if (!fxData || !fxData.price) {
-      throw new Error(`No FX data available for pair ${pair}`);
+    if (!fxData || !fxData['5. Exchange Rate']) {
+      throw new Error(`No FX data available for pair ${from}-${to}. This may be due to API rate limiting.`);
     }
 
-    const convertedAmount = amount * fxData.price;
-    return { from, to, amount, rate: fxData.price, convertedAmount };
+    const rate = parseFloat(fxData['5. Exchange Rate']);
+    const convertedAmount = amount * rate;
+    return { from, to, amount, rate, convertedAmount };
   } catch (error: any) {
     console.error(`Error converting currency ${from} -> ${to}`, error);
     throw new Error(`Currency conversion failed: ${error.message || error}`);

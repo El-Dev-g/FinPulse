@@ -44,69 +44,70 @@ export async function getStockDetails(
 
 const fetchStockDataTool = ai.defineTool(
   {
-    name: 'fetchStockData',
+    name: "fetchStockData",
     description:
-      'Fetches quote, profile, and historical data for a stock symbol from the Financial Modeling Prep API (stable endpoints).',
+      "Fetches quote, profile, and historical data for a stock symbol from the Alpha Vantage API.",
     inputSchema: StockDetailsRequestSchema,
     outputSchema: StockDetailsResponseSchema,
   },
   async ({ symbol }) => {
-    const apiKey = process.env.FINANCIAL_MODELING_PREP_API_KEY;
+    const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
     if (!apiKey) {
-      throw new Error('Financial Modeling Prep API key is not configured.');
+      throw new Error("Alpha Vantage API key is not configured.");
     }
 
     try {
-      const historyUrl = `https://financialmodelingprep.com/stable/historical-price?symbol=${symbol}&limit=90&apikey=${apiKey}`;
-      const profileUrl = `https://financialmodelingprep.com/stable/profile?symbol=${symbol}&apikey=${apiKey}`;
+      const overviewUrl = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${symbol}&apikey=${apiKey}`;
+      const historyUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&apikey=${apiKey}`;
+      const quoteUrl = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKey}`;
 
-      const [historyResponse, profileResponse] = await Promise.all([
+      const [overviewResponse, historyResponse, quoteResponse] = await Promise.all([
+        axios.get(overviewUrl),
         axios.get(historyUrl),
-        axios.get(profileUrl),
+        axios.get(quoteUrl),
       ]);
+      
+      const overviewData = overviewResponse.data;
+      const historyData = historyResponse.data['Time Series (Daily)'];
+      const quoteData = quoteResponse.data['Global Quote'];
 
-      const historyData = Array.isArray(historyResponse.data)
-        ? historyResponse.data
-        : [];
-      const profileData = Array.isArray(profileResponse.data)
-        ? profileResponse.data[0]
-        : null;
-
-      if (historyData.length === 0 || !profileData) {
-        throw new Error(`No historical or profile data for symbol: ${symbol}`);
+      if (!overviewData || Object.keys(overviewData).length === 0) {
+        throw new Error(`No overview data found for symbol: ${symbol}`);
+      }
+      if (!historyData || Object.keys(historyData).length === 0) {
+         console.warn(`No historical data for symbol: ${symbol}`);
+      }
+      if (!quoteData || Object.keys(quoteData).length === 0) {
+         console.warn(`No quote data for symbol: ${symbol}`);
       }
 
-      const today = historyData[0]; // most recent trading day
-      const yesterday = historyData[1]; // previous trading day
-      const change =
-        today && yesterday ? today.close - yesterday.close : 0;
+      const history = historyData ? Object.entries(historyData).map(([date, data]: [string, any]) => ({
+        date: date,
+        open: parseFloat(data['1. open']),
+        high: parseFloat(data['2. high']),
+        low: parseFloat(data['3. low']),
+        close: parseFloat(data['4. close']),
+        volume: parseInt(data['6. volume'], 10),
+      })).slice(0, 90).reverse() : [];
+
 
       return {
         symbol,
-        name: profileData.companyName || symbol,
-        price: today?.close || 0,
-        change,
-        dayLow: today?.low || 0,
-        dayHigh: today?.high || 0,
-        volume: today?.volume || 0,
-        logo: profileData.image || '',
-        description: profileData.description || '',
-        sector: profileData.sector || '',
-        industry: profileData.industry || '',
-        ceo: profileData.ceo || '',
-        history: historyData
-          .map((item: any) => ({
-            date: item.date,
-            open: item.open,
-            high: item.high,
-            low: item.low,
-            close: item.close,
-            volume: item.volume,
-          }))
-          .reverse(),
+        name: overviewData.Name || symbol,
+        price: parseFloat(quoteData?.['05. price']) || 0,
+        change: parseFloat(quoteData?.['09. change']) || 0,
+        dayLow: parseFloat(quoteData?.['04. low']) || 0,
+        dayHigh: parseFloat(quoteData?.['03. high']) || 0,
+        volume: parseInt(quoteData?.['06. volume'], 10) || 0,
+        logo: "", // Alpha Vantage free tier doesn't provide logos
+        description: overviewData.Description || "",
+        sector: overviewData.Sector || "",
+        industry: overviewData.Industry || "",
+        ceo: overviewData.CEO || "",
+        history,
       };
-    } catch (error) {
-      console.error(`Failed to fetch all data for symbol ${symbol}:`, error);
+    } catch (error: any) {
+      console.error(`Failed to fetch all data for symbol ${symbol}:`, error.message);
       throw new Error(
         `Could not load data for ${symbol}. The API may be unavailable or the symbol may be invalid.`
       );
@@ -125,3 +126,4 @@ const getStockDetailsFlow = ai.defineFlow(
     return await fetchStockDataTool(input);
   }
 );
+

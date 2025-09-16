@@ -115,74 +115,69 @@ export async function getStockData(
     return [];
   }
 
-  const apiKey = process.env.FINANCIAL_MODELING_PREP_API_KEY;
+  const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
   if (!apiKey) {
-    console.error("Financial Modeling Prep API key is not configured.");
-    throw new Error("Financial Modeling Prep API key is not configured.");
+    console.error("Alpha Vantage API key is not configured.");
+    throw new Error("Alpha Vantage API key is not configured.");
   }
+  
+  // Helper function to introduce a delay
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const results = await Promise.all(
-    symbols.map(async (symbol) => {
+  const results = [];
+  for (const symbol of symbols) {
       try {
-        const historyUrl = `https://financialmodelingprep.com/stable/historical-price?symbol=${symbol}&limit=2&apikey=${apiKey}`;
-        const profileUrl = `https://financialmodelingprep.com/stable/profile?symbol=${symbol}&apikey=${apiKey}`;
-
-        const [historyResponse, profileResponse] = await Promise.all([
-          axios.get(historyUrl),
-          axios.get(profileUrl),
+        const quoteUrl = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKey}`;
+        const overviewUrl = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${symbol}&apikey=${apiKey}`;
+        
+        const [quoteResponse, overviewResponse] = await Promise.all([
+            axios.get(quoteUrl),
+            axios.get(overviewUrl)
         ]);
 
-        const history = Array.isArray(historyResponse.data)
-          ? historyResponse.data
-          : [];
-        const profile = Array.isArray(profileResponse.data)
-          ? profileResponse.data[0]
-          : null;
+        const quoteData = quoteResponse.data['Global Quote'];
+        const overviewData = overviewResponse.data;
 
-        if (history.length === 0 && !profile) {
-          console.warn(`No data found for symbol: ${symbol}`);
-          return {
+        if (!quoteData || Object.keys(quoteData).length === 0) {
+          console.warn(`No quote data found for symbol: ${symbol}`);
+          // Fallback using overview data if available
+          results.push({
             symbol,
-            name: "",
+            name: overviewData?.Name || symbol,
             price: 0,
             change: 0,
             dayLow: 0,
             dayHigh: 0,
             volume: 0,
             logo: "",
-          };
+          });
+        } else {
+           results.push({
+            symbol: quoteData['01. symbol'],
+            name: overviewData?.Name || quoteData['01. symbol'],
+            price: parseFloat(quoteData['05. price']),
+            change: parseFloat(quoteData['09. change']),
+            dayLow: parseFloat(quoteData['04. low']),
+            dayHigh: parseFloat(quoteData['03. high']),
+            volume: parseInt(quoteData['06. volume'], 10),
+            logo: "", // AlphaVantage free tier doesn't provide logos
+          });
         }
 
-        const today = history[0];
-        const yesterday = history[1];
-        const change =
-          today && yesterday ? today.close - yesterday.close : 0;
-
-        return {
-          symbol: profile?.symbol || symbol,
-          name: profile?.companyName || symbol,
-          price: today?.close || 0,
-          change,
-          dayLow: today?.low || 0,
-          dayHigh: today?.high || 0,
-          volume: today?.volume || 0,
-          logo: profile?.image || "",
-        };
-      } catch (error) {
-        console.error(`Error fetching data for symbol: ${symbol}`, error);
-        return {
-          symbol,
-          name: "",
-          price: 0,
-          change: 0,
-          dayLow: 0,
-          dayHigh: 0,
-          volume: 0,
-          logo: "",
-        };
+      } catch (error: any) {
+        // Handle API rate limit error specifically if possible
+        if (error.response && error.response.data && /rate limit/i.test(JSON.stringify(error.response.data))) {
+            console.warn(`Rate limit likely reached for Alpha Vantage. Symbol: ${symbol}`);
+        } else {
+            console.error(`Error fetching data for symbol: ${symbol}`, error.message);
+        }
+        results.push({ symbol, name: symbol, price: 0, change: 0, dayLow: 0, dayHigh: 0, volume: 0, logo: "" });
       }
-    })
-  );
+      // The free Alpha Vantage API has a rate limit of 5 requests per minute and 100 per day.
+      // We must add a delay between requests to avoid hitting the limit.
+      await sleep(15000); // 15-second delay to stay under 5 requests per minute
+  }
+
 
   return results;
 }
