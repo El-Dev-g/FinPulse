@@ -1,4 +1,3 @@
-
 // src/components/dashboard/investment-holdings-table.tsx
 "use client";
 
@@ -61,7 +60,7 @@ export function InvestmentHoldingsTable({ investments, onEdit, onDelete }: Inves
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem onSelect={() => onEdit(inv)}>
-                        Edit
+                        Manage
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onSelect={() => onDelete(inv)} className="text-destructive">

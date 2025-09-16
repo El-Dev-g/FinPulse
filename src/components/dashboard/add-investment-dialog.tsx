@@ -29,7 +29,6 @@ export function AddInvestmentDialog({ isOpen, onOpenChange, onAddInvestment }: A
   const [purchasePrice, setPurchasePrice] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,10 +55,7 @@ export function AddInvestmentDialog({ isOpen, onOpenChange, onAddInvestment }: A
         quantity: numQuantity,
         purchasePrice: numPurchasePrice,
       });
-      toast({
-        title: "Investment Added",
-        description: `${numQuantity} shares of ${symbol.toUpperCase()} have been added to your portfolio.`,
-      });
+      
       onOpenChange(false);
       setSymbol("");
       setQuantity("");

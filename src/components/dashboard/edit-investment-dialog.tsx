@@ -1,7 +1,7 @@
-// src/components/dashboard/edit-investment-dialog.tsx
+// src/components/dashboard/add-investment-dialog.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,52 +10,35 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, Trash } from "lucide-react";
-import type { ClientInvestment, Investment } from "@/lib/types";
+import { Loader } from "lucide-react";
+import type { Investment } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
 
-interface EditInvestmentDialogProps {
-  investment: ClientInvestment | null;
+interface AddInvestmentDialogProps {
   isOpen: boolean;
-  onOpenChange: () => void;
-  onEditInvestment: (id: string, updatedData: Partial<Investment>) => Promise<void>;
+  onOpenChange: (isOpen: boolean) => void;
+  onAddInvestment: (newInvestment: Omit<Investment, "id" | "createdAt">) => Promise<void>;
 }
 
-export function EditInvestmentDialog({
-  investment,
-  isOpen,
-  onOpenChange,
-  onEditInvestment,
-}: EditInvestmentDialogProps) {
+export function AddInvestmentDialog({ isOpen, onOpenChange, onAddInvestment }: AddInvestmentDialogProps) {
+  const [symbol, setSymbol] = useState("");
   const [quantity, setQuantity] = useState("");
   const [purchasePrice, setPurchasePrice] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (investment) {
-      setQuantity(String(investment.quantity));
-      setPurchasePrice(String(investment.purchasePrice));
-    }
-  }, [investment]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!investment) return;
-    
     setError(null);
+
+    if (!symbol || !quantity || !purchasePrice) {
+      setError("Please fill out all fields.");
+      return;
+    }
+
     const numQuantity = parseFloat(quantity);
     const numPurchasePrice = parseFloat(purchasePrice);
 
@@ -67,71 +50,85 @@ export function EditInvestmentDialog({
     setLoading(true);
 
     try {
-      await onEditInvestment(investment.id, { 
+      await onAddInvestment({
+        symbol: symbol.toUpperCase(),
         quantity: numQuantity,
         purchasePrice: numPurchasePrice,
       });
-      onOpenChange();
+      
+      onOpenChange(false);
+      setSymbol("");
+      setQuantity("");
+      setPurchasePrice("");
     } catch (err) {
-      setError("Failed to update investment. Please try again.");
+      setError("Failed to add investment. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <>
-      <Dialog open={isOpen} onOpenChange={(open) => {
-        if (!open) {
-          onOpenChange();
-          setError(null);
-          setLoading(false);
-        }
-      }}>
-        <DialogContent className="sm:max-w-[425px]">
-          <form onSubmit={handleSubmit}>
-            <DialogHeader>
-              <DialogTitle>Edit {investment?.symbol} Holding</DialogTitle>
-              <DialogDescription>
-                Update the details of your investment.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        setSymbol("");
+        setQuantity("");
+        setPurchasePrice("");
+        setError(null);
+      }
+      onOpenChange(open);
+    }}>
+      <DialogContent className="sm:max-w-[425px]">
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Add New Investment</DialogTitle>
+            <DialogDescription>
+              Enter the details of your investment holding.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="symbol">Stock Symbol</Label>
+              <Input
+                id="symbol"
+                value={symbol}
+                onChange={(e) => setSymbol(e.target.value)}
+                placeholder="e.g., AAPL, GOOGL"
+                className="uppercase"
+                autoCapitalize="characters"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="symbol-edit">Stock Symbol</Label>
-                <Input id="symbol-edit" value={investment?.symbol || ''} disabled />
+                <Label htmlFor="quantity">Quantity</Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  placeholder="e.g., 10"
+                />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="quantity-edit">Quantity</Label>
-                    <Input
-                    id="quantity-edit"
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="purchasePrice-edit">Average Cost ($)</Label>
-                    <Input
-                    id="purchasePrice-edit"
-                    type="number"
-                    value={purchasePrice}
-                    onChange={(e) => setPurchasePrice(e.target.value)}
-                    />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="purchasePrice">Purchase Price ($)</Label>
+                <Input
+                  id="purchasePrice"
+                  type="number"
+                  value={purchasePrice}
+                  onChange={(e) => setPurchasePrice(e.target.value)}
+                  placeholder="e.g., 150.25"
+                />
               </div>
             </div>
-            {error && <p className="text-sm text-destructive mb-4">{error}</p>}
-            <DialogFooter className="justify-end">
-              <Button type="submit" disabled={loading}>
-                {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-                Save Changes
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </>
+          </div>
+          {error && <p className="text-sm text-destructive mb-4">{error}</p>}
+          <DialogFooter>
+            <Button type="submit" disabled={loading}>
+              {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
+              Add Holding
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,4 +1,3 @@
-
 // src/app/dashboard/investments/page.tsx
 "use client";
 
@@ -23,26 +22,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plus, Loader, TrendingUp, FileText, Search, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import type { Investment, ClientInvestment } from "@/lib/types";
-import { getInvestments, addInvestment, updateInvestment, deleteInvestment } from "@/lib/db";
+import type { Investment, ClientInvestment, Transaction } from "@/lib/types";
+import { getInvestments, addInvestment, updateInvestment, deleteInvestment, addTransaction } from "@/lib/db";
 import { getStockData } from "@/lib/actions";
 import { InvestmentHoldingsTable } from "@/components/dashboard/investment-holdings-table";
 import { AddInvestmentDialog } from "@/components/dashboard/add-investment-dialog";
-import { EditInvestmentDialog } from "@/components/dashboard/edit-investment-dialog";
+import { ManageInvestmentDialog } from "@/components/dashboard/manage-investment-dialog";
 import { Alert, AlertTitle, AlertDescription as AlertDescriptionComponent } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { PortfolioSummary } from "@/components/dashboard/portfolio-summary";
 import { InvestmentPerformanceChart } from "@/components/dashboard/investment-performance-chart";
+import { useToast } from "@/hooks/use-toast";
 
 export default function InvestmentsPage() {
   const { user, isPro } = useAuth();
   const [investments, setInvestments] = useState<ClientInvestment[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingInvestment, setEditingInvestment] = useState<ClientInvestment | null>(null);
+  const [managingInvestment, setManagingInvestment] = useState<ClientInvestment | null>(null);
   const [deletingInvestment, setDeletingInvestment] = useState<ClientInvestment | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -84,7 +85,7 @@ export default function InvestmentsPage() {
 
     } catch (e: any) {
       console.error("Error fetching investments:", e);
-      setError("Could not fetch real-time stock data. Prices may not be current. Please ensure your API key is configured correctly in .env");
+       setError("Could not fetch real-time stock data. Prices may not be current. Please ensure your API key is configured correctly in .env");
     } finally {
       setLoading(false);
     }
@@ -103,12 +104,23 @@ export default function InvestmentsPage() {
 
 
   const handleAddInvestment = async (investment: Omit<Investment, "id" | "createdAt">) => {
+    // 1. Add the holding
     await addInvestment(investment);
-    fetchData();
-  };
 
-  const handleEditInvestment = async (id: string, investment: Partial<Investment>) => {
-    await updateInvestment(id, investment);
+    // 2. Add a corresponding transaction
+    const cost = investment.quantity * investment.purchasePrice;
+    await addTransaction({
+        description: `Buy ${investment.quantity} shares of ${investment.symbol}`,
+        amount: -cost,
+        category: "Investments",
+        date: new Date().toISOString().split('T')[0],
+        source: 'manual',
+    });
+
+    toast({
+      title: "Investment Added",
+      description: `${investment.quantity} shares of ${investment.symbol.toUpperCase()} added.`,
+    });
     fetchData();
   };
 
@@ -116,8 +128,75 @@ export default function InvestmentsPage() {
     if (!deletingInvestment) return;
     await deleteInvestment(deletingInvestment.id);
     setDeletingInvestment(null);
+    toast({
+        title: "Holding Sold",
+        description: `All shares of ${deletingInvestment.symbol} have been removed from your portfolio.`,
+    });
     fetchData();
   };
+  
+  const handleBuyShares = async (investment: ClientInvestment, quantity: number, price: number) => {
+    const totalShares = investment.quantity + quantity;
+    const totalCost = (investment.purchasePrice * investment.quantity) + (price * quantity);
+    const newAveragePrice = totalCost / totalShares;
+    
+    // 1. Update the holding
+    await updateInvestment(investment.id, {
+        quantity: totalShares,
+        purchasePrice: newAveragePrice
+    });
+
+    // 2. Add transaction
+    await addTransaction({
+        description: `Buy ${quantity} shares of ${investment.symbol}`,
+        amount: -(quantity * price),
+        category: "Investments",
+        date: new Date().toISOString().split('T')[0],
+        source: 'manual',
+    });
+    
+    toast({
+        title: "Shares Purchased",
+        description: `Bought ${quantity} shares of ${investment.symbol}.`,
+    });
+    fetchData();
+  };
+  
+  const handleSellShares = async (investment: ClientInvestment, quantity: number, price: number) => {
+    if (quantity > investment.quantity) {
+        toast({ variant: 'destructive', title: "Error", description: "Cannot sell more shares than you own."});
+        return;
+    }
+
+    const proceeds = quantity * price;
+
+    if (quantity === investment.quantity) {
+        // Selling all shares, delete the holding
+        await deleteInvestment(investment.id);
+    } else {
+        // Selling partial shares, update quantity
+        // Average cost basis does not change on sale
+        await updateInvestment(investment.id, {
+            quantity: investment.quantity - quantity,
+        });
+    }
+
+    // Add income transaction
+    await addTransaction({
+        description: `Sell ${quantity} shares of ${investment.symbol}`,
+        amount: proceeds,
+        category: "Investments",
+        date: new Date().toISOString().split('T')[0],
+        source: 'manual',
+    });
+
+    toast({
+        title: "Shares Sold",
+        description: `Sold ${quantity} shares of ${investment.symbol}.`,
+    });
+    fetchData();
+  }
+
 
   if (!isPro) {
     return (
@@ -165,7 +244,7 @@ export default function InvestmentsPage() {
                 <FileText className="h-4 w-4" />
                 <AlertTitle>Data Fetching Error</AlertTitle>
                 <AlertDescriptionComponent>
-                    {error} <a href="https://site.financialmodelingprep.com/developer/docs" target="_blank" rel="noopener noreferrer" className="underline font-semibold">Get a free API key</a>.
+                    {error}. You can get a free key from the Alpha Vantage website.
                 </AlertDescriptionComponent>
              </Alert>
         )}
@@ -217,7 +296,7 @@ export default function InvestmentsPage() {
                                 </div>
                                 <InvestmentHoldingsTable 
                                     investments={filteredInvestments} 
-                                    onEdit={setEditingInvestment}
+                                    onEdit={setManagingInvestment}
                                     onDelete={setDeletingInvestment}
                                 />
                             </CardContent>
@@ -236,11 +315,12 @@ export default function InvestmentsPage() {
         onOpenChange={setIsAddDialogOpen}
         onAddInvestment={handleAddInvestment}
       />
-      <EditInvestmentDialog
-        investment={editingInvestment}
-        isOpen={!!editingInvestment}
-        onOpenChange={() => setEditingInvestment(null)}
-        onEditInvestment={handleEditInvestment}
+      <ManageInvestmentDialog
+        investment={managingInvestment}
+        isOpen={!!managingInvestment}
+        onOpenChange={() => setManagingInvestment(null)}
+        onBuy={handleBuyShares}
+        onSell={handleSellShares}
       />
     </main>
     <AlertDialog open={!!deletingInvestment} onOpenChange={() => setDeletingInvestment(null)}>
