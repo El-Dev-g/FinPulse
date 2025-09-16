@@ -45,12 +45,12 @@ function TradeButton({ investments }: { investments: ClientInvestment[] }) {
     const router = useRouter();
 
     if (investments.length === 0) {
-        return null; // Don't show trade button if no investments
+        return null;
     }
 
     if (investments.length === 1) {
         return (
-            <Button onClick={() => router.push(`/dashboard/investments/trade?symbol=${investments[0].symbol}`)}>
+            <Button className="w-full h-14 text-base flex-grow" onClick={() => router.push(`/dashboard/investments/trade?symbol=${investments[0].symbol}`)}>
                 <ShoppingCart className="mr-2 h-4 w-4" />
                 Trade
             </Button>
@@ -60,12 +60,12 @@ function TradeButton({ investments }: { investments: ClientInvestment[] }) {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button>
+                 <Button className="w-full h-14 text-base flex-grow">
                     <ShoppingCart className="mr-2 h-4 w-4" />
                     Trade
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent side="top" align="center" className="w-80 mb-2">
                 {investments.map(inv => (
                     <DropdownMenuItem key={inv.id} onSelect={() => router.push(`/dashboard/investments/trade?symbol=${inv.symbol}`)}>
                         {inv.symbol} - {inv.name}
@@ -200,7 +200,7 @@ export default function InvestmentsPage() {
   if (!isPro) {
     return (
         <main className="flex-1 p-4 md:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
+            <div className="w-full">
                  <Card className="mt-8 text-center">
                     <CardHeader>
                         <CardTitle className="flex items-center justify-center gap-2 font-headline">
@@ -223,93 +223,100 @@ export default function InvestmentsPage() {
 
   return (
     <>
-    <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-            <div>
-                <h2 className="text-3xl font-bold tracking-tight font-headline">
-                Investment Portfolio
-                </h2>
-                <p className="text-muted-foreground">Track and manage your stock holdings.</p>
-            </div>
-            <div className="flex gap-2">
-                <TradeButton investments={investments} />
-                <Button onClick={() => setIsAddDialogOpen(true)} size="sm" variant="outline">
-                    <Plus className="mr-2 h-4 w-4" />
-                    New Holding
-                </Button>
+    <main className="flex-1 flex flex-col">
+        <div className="flex-grow p-4 md:p-6 lg:p-8 space-y-6 overflow-y-auto pb-40">
+            <div className="w-full">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 className="text-3xl font-bold tracking-tight font-headline">
+                        Investment Portfolio
+                        </h2>
+                        <p className="text-muted-foreground">Track and manage your stock holdings.</p>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button onClick={() => setIsAddDialogOpen(true)} size="sm" variant="outline">
+                            <Plus className="mr-2 h-4 w-4" />
+                            New Holding
+                        </Button>
+                    </div>
+                </div>
+
+                {error && (
+                    <Alert variant="destructive" className="mb-6">
+                        <FileText className="h-4 w-4" />
+                        <AlertTitle>Data Fetching Error</AlertTitle>
+                        <AlertDescriptionComponent>
+                            {error}. You can get a free key from your Alpha Vantage dashboard.
+                        </AlertDescriptionComponent>
+                    </Alert>
+                )}
+
+                {loading ? (
+                    <div className="flex justify-center items-center h-96">
+                        <Loader className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                ) : investments.length === 0 ? (
+                    <div className="text-center py-20">
+                        <h3 className="text-lg font-semibold">Your Portfolio is Empty</h3>
+                        <p className="text-muted-foreground mt-2">
+                            Add your first holding to start tracking your investments.
+                        </p>
+                        <Button onClick={() => setIsAddDialogOpen(true)} className="mt-6">
+                            <Plus className="mr-2" />
+                            Add Investment
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="space-y-6">
+                        <PortfolioSummary investments={investments} />
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div className="lg:col-span-2">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Holdings</CardTitle>
+                                        <CardDescription>Your current investment positions.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="relative mb-4">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input 
+                                            placeholder="Search holdings..." 
+                                            className="pl-9"
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                        />
+                                        {searchTerm && (
+                                            <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                                            onClick={() => setSearchTerm('')}
+                                            >
+                                            <X className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                        </div>
+                                        <InvestmentHoldingsTable 
+                                            investments={filteredInvestments}
+                                            onDelete={setDeletingInvestment}
+                                        />
+                                    </CardContent>
+                                </Card>
+                            </div>
+                            <div className="lg:col-span-1">
+                                <InvestmentPerformanceChart investments={investments} />
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
 
-        {error && (
-             <Alert variant="destructive" className="mb-6">
-                <FileText className="h-4 w-4" />
-                <AlertTitle>Data Fetching Error</AlertTitle>
-                <AlertDescriptionComponent>
-                    {error}. You can get a free key from your Alpha Vantage dashboard.
-                </AlertDescriptionComponent>
-             </Alert>
-        )}
-
-        {loading ? (
-            <div className="flex justify-center items-center h-96">
-                <Loader className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        ) : investments.length === 0 ? (
-             <div className="text-center py-20">
-                <h3 className="text-lg font-semibold">Your Portfolio is Empty</h3>
-                <p className="text-muted-foreground mt-2">
-                    Add your first holding to start tracking your investments.
-                </p>
-                <Button onClick={() => setIsAddDialogOpen(true)} className="mt-6">
-                    <Plus className="mr-2" />
-                    Add Investment
-                </Button>
-             </div>
-        ) : (
-            <div className="space-y-6">
-                <PortfolioSummary investments={investments} />
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2">
-                         <Card>
-                            <CardHeader>
-                                <CardTitle>Holdings</CardTitle>
-                                <CardDescription>Your current investment positions.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="relative mb-4">
-                                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                  <Input 
-                                    placeholder="Search holdings..." 
-                                    className="pl-9"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                  />
-                                  {searchTerm && (
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                                      onClick={() => setSearchTerm('')}
-                                    >
-                                      <X className="h-4 w-4" />
-                                    </Button>
-                                  )}
-                                </div>
-                                <InvestmentHoldingsTable 
-                                    investments={filteredInvestments}
-                                    onDelete={setDeletingInvestment}
-                                />
-                            </CardContent>
-                        </Card>
-                    </div>
-                    <div className="lg:col-span-1">
-                        <InvestmentPerformanceChart investments={investments} />
-                    </div>
-                </div>
+        {investments.length > 0 && (
+            <div className="sticky bottom-0 mt-auto bg-background/80 backdrop-blur-sm border-t p-4">
+                <TradeButton investments={investments} />
             </div>
         )}
-      </div>
 
        <AddInvestmentDialog
         isOpen={isAddDialogOpen}
