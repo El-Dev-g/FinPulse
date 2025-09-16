@@ -112,7 +112,6 @@ const getStockDetailsFlow = ai.defineFlow(
     name: 'getStockDetailsFlow',
     inputSchema: StockDetailsRequestSchema,
     outputSchema: StockDetailsResponseSchema,
-    tools: [fetchStockDataTool]
   },
   async (input) => {
     return await fetchStockDataTool(input);
@@ -125,3 +124,4 @@ export async function getStockDetails(
 ): Promise<StockDetailsResponse> {
   return getStockDetailsFlow(request);
 }
+
