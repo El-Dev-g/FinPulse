@@ -40,6 +40,11 @@ const StockDetailsResponseSchema = z.object({
   sector: z.string(),
   industry: z.string(),
   ceo: z.string(),
+  marketCap: z.string(),
+  peRatio: z.string(),
+  dividendYield: z.string(),
+  week52High: z.string(),
+  week52Low: z.string(),
   history: z.array(StockHistoryItemSchema),
   news: z.array(NewsArticleSchema),
 });
@@ -116,6 +121,11 @@ const fetchStockDataTool = ai.defineTool(
         sector: overviewData.Sector || "",
         industry: overviewData.Industry || "",
         ceo: overviewData.CEO || "",
+        marketCap: overviewData.MarketCapitalization || "N/A",
+        peRatio: overviewData.PERatio || "N/A",
+        dividendYield: overviewData.DividendYield || "N/A",
+        week52High: overviewData['52WeekHigh'] || "N/A",
+        week52Low: overviewData['52WeekLow'] || "N/A",
         history,
         news: newsData,
       };

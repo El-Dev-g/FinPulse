@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader, TrendingUp, TrendingDown, AlertCircle, Plus, Repeat, Heart, ArrowUpRight } from 'lucide-react';
+import { ArrowLeft, Loader, TrendingUp, TrendingDown, AlertCircle, Plus, Repeat, Heart, ArrowUpRight, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -38,6 +38,11 @@ type StockDetails = {
     description: string;
     sector: string;
     industry: string;
+    marketCap: string;
+    peRatio: string;
+    dividendYield: string;
+    week52High: string;
+    week52Low: string;
     history: {
         date: string;
         open: number;
@@ -48,6 +53,24 @@ type StockDetails = {
     }[];
     news: NewsArticle[];
 };
+
+function FinancialsStat({ label, value }: { label: string, value: string | number}) {
+    return (
+        <div className="flex justify-between py-3 border-b">
+            <span className="text-muted-foreground">{label}</span>
+            <span className="font-medium">{value}</span>
+        </div>
+    )
+}
+
+function formatMarketCap(marketCap: string) {
+    const num = parseInt(marketCap);
+    if (isNaN(num)) return "N/A";
+    if (num >= 1_000_000_000_000) return `$${(num / 1_000_000_000_000).toFixed(2)}T`;
+    if (num >= 1_000_000_000) return `$${(num / 1_000_000_000).toFixed(2)}B`;
+    if (num >= 1_000_000) return `$${(num / 1_000_000).toFixed(2)}M`;
+    return `$${num.toLocaleString()}`;
+}
 
 export default function StockDetailPage() {
     const params = useParams();
@@ -144,63 +167,38 @@ export default function StockDetailPage() {
                             <Heart className={cn("h-5 w-5", isFavorite && "fill-red-500 text-red-500")} />
                         </Button>
                     </div>
+                    
+                    <div className="flex items-start gap-4 mb-6">
+                        <Avatar className="h-12 w-12">
+                            <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
+                            <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-grow">
+                            <p className="text-4xl font-bold">{formatCurrency(stockData.price)}</p>
+                            <div className="flex items-center gap-2">
+                                <p className={cn("font-semibold text-base", isPositiveChange ? "text-green-600" : "text-destructive")}>
+                                    {isPositiveChange ? '+' : ''}{formatCurrency(stockData.change)} ({isPositiveChange ? '+' : ''}{((stockData.change) / ((stockData.price) - (stockData.change)) * 100).toFixed(2)}%)
+                                </p>
+                                <p className="text-sm text-muted-foreground">today</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm font-semibold text-green-600 mb-6">
+                        <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
+                        MARKET OPEN
+                    </div>
+
 
                     <Tabs defaultValue="about">
                         <TabsList className="grid w-full grid-cols-3">
                             <TabsTrigger value="about">About</TabsTrigger>
-                            <TabsTrigger value="financials" disabled>Financials</TabsTrigger>
+                            <TabsTrigger value="financials">Financials</TabsTrigger>
                             <TabsTrigger value="news">News</TabsTrigger>
                         </TabsList>
                         <TabsContent value="about">
                             <div className="py-6 space-y-6">
-                                <div className="flex items-start gap-4">
-                                     <Avatar className="h-12 w-12">
-                                        <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
-                                        <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-grow">
-                                        <p className="text-4xl font-bold">{formatCurrency(stockData.price)}</p>
-                                        <div className="flex items-center gap-2">
-                                            <p className={cn("font-semibold text-base", isPositiveChange ? "text-green-600" : "text-destructive")}>
-                                                {isPositiveChange ? '+' : ''}{formatCurrency(stockData.change)} ({isPositiveChange ? '+' : ''}{((stockData.change) / ((stockData.price) - (stockData.change)) * 100).toFixed(2)}%)
-                                            </p>
-                                            <p className="text-sm text-muted-foreground">today</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm font-semibold text-green-600">
-                                    <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
-                                    MARKET OPEN
-                                </div>
-                                
                                 <StockPriceChart data={stockData.history} isPositive={isPositiveChange}/>
 
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>Key Statistics</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="grid grid-cols-2 gap-x-4 gap-y-6">
-                                            <div className="space-y-1">
-                                                <p className="text-sm text-muted-foreground">Day High</p>
-                                                <p className="font-semibold text-lg">{formatCurrency(stockData.dayHigh)}</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-sm text-muted-foreground">Day Low</p>
-                                                <p className="font-semibold text-lg">{formatCurrency(stockData.dayLow)}</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-sm text-muted-foreground">Volume</p>
-                                                <p className="font-semibold text-lg">{(stockData.volume).toLocaleString()}</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-sm text-muted-foreground">Sector</p>
-                                                <p className="font-semibold text-lg truncate">{stockData.sector || "N/A"}</p>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                                
                                 <Card>
                                     <CardHeader>
                                         <CardTitle>About {stockData.name}</CardTitle>
@@ -212,15 +210,31 @@ export default function StockDetailPage() {
                             </div>
                         </TabsContent>
                          <TabsContent value="financials">
-                            <Card className="mt-4">
-                                <CardHeader>
-                                    <CardTitle>Financials</CardTitle>
-                                    <CardDescription>This feature is coming soon.</CardDescription>
-                                </CardHeader>
-                                <CardContent className="h-60 flex items-center justify-center">
-                                    <p className="text-muted-foreground">Financial data will be displayed here.</p>
-                                </CardContent>
-                            </Card>
+                            <div className="py-6 space-y-6">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            Stats <Info className="h-4 w-4 text-muted-foreground" />
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8 text-sm">
+                                        <div>
+                                            <FinancialsStat label="Open" value={formatCurrency(stockData.dayHigh > 0 ? stockData.history.at(-1)?.open ?? 0 : 0)} />
+                                            <FinancialsStat label="High" value={formatCurrency(stockData.dayHigh)} />
+                                            <FinancialsStat label="Low" value={formatCurrency(stockData.dayLow)} />
+                                            <FinancialsStat label="52 Wk High" value={formatCurrency(parseFloat(stockData.week52High))} />
+                                            <FinancialsStat label="52 Wk Low" value={formatCurrency(parseFloat(stockData.week52Low))} />
+                                        </div>
+                                        <div>
+                                            <FinancialsStat label="Volume" value={stockData.volume.toLocaleString()} />
+                                            <FinancialsStat label="Avg Vol" value="N/A" />
+                                            <FinancialsStat label="Mkt Cap" value={formatMarketCap(stockData.marketCap)} />
+                                            <FinancialsStat label="P/E Ratio" value={stockData.peRatio} />
+                                            <FinancialsStat label="Div/Yield" value={stockData.dividendYield === "N/A" ? "N/A" : `${(parseFloat(stockData.dividendYield) * 100).toFixed(2)}%`} />
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
                         </TabsContent>
                          <TabsContent value="news">
                              <div className="py-6 space-y-4">
