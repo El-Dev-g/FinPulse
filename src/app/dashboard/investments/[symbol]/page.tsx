@@ -122,33 +122,31 @@ export default function StockDetailPage() {
         <main className="flex-1 flex flex-col">
             <div className="flex-grow p-4 md:p-6 lg:p-8 space-y-6">
                 <div className="max-w-7xl mx-auto">
-                    <div className="mb-6">
-                        <Button asChild variant="outline" size="sm">
+                    <div className="flex items-center gap-4 mb-6">
+                         <Button asChild variant="outline" size="icon" className="h-9 w-9 flex-shrink-0">
                             <Link href="/dashboard/investments">
-                                <ArrowLeft className="mr-2" />
-                                Back to Portfolio
+                                <ArrowLeft className="h-4 w-4" />
                             </Link>
                         </Button>
-                    </div>
-                    
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                         <div className="flex items-center gap-4">
                             <Avatar className="h-12 w-12">
                                 <AvatarImage src={stockData?.logo} alt={symbol as string} />
                                 <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
                             </Avatar>
                             <div>
-                                <h2 className="text-3xl font-bold tracking-tight font-headline">{stockData?.name}</h2>
-                                <p className="text-muted-foreground">{stockData?.symbol}</p>
+                                <h2 className="text-xl font-bold tracking-tight font-headline">{stockData?.name}</h2>
+                                <p className="text-sm text-muted-foreground">{stockData?.symbol}</p>
                             </div>
                         </div>
-                        <div className="text-left sm:text-right">
-                            <p className="text-3xl font-bold">{formatCurrency(stockData?.price || 0)}</p>
-                            <p className={cn("font-semibold", isPositiveChange ? "text-green-600" : "text-destructive")}>
-                                {isPositiveChange ? '+' : ''}{formatCurrency(stockData?.change || 0)} ({isPositiveChange ? '+' : ''}{((stockData?.change || 0) / ((stockData?.price || 0) - (stockData?.change || 0)) * 100).toFixed(2)}%)
-                            </p>
-                        </div>
                     </div>
+                    
+                    <div className="mb-6">
+                        <p className="text-4xl font-bold">{formatCurrency(stockData?.price || 0)}</p>
+                        <p className={cn("font-semibold text-base", isPositiveChange ? "text-green-600" : "text-destructive")}>
+                            {isPositiveChange ? '+' : ''}{formatCurrency(stockData?.change || 0)} ({isPositiveChange ? '+' : ''}{((stockData?.change || 0) / ((stockData?.price || 0) - (stockData?.change || 0)) * 100).toFixed(2)}%)
+                        </p>
+                    </div>
+
 
                     <Card>
                         <CardHeader>
@@ -172,47 +170,38 @@ export default function StockDetailPage() {
                         </CardContent>
                     </Card>
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-medium">Day High</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-2xl font-bold">{formatCurrency(stockData?.dayHigh || 0)}</p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-medium">Day Low</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-2xl font-bold">{formatCurrency(stockData?.dayLow || 0)}</p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-medium">Volume</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-2xl font-bold">{(stockData?.volume || 0).toLocaleString()}</p>
-                            </CardContent>
-                        </Card>
-                         <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-medium">Sector</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-lg font-bold truncate">{stockData?.sector || "N/A"}</p>
-                            </CardContent>
-                        </Card>
-                    </div>
-
+                    <Card className="mt-6">
+                        <CardHeader>
+                            <CardTitle>Key Statistics</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-6">
+                                <div className="space-y-1">
+                                    <p className="text-sm text-muted-foreground">Day High</p>
+                                    <p className="font-semibold text-lg">{formatCurrency(stockData?.dayHigh || 0)}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-sm text-muted-foreground">Day Low</p>
+                                    <p className="font-semibold text-lg">{formatCurrency(stockData?.dayLow || 0)}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-sm text-muted-foreground">Volume</p>
+                                    <p className="font-semibold text-lg">{(stockData?.volume || 0).toLocaleString()}</p>
+                                </div>
+                                 <div className="space-y-1">
+                                    <p className="text-sm text-muted-foreground">Sector</p>
+                                    <p className="font-semibold text-lg truncate">{stockData?.sector || "N/A"}</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    
                      <Card className="mt-6">
                         <CardHeader>
                             <CardTitle>About {stockData?.name}</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-muted-foreground line-clamp-4">{stockData?.description}</p>
+                            <p className="text-muted-foreground">{stockData?.description}</p>
                         </CardContent>
                     </Card>
 
