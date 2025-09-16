@@ -176,9 +176,9 @@ export default function StockDetailPage() {
 
                     <Tabs defaultValue="about" className="w-full">
                         <TabsList className="w-full justify-start border-b gap-4" variant="underline">
-                            <TabsTrigger value="about" className="flex-grow">About</TabsTrigger>
-                            <TabsTrigger value="financials" className="flex-grow">Financials</TabsTrigger>
-                            <TabsTrigger value="news" className="flex-grow">News</TabsTrigger>
+                            <TabsTrigger value="about">About</TabsTrigger>
+                            <TabsTrigger value="financials">Financials</TabsTrigger>
+                            <TabsTrigger value="news">News</TabsTrigger>
                         </TabsList>
                         
                         <div className="px-4 md:px-6 lg:px-8 mt-6">
@@ -232,7 +232,7 @@ export default function StockDetailPage() {
                             </div>
                         </TabsContent>
                          <TabsContent value="financials" className="w-full mt-6 px-4 md:px-6 lg:px-8">
-                            <div className="space-y-6">
+                             <div className="space-y-6">
                                 <h3 className="text-xl font-bold font-headline flex items-center gap-2">
                                     Stats <Info className="h-4 w-4 text-muted-foreground" />
                                 </h3>
