@@ -151,10 +151,10 @@ export default function StockDetailPage() {
 
     return (
         <main className="flex-1 flex flex-col">
-            <div className="flex-grow p-4 md:p-6 lg:p-8 space-y-6 overflow-y-auto pb-40">
+            <div className="flex-grow space-y-6 overflow-y-auto pb-40">
                 <div className="w-full">
                     {/* Header */}
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between p-4 md:p-6 lg:p-8">
                          <Button asChild variant="ghost" size="icon" className="h-9 w-9 flex-shrink-0">
                             <Link href="/dashboard/investments">
                                 <ArrowLeft className="h-5 w-5" />
@@ -170,12 +170,12 @@ export default function StockDetailPage() {
                     </div>
 
                     <Tabs defaultValue="about" className="w-full">
-                        <TabsList className="w-full">
+                        <TabsList className="w-full justify-start px-4 md:px-6 lg:px-8">
                             <TabsTrigger value="about">About</TabsTrigger>
                             <TabsTrigger value="financials">Financials</TabsTrigger>
                             <TabsTrigger value="news">News</TabsTrigger>
                         </TabsList>
-                        <TabsContent value="about" className="w-full mt-6">
+                        <TabsContent value="about" className="w-full mt-6 px-4 md:px-6 lg:px-8">
                             <div className="space-y-6">
                                 <div className="flex items-start gap-4">
                                     <Avatar className="h-12 w-12">
@@ -220,10 +220,10 @@ export default function StockDetailPage() {
                         </TabsContent>
                          <TabsContent value="financials" className="w-full mt-6">
                             <div className="space-y-6">
-                                <h3 className="text-xl font-bold font-headline flex items-center gap-2">
+                                <h3 className="text-xl font-bold font-headline flex items-center gap-2 px-4 md:px-6 lg:px-8">
                                     Stats <Info className="h-4 w-4 text-muted-foreground" />
                                 </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 text-sm">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 text-sm px-4 md:px-6 lg:px-8">
                                     <div>
                                         <FinancialsStat label="Open" value={formatCurrency(stockData.dayHigh > 0 ? stockData.history.at(-1)?.open ?? 0 : 0)} />
                                         <FinancialsStat label="High" value={formatCurrency(stockData.dayHigh)} />
@@ -243,9 +243,9 @@ export default function StockDetailPage() {
                         </TabsContent>
                          <TabsContent value="news" className="w-full mt-6">
                              <div className="space-y-4">
-                                <h3 className="text-xl font-bold font-headline">Related News</h3>
+                                <h3 className="text-xl font-bold font-headline px-4 md:px-6 lg:px-8">Related News</h3>
                                 {stockData.news && stockData.news.length > 0 ? (
-                                    <div className="space-y-4">
+                                    <div className="space-y-4 px-4 md:px-6 lg:px-8">
                                         {stockData.news.map((article, index) => (
                                             <a key={index} href={article.url} target="_blank" rel="noopener noreferrer" className="block p-4 rounded-lg border hover:bg-muted/50">
                                                 <div className="flex gap-4 items-start">
@@ -272,7 +272,7 @@ export default function StockDetailPage() {
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="h-40 flex items-center justify-center border rounded-lg">
+                                    <div className="h-40 flex items-center justify-center border rounded-lg mx-4 md:mx-6 lg:mx-8">
                                         <p className="text-muted-foreground">No recent news found for {stockData.symbol}.</p>
                                     </div>
                                 )}
