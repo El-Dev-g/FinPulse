@@ -124,4 +124,3 @@ export async function getStockDetails(
 ): Promise<StockDetailsResponse> {
   return getStockDetailsFlow(request);
 }
-
