@@ -46,9 +46,16 @@ import Link from 'next/link';
 import { addAccount, getAccounts, deleteAccount } from '@/lib/db';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
-
-const partner = { name: 'Fintech Partner', termsUrl: '#', privacyUrl: '#' };
+const continents = [
+  { name: 'Africa', path: '/africa' },
+  { name: 'Asia', path: '/asia' },
+  { name: 'Europe', path: '/europe' },
+  { name: 'North America', path: '/north-america' },
+  { name: 'South America', path: '/south-america' },
+];
 
 function AccountDetailsRow({ label, value, onCopy }: { label: string; value: string, onCopy: () => void }) {
     const [copied, setCopied] = useState(false);
@@ -78,8 +85,8 @@ function LinkAccountPageContent() {
     const [step, setStep] = useState<'initial' | 'connecting' | 'success'>('initial');
     const [connectedAccounts, setConnectedAccounts] = useState<Account[]>([]);
     const [newlyFetchedAccounts, setNewlyFetchedAccounts] = useState<Account[]>([]);
-    const [isConfirming, setIsConfirming] = useState(false);
     const [isUnlinking, setIsUnlinking] = useState<Account | null>(null);
+    const [selectedContinent, setSelectedContinent] = useState<string>("");
 
     const { user, formatCurrency } = useAuth();
     const router = useRouter();
@@ -157,6 +164,17 @@ function LinkAccountPageContent() {
         } finally {
             setIsUnlinking(null);
         }
+    }
+
+    const handleConnectAccount = () => {
+        if (!selectedContinent) {
+            toast({ variant: 'destructive', title: 'Please select a continent' });
+            return;
+        }
+        setLoading(true);
+        // In a real app, you would navigate to a partner-specific URL
+        // For this demo, we simulate a successful connection flow.
+        router.push('/dashboard/link-account?success=true');
     }
     
     if (step === 'connecting') {
@@ -271,12 +289,32 @@ function LinkAccountPageContent() {
                             </Alert>
                         )}
                     </CardContent>
+                </Card>
+
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Connect a New Account</CardTitle>
+                        <CardDescription>Select your region to find your bank.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                         <div className="space-y-2">
+                            <Label htmlFor="continent-select">Select Continent</Label>
+                             <Select value={selectedContinent} onValueChange={setSelectedContinent}>
+                                <SelectTrigger id="continent-select">
+                                    <SelectValue placeholder="Choose your continent..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {continents.map((c) => (
+                                        <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </CardContent>
                     <CardFooter>
-                        <Button asChild disabled={loading} className="w-full sm:w-auto">
-                            <Link href="/dashboard/link-account/continent">
-                                <Landmark className="mr-2" />
-                                Connect New Account
-                            </Link>
+                         <Button onClick={handleConnectAccount} disabled={loading || !selectedContinent}>
+                            {loading ? <Loader className="mr-2 animate-spin" /> : <Landmark className="mr-2" />}
+                            Connect New Account
                         </Button>
                     </CardFooter>
                 </Card>
