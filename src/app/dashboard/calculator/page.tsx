@@ -356,6 +356,8 @@ function CalculatorPageContent() {
   const [currencyValues, setCurrencyValues] = useState({ amount: "1", fromCurrency: "USD", toCurrency: "EUR" });
   
   const [activeTab, setActiveTab] = useState('investment-savings');
+  const [activeSavingsTab, setActiveSavingsTab] = useState('investment');
+
 
   const setPartialState = useCallback((setter: React.Dispatch<React.SetStateAction<any>>) => (newValues: object) => {
       setter((prev: object) => ({...prev, ...newValues}));
@@ -366,6 +368,7 @@ function CalculatorPageContent() {
       if (destination === 'savings') {
           setSavingsValues(prev => ({...prev, current: value.toFixed(2)}));
           setActiveTab('investment-savings');
+          setActiveSavingsTab('savings');
       } else {
           setDebtValues(prev => ({...prev, debtAmount: value.toFixed(2)}));
           setActiveTab('debt-currency');
@@ -375,6 +378,7 @@ function CalculatorPageContent() {
   const handleUseContribution = (value: number) => {
       setInvestmentValues(prev => ({...prev, contribution: value.toFixed(2)}));
       setActiveTab('investment-savings');
+      setActiveSavingsTab('investment');
   }
 
   const handleUsePayment = (value: string) => {
@@ -382,6 +386,7 @@ function CalculatorPageContent() {
       if (isNaN(numericValue) || numericValue <= 0) return;
       setSavingsValues(prev => ({...prev, monthlyContribution: numericValue.toFixed(2) as any }));
       setActiveTab('investment-savings');
+      setActiveSavingsTab('savings');
   }
 
   const handleUseConversion = (value: number) => {
@@ -390,6 +395,7 @@ function CalculatorPageContent() {
     setSavingsValues(prev => ({...prev, current: valStr}));
     setDebtValues(prev => ({...prev, debtAmount: valStr}));
     setActiveTab('investment-savings');
+    setActiveSavingsTab('investment');
   }
 
 
@@ -417,7 +423,7 @@ function CalculatorPageContent() {
             <TabsTrigger value="debt-currency">Debt & Currency</TabsTrigger>
           </TabsList>
           <TabsContent value="investment-savings">
-            <Tabs defaultValue="investment">
+            <Tabs value={activeSavingsTab} onValueChange={setActiveSavingsTab}>
                 <TabsList className="mb-4 grid w-full grid-cols-2">
                     <TabsTrigger value="investment">Investment Growth</TabsTrigger>
                     <TabsTrigger value="savings">Savings Goal</TabsTrigger>
@@ -449,5 +455,7 @@ function CalculatorPageContent() {
     </main>
   );
 }
+
+    
 
     
