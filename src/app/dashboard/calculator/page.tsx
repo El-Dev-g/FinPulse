@@ -79,7 +79,7 @@ function InvestmentCalculator({ values, setValues, onUseFutureValue }: any) {
 
 function SavingsGoalCalculator({ values, setValues, onUseContribution }: any) {
     const { formatCurrency } = useAuth();
-    const { target, current, years } = values;
+    const { target, current, years, monthlyContribution: externalMonthlyContribution } = values;
     const searchParams = useSearchParams();
 
     const targetParam = searchParams.get('target');
@@ -96,6 +96,9 @@ function SavingsGoalCalculator({ values, setValues, onUseContribution }: any) {
 
 
     const monthlyContribution = useMemo(() => {
+        if (externalMonthlyContribution) {
+            return parseFloat(externalMonthlyContribution);
+        }
         const T = parseFloat(target);
         const C = parseFloat(current);
         const Y = parseInt(years);
@@ -103,7 +106,27 @@ function SavingsGoalCalculator({ values, setValues, onUseContribution }: any) {
         const remaining = T - C;
         if (remaining <= 0) return 0;
         return remaining / (Y * 12);
-    }, [target, current, years]);
+    }, [target, current, years, externalMonthlyContribution]);
+
+    useEffect(() => {
+        if (externalMonthlyContribution) {
+            const T = parseFloat(target);
+            const C = parseFloat(current);
+            const M = parseFloat(externalMonthlyContribution);
+            if (!isNaN(T) && !isNaN(C) && !isNaN(M) && M > 0) {
+                const remaining = T - C;
+                if (remaining > 0) {
+                    const monthsNeeded = remaining / M;
+                    const yearsNeeded = monthsNeeded / 12;
+                    setValues({ years: yearsNeeded.toFixed(1), monthlyContribution: undefined });
+                }
+            }
+        }
+    }, [externalMonthlyContribution, target, current, setValues]);
+
+    const handleYearsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setValues({ years: e.target.value, monthlyContribution: undefined });
+    }
 
     return (
         <Card>
@@ -115,15 +138,15 @@ function SavingsGoalCalculator({ values, setValues, onUseContribution }: any) {
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="target">Goal Amount ($)</Label>
-                        <Input id="target" type="number" value={target} onChange={(e) => setValues({ target: e.target.value })} placeholder="0"/>
+                        <Input id="target" type="number" value={target} onChange={(e) => setValues({ target: e.target.value, monthlyContribution: undefined })} placeholder="0"/>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="current">Current Savings ($)</Label>
-                        <Input id="current" type="number" value={current} onChange={(e) => setValues({ current: e.target.value })} placeholder="0"/>
+                        <Input id="current" type="number" value={current} onChange={(e) => setValues({ current: e.target.value, monthlyContribution: undefined })} placeholder="0"/>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="years-savings">Years to Save</Label>
-                        <Input id="years-savings" type="number" value={years} onChange={(e) => setValues({ years: e.target.value })} placeholder="0"/>
+                        <Input id="years-savings" type="number" value={years} onChange={handleYearsChange} placeholder="0"/>
                     </div>
                 </div>
                 <div className="p-6 bg-muted rounded-lg text-center space-y-3">
@@ -328,7 +351,7 @@ function CalculatorPageContent() {
   
   // Unified state for all calculators
   const [investmentValues, setInvestmentValues] = useState({ initial: "", contribution: "", rate: "", years: "" });
-  const [savingsValues, setSavingsValues] = useState({ target: "", current: "", years: "" });
+  const [savingsValues, setSavingsValues] = useState({ target: "", current: "", years: "", monthlyContribution: undefined });
   const [debtValues, setDebtValues] = useState({ debtAmount: "", interestRate: "", monthlyPayment: "" });
   const [currencyValues, setCurrencyValues] = useState({ amount: "1", fromCurrency: "USD", toCurrency: "EUR" });
   
@@ -357,7 +380,7 @@ function CalculatorPageContent() {
   const handleUsePayment = (value: string) => {
       const numericValue = parseFloat(value);
       if (isNaN(numericValue) || numericValue <= 0) return;
-      setInvestmentValues(prev => ({...prev, contribution: numericValue.toFixed(2)}));
+      setSavingsValues(prev => ({...prev, monthlyContribution: numericValue.toFixed(2) as any }));
       setActiveTab('investment-savings');
   }
 
@@ -403,7 +426,7 @@ function CalculatorPageContent() {
                     <InvestmentCalculator values={investmentValues} setValues={setPartialState(setInvestmentValues)} onUseFutureValue={handleUseFutureValue} />
                 </TabsContent>
                  <TabsContent value="savings">
-                    <SavingsGoalCalculator values={savingsValues} setValues={setPartialState(setSavingsValues)} onUseContribution={handleUseContribution} />
+                    <SavingsGoalCalculator values={savingsValues} setValues={setPartialState(setSavingsValues) as any} onUseContribution={handleUseContribution} />
                 </TabsContent>
             </Tabs>
           </TabsContent>
@@ -426,3 +449,5 @@ function CalculatorPageContent() {
     </main>
   );
 }
+
+    
