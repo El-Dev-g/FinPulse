@@ -356,17 +356,17 @@ function CalculatorPageContent() {
 
   const handleUsePayment = (value: string) => {
       const numericValue = parseFloat(value);
-      if (isNaN(numericValue)) return;
-      setSavingsValues(prev => ({...prev, years: '5' })); // Default to 5 years
-      handleUseContribution(numericValue);
+      if (isNaN(numericValue) || numericValue <= 0) return;
+      setInvestmentValues(prev => ({...prev, contribution: numericValue.toFixed(2)}));
       setActiveTab('investment-savings');
   }
 
   const handleUseConversion = (value: number) => {
     const valStr = value.toFixed(2);
     setInvestmentValues(prev => ({...prev, initial: valStr}));
-    setSavingsValues(prev => ({...prev, target: valStr}));
+    setSavingsValues(prev => ({...prev, current: valStr}));
     setDebtValues(prev => ({...prev, debtAmount: valStr}));
+    setActiveTab('investment-savings');
   }
 
 
@@ -426,5 +426,3 @@ function CalculatorPageContent() {
     </main>
   );
 }
-
-    
