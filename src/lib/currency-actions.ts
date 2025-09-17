@@ -39,5 +39,3 @@ export async function convertCurrency(
     throw new Error(`Currency conversion failed: ${error.message || error}`);
   }
 }
-
-    
