@@ -330,7 +330,7 @@ function CurrencyConverter({ values, setValues, onUseConversion }: any) {
             </>
             )}
         </div>
-        <p className="text-xs text-muted-foreground text-center">Rates provided by ExchangeRate-Host.</p>
+        <p className="text-xs text-muted-foreground text-center">Rates from the European Central Bank, via frankfurter.app.</p>
       </CardContent>
     </Card>
   );
