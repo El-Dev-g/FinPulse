@@ -146,20 +146,6 @@ function LinkAccountPageContent() {
     }, [searchParams, router, toast, fetchAccounts]);
 
 
-    const handleConnect = async () => {
-        setIsConfirming(false);
-        setLoading(true);
-        toast({
-            title: "Demo Feature",
-            description: "In a real app, this would securely redirect you to your bank.",
-        });
-        setTimeout(() => {
-            const params = new URLSearchParams(window.location.search);
-            params.set('success', 'true');
-            router.push(`?${params.toString()}`);
-        }, 2000);
-    };
-
     const handleUnlink = async () => {
         if (!isUnlinking) return;
         try {
@@ -286,45 +272,15 @@ function LinkAccountPageContent() {
                         )}
                     </CardContent>
                     <CardFooter>
-                        <Button onClick={() => setIsConfirming(true)} disabled={loading} className="w-full sm:w-auto">
-                            {loading ? <Loader className="mr-2 animate-spin" /> : <Landmark className="mr-2" />}
-                            Connect New Account
+                        <Button asChild disabled={loading} className="w-full sm:w-auto">
+                            <Link href="/dashboard/link-account/continent">
+                                <Landmark className="mr-2" />
+                                Connect New Account
+                            </Link>
                         </Button>
                     </CardFooter>
                 </Card>
             </div>
-            <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Connect your account</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            FinPulse's data partner, <strong>{partner.name}</strong>, would like 90-day access to your account details.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <div className="text-sm space-y-4">
-                       <div className="flex items-start gap-2 p-3 bg-muted rounded-md">
-                           <Info className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
-                           <div>
-                            <h4 className="font-semibold text-foreground">What details am I sharing?</h4>
-                            <p className="text-muted-foreground">To provide its services, {partner.name} needs permission to access the following information and share it with FinPulse:</p>
-                           </div>
-                       </div>
-                        <ul className="list-disc list-inside pl-4 space-y-1 text-muted-foreground">
-                            <li>Full name</li>
-                            <li>Account number and sort code</li>
-                            <li>Balance</li>
-                            <li>Transactions, direct debits and standing orders</li>
-                        </ul>
-                        <p className="text-xs text-muted-foreground text-center pt-2">
-                            By tapping 'Allow', you agree to {partner.name}'s <a href={partner.termsUrl} target="_blank" rel="noopener noreferrer" className="underline">Terms of Service</a> and <a href={partner.privacyUrl} target="_blank" rel="noopener noreferrer" className="underline">Privacy Policy</a>.
-                        </p>
-                    </div>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConnect}>Allow</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
             <AlertDialog open={!!isUnlinking} onOpenChange={() => setIsUnlinking(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
