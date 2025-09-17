@@ -1,3 +1,5 @@
+// src/lib/currency-actions.ts
+"use server";
 
 import axios from "axios";
 import { z } from "zod";
@@ -16,29 +18,26 @@ export async function convertCurrency(
   if (from === to) {
     return { from, to, amount, convertedAmount: amount };
   }
-
-  const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
-  if (!apiKey) {
-    throw new Error(
-      "Currency conversion service is not configured. Missing API key."
-    );
-  }
-
-  const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${from}&to_currency=${to}&apikey=${apiKey}`;
+  
+  const url = `https://api.exchangerate.host/convert?from=${from}&to=${to}&amount=${amount}`;
 
   try {
     const response = await axios.get(url);
-    const fxData = response.data['Realtime Currency Exchange Rate'];
+    const fxData = response.data;
 
-    if (!fxData || !fxData['5. Exchange Rate']) {
-      throw new Error(`No FX data available for pair ${from}-${to}. This may be due to API rate limiting.`);
+    if (!fxData.success) {
+        throw new Error(fxData.error?.info || `No FX data available for pair ${from}-${to}.`);
     }
 
-    const rate = parseFloat(fxData['5. Exchange Rate']);
-    const convertedAmount = amount * rate;
+    const rate = fxData.info.rate;
+    const convertedAmount = fxData.result;
+    
     return { from, to, amount, rate, convertedAmount };
+
   } catch (error: any) {
     console.error(`Error converting currency ${from} -> ${to}`, error);
     throw new Error(`Currency conversion failed: ${error.message || error}`);
   }
 }
+
+    

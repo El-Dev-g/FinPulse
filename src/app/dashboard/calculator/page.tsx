@@ -307,7 +307,7 @@ function CurrencyConverter({ values, setValues, onUseConversion }: any) {
             </>
             )}
         </div>
-        <p className="text-xs text-muted-foreground text-center">Rates provided by exchangerate.host.</p>
+        <p className="text-xs text-muted-foreground text-center">Rates provided by ExchangeRate-Host.</p>
       </CardContent>
     </Card>
   );
@@ -426,3 +426,5 @@ function CalculatorPageContent() {
     </main>
   );
 }
+
+    
