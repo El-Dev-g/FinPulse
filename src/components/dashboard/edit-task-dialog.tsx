@@ -156,7 +156,7 @@ export function EditTaskDialog({
               </div>
               
               <div className="space-y-2">
-                  <Label htmlFor="goalId">
+                  <Label htmlFor="goalId" className={!!projectId ? "text-muted-foreground" : ""}>
                       Link to Goal (Optional)
                   </Label>
                   <Select value={goalId || 'none'} onValueChange={setGoalId} disabled={!!projectId}>
