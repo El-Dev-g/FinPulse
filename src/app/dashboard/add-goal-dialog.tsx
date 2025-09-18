@@ -26,14 +26,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { getAccounts, getTasks, updateTasks, addTask, getProjects } from "@/lib/db";
-import { MultiSelect, type OptionType } from "@/components/ui/multi-select";
-import { AddTaskDialog } from "./add-task-dialog";
-
 
 interface AddGoalDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddGoal: (newGoal: Omit<Goal, "id" | "createdAt" | "status">, linkedTaskIds?: string[]) => Promise<void>;
+  onAddGoal: (newGoal: Omit<Goal, "id" | "createdAt" | "status">) => Promise<void>;
   isSubmitting?: boolean;
   aiPlans?: AIPlan[];
 }
@@ -58,26 +55,16 @@ export function AddGoalDialog({
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
 
-  // Tasks state
-  const [unassignedTasks, setUnassignedTasks] = useState<OptionType[]>([]);
-  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
-  const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
-
   const { toast } = useToast();
   
   const fetchData = useCallback(async () => {
     if (user && isOpen) {
-        const [accountsFromDb, tasksFromDb, projectsFromDb] = await Promise.all([
+        const [accountsFromDb, projectsFromDb] = await Promise.all([
             getAccounts() as Promise<Account[]>,
-            getTasks() as Promise<FinancialTask[]>,
             getProjects() as Promise<Project[]>,
         ]);
         setAccounts(accountsFromDb);
         setProjects(projectsFromDb);
-        const filteredTasks = tasksFromDb
-            .filter(task => !task.goalId && !task.projectId)
-            .map(task => ({ value: task.id, label: task.title }));
-        setUnassignedTasks(filteredTasks);
     }
   }, [user, isOpen]);
 
@@ -99,13 +86,6 @@ export function AddGoalDialog({
         })
     }
   }
-  
-  const handleAddNewTask = async (newTask: Omit<FinancialTask, "id" | "status" | "createdAt">) => {
-    const newTaskId = await addTask({ ...newTask, status: "To Do" });
-    // Add the new task to the selected list automatically
-    setSelectedTaskIds(prev => [...prev, newTaskId]);
-    await fetchData(); // Refresh the list of unassigned tasks
-  }
 
   const resetDialog = () => {
     setTitle("");
@@ -113,7 +93,6 @@ export function AddGoalDialog({
     setCurrent("");
     setAdviceId("none");
     setProjectId(undefined);
-    setSelectedTaskIds([]);
     setError(null);
     setLoading(false);
   }
@@ -151,7 +130,7 @@ export function AddGoalDialog({
         current: currentAmount,
         advice: selectedPlan ? selectedPlan.advice : undefined,
         projectId: projectId === 'none' ? undefined : projectId,
-      }, selectedTaskIds);
+      });
       onOpenChange(false);
       resetDialog();
     } catch (err) {
@@ -162,7 +141,6 @@ export function AddGoalDialog({
   };
 
   return (
-    <>
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) {
         resetDialog();
@@ -238,21 +216,6 @@ export function AddGoalDialog({
                   />
                 </div>
             </div>
-            
-            <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                    <Label htmlFor="tasks">Link Tasks (Optional)</Label>
-                    <Button type="button" variant="link" size="sm" className="h-auto p-0" onClick={() => setIsAddTaskDialogOpen(true)}>
-                        <Plus className="mr-1 h-3 w-3" /> New Task
-                    </Button>
-                </div>
-                <MultiSelect
-                    options={unassignedTasks}
-                    selected={selectedTaskIds}
-                    onChange={setSelectedTaskIds}
-                    placeholder="Select unassigned tasks..."
-                />
-            </div>
 
             {projects.length > 0 && (
                 <div className="space-y-2">
@@ -305,12 +268,5 @@ export function AddGoalDialog({
         </form>
       </DialogContent>
     </Dialog>
-    <AddTaskDialog 
-        isOpen={isAddTaskDialogOpen}
-        onOpenChange={setIsAddTaskDialogOpen}
-        onAddTask={handleAddNewTask}
-        goals={[]}
-    />
-    </>
   );
 }

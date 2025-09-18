@@ -16,7 +16,6 @@ type TaskSection = {
 
 interface TaskBoardProps {
   sections: TaskSection;
-  goals: Goal[];
   projects: ClientProject[];
   onEdit: (task: FinancialTask) => void;
   onStatusChange: (taskId: string, status: TaskStatus) => void;
@@ -25,14 +24,13 @@ interface TaskBoardProps {
 interface TaskSectionColumnProps {
     title: string;
     tasks: FinancialTask[];
-    goals: Goal[];
     projects: ClientProject[];
     onEdit: (task: FinancialTask) => void;
     onStatusChange: (taskId: string, status: TaskStatus) => void;
     isOverdue?: boolean;
 }
 
-function TaskSectionColumn({ title, tasks, goals, projects, onEdit, onStatusChange, isOverdue = false }: TaskSectionColumnProps) {
+function TaskSectionColumn({ title, tasks, projects, onEdit, onStatusChange, isOverdue = false }: TaskSectionColumnProps) {
     const { setNodeRef } = useDroppable({ id: title });
 
     const isDoneColumn = title === 'Done';
@@ -43,13 +41,11 @@ function TaskSectionColumn({ title, tasks, goals, projects, onEdit, onStatusChan
             <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
                 <div ref={setNodeRef} className="space-y-3 p-1 rounded-md min-h-12 bg-transparent mt-2">
                     {tasks.map(task => {
-                        const goal = task.goalId ? goals.find(g => g.id === task.goalId) : null;
                         const project = task.projectId ? projects.find(p => p.id === task.projectId) : null;
                         return (
                             <TaskCard 
                                 key={task.id} 
                                 task={task} 
-                                goal={goal} 
                                 project={project}
                                 onEdit={onEdit}
                                 onStatusChange={onStatusChange}
@@ -70,7 +66,7 @@ function TaskSectionColumn({ title, tasks, goals, projects, onEdit, onStatusChan
 }
 
 
-export function TaskBoard({ sections, goals, projects, onEdit, onStatusChange }: TaskBoardProps) {
+export function TaskBoard({ sections, projects, onEdit, onStatusChange }: TaskBoardProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8 w-full">
         {Object.entries(sections).map(([title, tasks]) => (
@@ -78,7 +74,6 @@ export function TaskBoard({ sections, goals, projects, onEdit, onStatusChange }:
                 key={title}
                 title={title} 
                 tasks={tasks}
-                goals={goals}
                 projects={projects}
                 onEdit={onEdit}
                 onStatusChange={onStatusChange}

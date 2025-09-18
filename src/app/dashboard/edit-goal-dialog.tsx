@@ -27,15 +27,13 @@ import { Label } from "@/components/ui/label";
 import { Loader, Trash, Archive, Undo, Plus, FolderKanban } from "lucide-react";
 import type { Goal, FinancialTask, Project } from "@/lib/types";
 import { getTasks, updateTask, updateTasks, addTask, getProjects } from "@/lib/db";
-import { MultiSelect, type OptionType } from "@/components/ui/multi-select";
-import { AddTaskDialog } from "./add-task-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 interface EditGoalDialogProps {
   goal: Goal | null;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onEditGoal: (updatedGoal: Goal, linkedTaskIds: string[], unlinkedTaskIds: string[]) => Promise<void>;
+  onEditGoal: (updatedGoal: Goal) => Promise<void>;
   onArchiveGoal: (goalId: string) => Promise<void>;
   onPermanentDelete: (goalId: string) => Promise<void>;
 }
@@ -56,13 +54,6 @@ export function EditGoalDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  
-  // Tasks state
-  const [allTasks, setAllTasks] = useState<FinancialTask[]>([]);
-  const [taskOptions, setTaskOptions] = useState<OptionType[]>([]);
-  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
-  const [initialTaskIds, setInitialTaskIds] = useState<string[]>([]);
-  const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
 
   // Projects state
   const [projects, setProjects] = useState<Project[]>([]);
@@ -72,19 +63,8 @@ export function EditGoalDialog({
 
   const fetchData = useCallback(async () => {
     if (goal) {
-      const [dbTasks, dbProjects] = await Promise.all([
-        getTasks() as Promise<FinancialTask[]>,
-        getProjects() as Promise<Project[]>,
-      ]);
-      setAllTasks(dbTasks);
+      const dbProjects = await getProjects() as Project[];
       setProjects(dbProjects);
-      
-      const currentlyLinkedIds = dbTasks.filter(t => t.goalId === goal.id).map(t => t.id);
-      setInitialTaskIds(currentlyLinkedIds);
-      setSelectedTaskIds(currentlyLinkedIds);
-
-      const availableTasks = dbTasks.filter(t => !t.goalId || t.goalId === goal.id);
-      setTaskOptions(availableTasks.map(t => ({ value: t.id, label: t.title })));
     }
   }, [goal]);
 
@@ -99,13 +79,6 @@ export function EditGoalDialog({
       fetchData();
     }
   }, [goal, fetchData]);
-  
-  const handleAddNewTask = async (newTask: Omit<FinancialTask, "id" | "status" | "createdAt">) => {
-    const newTaskId = await addTask({ ...newTask, status: "To Do" });
-    // Add the new task to the selected list automatically
-    setSelectedTaskIds(prev => [...prev, newTaskId]);
-    await fetchData(); // Refresh the list of tasks
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,9 +111,6 @@ export function EditGoalDialog({
 
     try {
         if (goal) {
-            const linkedTaskIds = selectedTaskIds.filter(id => !initialTaskIds.includes(id));
-            const unlinkedTaskIds = initialTaskIds.filter(id => !selectedTaskIds.includes(id));
-
             await onEditGoal({
                 ...goal,
                 title,
@@ -148,7 +118,7 @@ export function EditGoalDialog({
                 target: targetAmount,
                 status: isArchived ? 'active' : goal.status, // Restore if it was archived
                 projectId: projectId === 'none' ? undefined : projectId,
-            }, linkedTaskIds, unlinkedTaskIds);
+            });
         }
         onOpenChange(false);
     } catch (err) {
@@ -234,20 +204,6 @@ export function EditGoalDialog({
             </div>
             {!isArchived && (
               <>
-                <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                        <Label htmlFor="tasks">Linked Tasks</Label>
-                        <Button type="button" variant="link" size="sm" className="h-auto p-0" onClick={() => setIsAddTaskDialogOpen(true)}>
-                            <Plus className="mr-1 h-3 w-3" /> New Task
-                        </Button>
-                    </div>
-                    <MultiSelect
-                        options={taskOptions}
-                        selected={selectedTaskIds}
-                        onChange={setSelectedTaskIds}
-                        placeholder="Select tasks..."
-                    />
-                </div>
                  {projects.length > 0 && (
                     <div className="space-y-2">
                         <Label htmlFor="projectId-edit">Link to a Project (Optional)</Label>
@@ -312,12 +268,6 @@ export function EditGoalDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <AddTaskDialog 
-        isOpen={isAddTaskDialogOpen}
-        onOpenChange={setIsAddTaskDialogOpen}
-        onAddTask={handleAddNewTask}
-        goals={[]}
-    />
     </>
   );
 }

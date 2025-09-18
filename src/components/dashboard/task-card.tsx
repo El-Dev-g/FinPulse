@@ -1,3 +1,4 @@
+
 // src/components/dashboard/task-card.tsx
 "use client";
 
@@ -17,14 +18,13 @@ import {
 
 interface TaskCardProps {
   task: FinancialTask;
-  goal?: Goal | null;
   project?: ClientProject | null;
   onEdit: (task: FinancialTask) => void;
   onStatusChange: (taskId: string, status: TaskStatus) => void;
   isOverdue?: boolean;
 }
 
-export function TaskCard({ task, goal, project, onEdit, onStatusChange, isOverdue = false }: TaskCardProps) {
+export function TaskCard({ task, project, onEdit, onStatusChange, isOverdue = false }: TaskCardProps) {
   const {
     attributes,
     listeners,
@@ -79,21 +79,6 @@ export function TaskCard({ task, goal, project, onEdit, onStatusChange, isOverdu
                         </span>
                         {task.dueTime && <span>{formatTime(task.dueTime)}</span>}
                     </div>
-                    )}
-                    {goal && (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-default">
-                                        <Target className="h-3 w-3 text-primary/70"/>
-                                        <p className="max-w-[120px] truncate">{goal.title}</p>
-                                    </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Goal: {goal.title}</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
                     )}
                      {project && (
                         <TooltipProvider>

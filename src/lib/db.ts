@@ -132,7 +132,7 @@ export const deleteUserData = async (uid: string): Promise<void> => {
 
 
 // --- Goals ---
-export const addGoal = async (goal: Omit<Goal, 'id' | 'createdAt'>, linkedTaskIds: string[] = [], autoGenerateAdvice: boolean = false) => {
+export const addGoal = async (goal: Omit<Goal, 'id' | 'createdAt'>, autoGenerateAdvice: boolean = false) => {
     const goalData: Partial<Omit<Goal, 'id' | 'createdAt'>> = {
         ...goal,
         status: 'active',
@@ -145,11 +145,6 @@ export const addGoal = async (goal: Omit<Goal, 'id' | 'createdAt'>, linkedTaskId
     }
 
     const newGoalId = await addDataItem('goals', goalData);
-
-    if (linkedTaskIds.length > 0) {
-      await updateTasks(linkedTaskIds, { goalId: newGoalId });
-    }
-
     return newGoalId;
 };
 export const getGoals = async (status: 'active' | 'archived' | 'all' = 'active') => {
@@ -211,13 +206,10 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id' | 'Icon
     let finalTransaction = { ...transaction };
 
     // If a goalId is present, check if that goal is linked to a project
-    if (transaction.goalId) {
-        const goal = await getGoal(transaction.goalId);
-        if (goal && goal.projectId) {
-            // Automatically link the transaction to the project as well
-            finalTransaction.projectId = goal.projectId;
-        }
+    if (finalTransaction.projectId) {
+        // Project ID is already set, great.
     }
+
     return addDataItem<Omit<Transaction, 'id' | 'Icon'>>('transactions', finalTransaction);
 };
 export const getTransactions = () => getData<Transaction>('transactions');
@@ -231,7 +223,6 @@ export const addTask = (task: Omit<FinancialTask, 'id'>) => {
     };
     if (task.dueDate) taskData.dueDate = task.dueDate;
     if (task.dueTime) taskData.dueTime = task.dueTime;
-    if (task.goalId) taskData.goalId = task.goalId;
     if (task.projectId) taskData.projectId = task.projectId;
     
     return addDataItem<Partial<Omit<FinancialTask, 'id' | 'createdAt'>>>('tasks', taskData);

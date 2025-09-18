@@ -16,20 +16,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
 import type { FinancialTask, Goal } from "@/lib/types";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
 
 interface AddTaskDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onAddTask: (newTask: Omit<FinancialTask, "id" | "status" | "createdAt">) => Promise<void>;
-  goals: Goal[];
-  defaultGoalId?: string;
   defaultProjectId?: string;
 }
 
@@ -37,14 +28,11 @@ export function AddTaskDialog({
   isOpen,
   onOpenChange,
   onAddTask,
-  goals,
-  defaultGoalId,
   defaultProjectId,
 }: AddTaskDialogProps) {
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [dueTime, setDueTime] = useState("");
-  const [goalId, setGoalId] = useState<string | undefined>(defaultGoalId);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,7 +52,6 @@ export function AddTaskDialog({
             title, 
             dueDate, 
             dueTime, 
-            goalId: defaultGoalId || (goalId === "none" ? undefined : goalId),
             projectId: defaultProjectId,
         };
 
@@ -73,7 +60,6 @@ export function AddTaskDialog({
         setTitle("");
         setDueDate("");
         setDueTime("");
-        setGoalId(undefined);
     } catch (err) {
         setError("Failed to add task. Please try again.");
     } finally {
@@ -87,7 +73,6 @@ export function AddTaskDialog({
         setTitle("");
         setDueDate("");
         setDueTime("");
-        setGoalId(defaultGoalId);
         setError(null);
       }
       onOpenChange(open);
@@ -137,26 +122,6 @@ export function AddTaskDialog({
                 />
               </div>
             </div>
-            {goals.length > 0 && !defaultGoalId && !defaultProjectId && (
-                <div className="space-y-2">
-                <Label htmlFor="goalId">
-                    Link to Goal (Optional)
-                </Label>
-                <Select value={goalId} onValueChange={setGoalId}>
-                    <SelectTrigger>
-                    <SelectValue placeholder="Select a goal" />
-                    </SelectTrigger>
-                    <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {goals.map((goal) => (
-                        <SelectItem key={goal.id} value={goal.id}>
-                        {goal.title}
-                        </SelectItem>
-                    ))}
-                    </SelectContent>
-                </Select>
-                </div>
-            )}
           </div>
           {error && <p className="text-sm text-destructive mb-4">{error}</p>}
           <DialogFooter>

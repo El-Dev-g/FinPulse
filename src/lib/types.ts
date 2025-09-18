@@ -26,7 +26,6 @@ export interface Transaction {
   amount: number;
   date: string; // ISO string
   category: string;
-  goalId?: string;
   projectId?: string;
   createdAt: any; // Firestore timestamp
   source?: 'manual' | string; // Source can be manual or an account ID
@@ -59,7 +58,6 @@ export interface FinancialTask {
   status: TaskStatus;
   dueDate?: string; // ISO string
   dueTime?: string; // HH:mm format
-  goalId?: string;
   projectId?: string;
   createdAt: any; // Firestore timestamp
 }

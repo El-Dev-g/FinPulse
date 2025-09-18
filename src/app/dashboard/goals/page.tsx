@@ -20,7 +20,7 @@ import { AddGoalDialog } from "@/components/dashboard/add-goal-dialog";
 import { EditGoalDialog } from "@/components/dashboard/edit-goal-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import type { Goal, Advice, AIPlan } from "@/lib/types";
-import { addGoal, deleteGoal, getGoals, updateGoal, getAIPlans, permanentDeleteGoal, updateTasks } from "@/lib/db";
+import { addGoal, deleteGoal, getGoals, updateGoal, getAIPlans, permanentDeleteGoal } from "@/lib/db";
 import { processGoals } from "@/lib/utils";
 import {
   Tooltip,
@@ -98,24 +98,18 @@ function GoalsPageContent() {
     fetchData();
   }, [fetchData]);
 
-  const handleAddGoal = async (newGoal: Omit<Goal, "id" | "createdAt" | "status">, linkedTaskIds: string[] = []) => {
+  const handleAddGoal = async (newGoal: Omit<Goal, "id" | "createdAt" | "status">) => {
     const newGoalId = await addGoal({
       ...newGoal,
       current: newGoal.current || 0,
       status: 'active',
-    }, linkedTaskIds, !isPro);
+    }, !isPro);
     
     fetchData();
   };
 
-  const handleEditGoal = async (updatedGoal: Goal, linkedTaskIds: string[], unlinkedTaskIds: string[]) => {
+  const handleEditGoal = async (updatedGoal: Goal) => {
     await updateGoal(updatedGoal.id, updatedGoal);
-    if (linkedTaskIds.length > 0) {
-      await updateTasks(linkedTaskIds, { goalId: updatedGoal.id });
-    }
-    if (unlinkedTaskIds.length > 0) {
-      await updateTasks(unlinkedTaskIds, { goalId: "" }); // Using empty string to signify unlinking
-    }
     fetchData();
   };
 

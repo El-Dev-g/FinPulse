@@ -13,7 +13,6 @@ import { ClipboardList, Plus, Calendar, LayoutGrid, Loader } from "lucide-react"
 import {
   type FinancialTask,
   type TaskStatus,
-  type Goal,
   type Project,
   type ClientProject,
 } from "@/lib/types";
@@ -25,7 +24,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
-import { getTasks, getGoals, getProjects, addTask, updateTask, deleteTask } from "@/lib/db";
+import { getTasks, getProjects, addTask, updateTask, deleteTask } from "@/lib/db";
 import { startOfToday, isBefore, isSameDay, parseISO } from 'date-fns';
 import { formatTime, processProjects } from "@/lib/utils";
 import Confetti from 'react-confetti';
@@ -134,7 +133,6 @@ function CalendarView({ tasks, onEdit }: { tasks: FinancialTask[], onEdit: (task
 export default function OrganizerPage() {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<FinancialTask[]>([]);
-  const [goals, setGoals] = useState<Goal[]>([]);
   const [projects, setProjects] = useState<ClientProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingTask, setEditingTask] = useState<FinancialTask | null>(null);
@@ -146,9 +144,8 @@ export default function OrganizerPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const [dbTasks, dbGoals, dbProjects] = await Promise.all([getTasks(), getGoals(), getProjects()]);
+      const [dbTasks, dbProjects] = await Promise.all([getTasks(), getProjects()]);
       setTasks(dbTasks as FinancialTask[]);
-      setGoals(dbGoals as Goal[]);
       setProjects(processProjects(dbProjects as Project[]));
 
     } catch (error) {
@@ -255,7 +252,6 @@ export default function OrganizerPage() {
                 <ScrollArea className="w-full">
                   <div className="pb-4">
                     <TaskBoard
-                      goals={goals}
                       projects={projects}
                       onEdit={setEditingTask}
                       onStatusChange={handleUpdateTaskStatus}
@@ -282,7 +278,6 @@ export default function OrganizerPage() {
         isOpen={isAddTaskDialogOpen}
         onOpenChange={setIsAddTaskDialogOpen}
         onAddTask={handleAddTask}
-        goals={goals}
       />
       <EditTaskDialog
         task={editingTask}
@@ -290,7 +285,6 @@ export default function OrganizerPage() {
         onOpenChange={(isOpen) => !isOpen && setEditingTask(null)}
         onEditTask={handleEditTask}
         onDeleteTask={handleDeleteTask}
-        goals={goals}
       />
     </main>
   );
