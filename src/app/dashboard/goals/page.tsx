@@ -1,3 +1,4 @@
+
 // src/app/dashboard/goals/page.tsx
 "use client";
 
