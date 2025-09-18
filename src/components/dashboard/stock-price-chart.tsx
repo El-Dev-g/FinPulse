@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { format, parseISO, subDays } from 'date-fns';
+import { format, parseISO, subDays, startOfDay } from 'date-fns';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -26,7 +26,7 @@ export const StockPriceChart = ({ data, isPositive }: StockPriceChartProps) => {
   const [timeRange, setTimeRange] = useState<TimeRange>('3M');
 
   const chartData = useMemo(() => {
-    const now = new Date();
+    const now = startOfDay(new Date());
     let startDate: Date;
     
     switch (timeRange) {
@@ -61,6 +61,14 @@ export const StockPriceChart = ({ data, isPositive }: StockPriceChartProps) => {
         price: d.close
       }));
   }, [data, timeRange]);
+
+  if (!chartData || chartData.length === 0) {
+    return (
+        <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+            Not enough data to display chart.
+        </div>
+    )
+  }
 
   const gradientId = `colorPrice-${isPositive ? 'positive' : 'negative'}`;
   const strokeColor = isPositive ? 'hsl(var(--chart-1))' : 'hsl(var(--destructive))';
