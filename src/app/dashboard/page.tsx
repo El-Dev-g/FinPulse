@@ -10,11 +10,13 @@ import { Alerts } from "@/components/dashboard/alerts";
 import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Loader } from 'lucide-react';
+import { AlertCircle, Loader, Plus } from 'lucide-react';
 import Link from 'next/link';
-import { getTransactions, getGoals, getAccounts } from '@/lib/db';
+import { getTransactions, getGoals, getAccounts, addTransaction } from '@/lib/db';
 import type { Account, Goal, Transaction, ClientGoal, ClientTransaction } from '@/lib/types';
 import { processGoals, processTransactions } from '@/lib/utils';
+import { AddTransactionDialog } from './add-transaction-dialog';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function DashboardPage() {
   const { user, subscriptionStatus } = useAuth();
@@ -22,6 +24,7 @@ export default function DashboardPage() {
   const [transactions, setTransactions] = useState<ClientTransaction[]>([]);
   const [goals, setGoals] = useState<ClientGoal[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [isAddTransactionDialogOpen, setIsAddTransactionDialogOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -47,6 +50,11 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+  
+  const handleAddTransaction = async (newTransaction: Omit<Transaction, "id" | "Icon" | "createdAt">) => {
+    await addTransaction(newTransaction);
+    fetchData(); // Refetch all data
+  };
 
   if (loading) {
     return (
@@ -55,8 +63,12 @@ export default function DashboardPage() {
       </main>
     );
   }
+  
+  const hasData = transactions.length > 0 || goals.length > 0 || accounts.length > 0;
+
 
   return (
+    <>
     <main className="flex-1 p-4 md:p-6 space-y-8">
       <div className="flex-col md:flex">
         <div className="flex-1 space-y-4">
@@ -84,22 +96,47 @@ export default function DashboardPage() {
         </Alert>
       )}
 
-      <Alerts />
+      {hasData ? (
+        <>
+          <Alerts />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <OverviewCards transactions={transactions} goals={goals} accounts={accounts} />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <SpendingChart transactions={transactions} />
+            </div>
+            <div className="lg:col-span-1">
+              <GoalTracker goals={goals} />
+            </div>
+          </div>
+          <div>
+            <RecentTransactions transactions={transactions} />
+          </div>
+        </>
+      ) : (
+        <Card className="text-center py-20 text-muted-foreground border-2 border-dashed rounded-lg">
+          <CardHeader>
+              <CardTitle className="text-xl">Your Dashboard is Ready!</CardTitle>
+              <CardDescription>
+                  Start by adding your first transaction to see your financial overview come to life.
+              </CardDescription>
+          </CardHeader>
+          <CardContent>
+              <Button onClick={() => setIsAddTransactionDialogOpen(true)}>
+                  <Plus className="mr-2" />
+                  Add Your First Transaction
+              </Button>
+          </CardContent>
+        </Card>
+      )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <OverviewCards transactions={transactions} goals={goals} accounts={accounts} />
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <SpendingChart transactions={transactions} />
-        </div>
-        <div className="lg:col-span-1">
-          <GoalTracker goals={goals} />
-        </div>
-      </div>
-      <div>
-        <RecentTransactions transactions={transactions} />
-      </div>
     </main>
+     <AddTransactionDialog
+        isOpen={isAddTransactionDialogOpen}
+        onOpenChange={setIsAddTransactionDialogOpen}
+        onAddTransaction={handleAddTransaction}
+      />
+    </>
   );
 }
