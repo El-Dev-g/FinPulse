@@ -216,18 +216,20 @@ function LinkAccountPageContent() {
                                 </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle className="flex items-center gap-2">
-                                        <ShieldCheck className="text-primary"/>
+                                <AlertDialogHeader className="items-center text-center">
+                                    <div className="p-2 bg-green-100 dark:bg-green-900 rounded-full inline-block">
+                                        <ShieldCheck className="h-6 w-6 text-green-600 dark:text-green-400"/>
+                                    </div>
+                                    <AlertDialogTitle>
                                         You are entering a secure connection
                                     </AlertDialogTitle>
                                     <AlertDialogDescription>
                                         You will be securely redirected to our trusted partner, to link your bank account. FinPulse never stores your bank login credentials. By continuing, you agree to our partner's terms of service.
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleConnectAccount}>
+                                <AlertDialogFooter className="flex-col-reverse gap-2 sm:flex-row">
+                                    <AlertDialogCancel className="w-full">Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleConnectAccount} className="w-full">
                                         Agree & Continue
                                     </AlertDialogAction>
                                 </AlertDialogFooter>
