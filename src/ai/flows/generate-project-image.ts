@@ -1,9 +1,9 @@
 
 'use server';
 /**
- * @fileOverview An AI flow to generate a project image based on its name.
+ * @fileOverview A flow to generate a placeholder project image.
  *
- * - generateProjectImage - A function that creates an image for a project.
+ * - generateProjectImage - A function that returns a placeholder image for a project.
  * - GenerateProjectImageRequest - The input type for the generateProjectImage function.
  * - GenerateProjectImageResponse - The return type for the generateProjectImage function.
  */
@@ -17,7 +17,7 @@ const GenerateProjectImageRequestSchema = z.object({
 export type GenerateProjectImageRequest = z.infer<typeof GenerateProjectImageRequestSchema>;
 
 const GenerateProjectImageResponseSchema = z.object({
-  imageUrl: z.string().describe("The data URI of the generated image."),
+  imageUrl: z.string().describe("The URL of the generated placeholder image."),
 });
 export type GenerateProjectImageResponse = z.infer<typeof GenerateProjectImageResponseSchema>;
 
@@ -34,15 +34,11 @@ const generateProjectImageFlow = ai.defineFlow(
     outputSchema: GenerateProjectImageResponseSchema,
   },
   async ({ projectName }) => {
-    const { media } = await ai.generate({
-      model: 'googleai/imagen-4.0-fast-generate-001',
-      prompt: `Generate a visually appealing and relevant image for a personal finance project named "${projectName}". The image should be a high-quality, photorealistic representation of the project's theme. For example, for "Kitchen Renovation", show a modern kitchen. For "Hawaii Vacation", show a beautiful Hawaiian beach.`,
-    });
-    
-    const imageUrl = media.url;
-    if (!imageUrl) {
-        throw new Error("Failed to generate project image.");
-    }
+    // Using picsum.photos for placeholder images as Imagen is a billed service.
+    // The seed is based on the project name to have some consistency,
+    // but a random element is added to ensure variety if names are similar.
+    const seed = projectName.replace(/\s+/g, '') + Math.floor(Math.random() * 1000);
+    const imageUrl = `https://picsum.photos/seed/${seed}/600/400`;
     
     return { imageUrl };
   }
