@@ -132,26 +132,25 @@ export const deleteUserData = async (uid: string): Promise<void> => {
 
 
 // --- Goals ---
-export const addGoal = async (goal: Omit<Goal, 'id' | 'createdAt' | 'status'>, autoGenerateAdvice: boolean = false) => {
-    const goalData: Omit<Goal, 'id' | 'createdAt'> & { status: 'active' } = {
-        title: goal.title,
-        target: goal.target,
-        current: goal.current || 0,
+export const addGoal = async (goal: Omit<Goal, 'id' | 'createdAt'>, linkedTaskIds: string[] = [], autoGenerateAdvice: boolean = false) => {
+    const goalData: Partial<Omit<Goal, 'id' | 'createdAt'>> = {
+        ...goal,
         status: 'active',
-        projectId: goal.projectId,
+        current: goal.current || 0,
     };
 
     if (autoGenerateAdvice) {
-        // For free users, generate a simple advice plan automatically
         const prompt = `I am creating a new financial goal to "${goal.title}" with a target of $${goal.target}. Please give me a simple, encouraging financial plan with 3-5 steps to help me get started.`;
-        const advice = await getFinancialAdvice(prompt);
-        goalData.advice = advice;
-    } else if (goal.advice) {
-        // For Pro users, use the advice they might have selected
-        goalData.advice = goal.advice;
+        goalData.advice = await getFinancialAdvice(prompt);
     }
 
-    return addDataItem('goals', goalData);
+    const newGoalId = await addDataItem('goals', goalData);
+
+    if (linkedTaskIds.length > 0) {
+      await updateTasks(linkedTaskIds, { goalId: newGoalId });
+    }
+
+    return newGoalId;
 };
 export const getGoals = async (status: 'active' | 'archived' | 'all' = 'active') => {
     const uid = await getUid();
@@ -168,16 +167,6 @@ export const getGoals = async (status: 'active' | 'archived' | 'all' = 'active')
     }
     return allGoals.filter(goal => goal.status === status);
 };
-export const updateGoal = (id: string, goal: Partial<Goal>) => {
-    return updateDataItem('goals', id, goal);
-};
-export const deleteGoal = (id: string) => {
-    // We archive instead of deleting
-    return updateGoal(id, { status: 'archived' });
-};
-export const permanentDeleteGoal = (id: string) => {
-    return deleteDataItem('goals', id);
-}
 export const getGoal = async (id: string): Promise<(Goal & {id: string}) | null> => {
     const uid = await getUid();
     if (!uid) return null;
@@ -187,6 +176,16 @@ export const getGoal = async (id: string): Promise<(Goal & {id: string}) | null>
         return { id: docSnap.id, ...docSnap.data() } as Goal & { id: string };
     }
     return null;
+}
+export const updateGoal = (id: string, goal: Partial<Goal>) => {
+    return updateDataItem('goals', id, goal);
+};
+export const deleteGoal = (id: string) => {
+    // We archive instead of deleting
+    return updateGoal(id, { status: 'archived' });
+};
+export const permanentDeleteGoal = (id: string) => {
+    return deleteDataItem('goals', id);
 }
 export const getGoalByTitle = async (title: string): Promise<(Goal & {id: string}) | null> => {
     const uid = await getUid();
