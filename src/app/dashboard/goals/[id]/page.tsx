@@ -13,24 +13,25 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { getGoal, getTasks, getTransactions } from "@/lib/db";
-import { ArrowLeft, Calculator, Sparkles, ClipboardList, Loader, Lightbulb } from "lucide-react";
+import { getGoal, getTasks, getTransactions, addTask } from "@/lib/db";
+import { ArrowLeft, Calculator, Sparkles, ClipboardList, Loader, Lightbulb, Plus } from "lucide-react";
 import Link from "next/link";
 import { ActivityList } from "@/components/dashboard/activity-list";
 import type { ClientGoal, ClientFinancialTask, ClientTransaction, Goal, Transaction, FinancialTask, Advice } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
 import { processGoal, processTasks, processTransactions } from "@/lib/utils";
+import { AddTaskDialog } from "@/components/dashboard/add-task-dialog";
 
 export default function GoalDetailPage() {
   const params = useParams();
   const { id } = params;
   const { user, formatCurrency } = useAuth();
-  const router = useRouter();
   
   const [goal, setGoal] = useState<ClientGoal | null>(null);
   const [relatedTransactions, setRelatedTransactions] = useState<ClientTransaction[]>([]);
   const [relatedTasks, setRelatedTasks] = useState<ClientFinancialTask[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!user || typeof id !== 'string') return;
@@ -66,6 +67,10 @@ export default function GoalDetailPage() {
     fetchData();
   }, [fetchData]);
 
+  const handleAddTask = async (newTask: Omit<FinancialTask, "id" | "status" | "createdAt">) => {
+    await addTask({ ...newTask, status: "To Do", goalId: id as string });
+    fetchData();
+  };
 
   if (loading) {
     return (
@@ -96,6 +101,7 @@ export default function GoalDetailPage() {
   
 
   return (
+    <>
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
@@ -190,15 +196,35 @@ export default function GoalDetailPage() {
               title="Goal Contributions"
               description="Transactions assigned to this goal."
             />
-            <ActivityList 
-              tasks={relatedTasks}
-              title="Related Tasks"
-              description="Tasks to help you reach this goal."
-              Icon={ClipboardList}
-            />
+            <Card>
+                 <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle className="flex items-center gap-2">
+                            <ClipboardList className="h-5 w-5" />
+                            Related Tasks
+                        </CardTitle>
+                        <CardDescription>Tasks to help you reach this goal.</CardDescription>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => setIsAddTaskOpen(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        New
+                    </Button>
+                 </CardHeader>
+                 <CardContent>
+                    <ActivityList tasks={relatedTasks} title="" description="" />
+                 </CardContent>
+            </Card>
           </div>
         </div>
       </div>
     </main>
+     <AddTaskDialog
+        isOpen={isAddTaskOpen}
+        onOpenChange={setIsAddTaskOpen}
+        onAddTask={handleAddTask}
+        goals={[]}
+        defaultGoalId={id as string}
+      />
+    </>
   );
 }

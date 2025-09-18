@@ -28,6 +28,8 @@ interface AddTaskDialogProps {
   onOpenChange: (isOpen: boolean) => void;
   onAddTask: (newTask: Omit<FinancialTask, "id" | "status" | "createdAt">) => Promise<void>;
   goals: Goal[];
+  defaultGoalId?: string;
+  defaultProjectId?: string;
 }
 
 export function AddTaskDialog({
@@ -35,11 +37,13 @@ export function AddTaskDialog({
   onOpenChange,
   onAddTask,
   goals,
+  defaultGoalId,
+  defaultProjectId,
 }: AddTaskDialogProps) {
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [dueTime, setDueTime] = useState("");
-  const [goalId, setGoalId] = useState<string | undefined>(undefined);
+  const [goalId, setGoalId] = useState<string | undefined>(defaultGoalId);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,7 +63,8 @@ export function AddTaskDialog({
             title, 
             dueDate, 
             dueTime, 
-            goalId: goalId === "none" ? undefined : goalId,
+            goalId: defaultGoalId || (goalId === "none" ? undefined : goalId),
+            projectId: defaultProjectId,
         };
 
         await onAddTask(taskData);
@@ -81,7 +86,7 @@ export function AddTaskDialog({
         setTitle("");
         setDueDate("");
         setDueTime("");
-        setGoalId(undefined);
+        setGoalId(defaultGoalId);
         setError(null);
       }
       onOpenChange(open);
@@ -131,7 +136,7 @@ export function AddTaskDialog({
                 />
               </div>
             </div>
-            {goals.length > 0 && (
+            {goals.length > 0 && !defaultGoalId && !defaultProjectId && (
                 <div className="space-y-2">
                 <Label htmlFor="goalId">
                     Link to Goal (Optional)

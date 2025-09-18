@@ -23,8 +23,8 @@ import { useAuth } from "@/hooks/use-auth";
 interface ActivityListProps {
   transactions?: ClientTransaction[];
   tasks?: ClientFinancialTask[];
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
   Icon?: LucideIcon;
 }
 
@@ -39,18 +39,17 @@ export function ActivityList({
 
   const hasContent = (transactions && transactions.length > 0) || (tasks && tasks.length > 0);
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-            <Icon className="h-5 w-5" />
-            {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {hasContent ? (
-          <Table>
+  const renderContent = () => {
+     if (!hasContent) {
+      return (
+        <div className="text-center py-12 text-muted-foreground">
+            <p>No activity found.</p>
+        </div>
+      )
+    }
+
+    return (
+        <Table>
             <TableHeader>
                 {transactions && (
                     <TableRow>
@@ -68,66 +67,80 @@ export function ActivityList({
                 )}
             </TableHeader>
             <TableBody>
-              {transactions?.map((transaction) => {
+            {transactions?.map((transaction) => {
                 const ItemIcon = getIconForCategory(transaction.category);
                 return (
                 <TableRow key={transaction.id}>
-                  <TableCell>
+                <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="bg-muted p-2 rounded-md">
+                    <div className="bg-muted p-2 rounded-md">
                         <ItemIcon className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                      <div>
+                    </div>
+                    <div>
                         <div className="font-medium">
-                          {transaction.description}
+                        {transaction.description}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {transaction.date}
+                        {transaction.date}
                         </div>
-                      </div>
                     </div>
-                  </TableCell>
-                  <TableCell>
+                    </div>
+                </TableCell>
+                <TableCell>
                     <Badge variant="outline">{transaction.category}</Badge>
-                  </TableCell>
-                  <TableCell
+                </TableCell>
+                <TableCell
                     className={cn(
-                      "text-right font-medium",
-                      transaction.amount > 0
+                    "text-right font-medium",
+                    transaction.amount > 0
                         ? "text-green-600"
                         : "text-foreground"
                     )}
-                  >
+                >
                     {transaction.amount > 0 ? "+" : ""}
                     {formatCurrency(transaction.amount)}
-                  </TableCell>
+                </TableCell>
                 </TableRow>
-              )})}
-              {tasks?.map((task) => (
+            )})}
+            {tasks?.map((task) => (
                 <TableRow key={task.id}>
-                  <TableCell>
+                <TableCell>
                     <div className="font-medium">{task.title}</div>
-                  </TableCell>
-                   <TableCell>
-                     <Badge variant={task.status === 'Done' ? 'outline' : 'secondary'}>{task.status}</Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-xs">
-                     {task.dueDate ? new Date(task.dueDate + "T00:00:00").toLocaleDateString(undefined, {
+                </TableCell>
+                <TableCell>
+                    <Badge variant={task.status === 'Done' ? 'outline' : 'secondary'}>{task.status}</Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground text-xs">
+                    {task.dueDate ? new Date(task.dueDate + "T00:00:00").toLocaleDateString(undefined, {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric'
                     }) : 'No due date'}
-                  </TableCell>
+                </TableCell>
                 </TableRow>
-              ))}
+            ))}
             </TableBody>
-          </Table>
-        ) : (
-          <div className="text-center py-12 text-muted-foreground">
-            <p>No activity found.</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+        </Table>
+    );
+  }
+
+  // If title and description are provided, wrap in a Card. Otherwise, just render the content.
+  if (title && description) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+              <Icon className="h-5 w-5" />
+              {title}
+          </CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+            {renderContent()}
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  return renderContent();
 }
