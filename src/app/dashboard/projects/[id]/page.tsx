@@ -1,3 +1,4 @@
+
 // src/app/dashboard/projects/[id]/page.tsx
 "use client";
 
@@ -14,13 +15,13 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { getProject, getTasks, getTransactions } from "@/lib/db";
-import { ArrowLeft, Calculator, ClipboardList, Loader, Plus } from "lucide-react";
+import { getProject, getTasks, getTransactions, getGoals } from "@/lib/db";
+import { ArrowLeft, Calculator, ClipboardList, Loader, Plus, Target } from "lucide-react";
 import Link from "next/link";
 import { ActivityList } from "@/components/dashboard/activity-list";
-import type { ClientProject, ClientFinancialTask, ClientTransaction, Project, Transaction, FinancialTask, Goal } from "@/lib/types";
+import type { ClientProject, ClientFinancialTask, ClientTransaction, Project, Transaction, FinancialTask, Goal, ClientGoal } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
-import { processProject, processTasks, processTransactions } from "@/lib/utils";
+import { processProject, processTasks, processTransactions, processGoals } from "@/lib/utils";
 import { AddTransactionDialog } from "@/components/dashboard/add-transaction-dialog";
 import { AddTaskDialog } from "@/components/dashboard/add-task-dialog";
 import { addTransaction, addTask } from "@/lib/db";
@@ -34,6 +35,7 @@ export default function ProjectDetailPage() {
   const [project, setProject] = useState<ClientProject | null>(null);
   const [relatedTransactions, setRelatedTransactions] = useState<ClientTransaction[]>([]);
   const [relatedTasks, setRelatedTasks] = useState<ClientFinancialTask[]>([]);
+  const [linkedGoal, setLinkedGoal] = useState<ClientGoal | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
@@ -43,10 +45,11 @@ export default function ProjectDetailPage() {
     if (!user || typeof id !== 'string') return;
     setLoading(true);
     try {
-      const [projectData, transactionsData, tasksData] = await Promise.all([
+      const [projectData, transactionsData, tasksData, goalsData] = await Promise.all([
         getProject(id),
         getTransactions(),
         getTasks(),
+        getGoals('all'),
       ]);
 
       if (projectData) {
@@ -57,6 +60,9 @@ export default function ProjectDetailPage() {
         
         const filteredTasks = tasksData.filter(t => t.projectId === id);
         setRelatedTasks(processTasks(filteredTasks as FinancialTask[]));
+
+        const foundGoal = goalsData.find(g => g.projectId === id);
+        setLinkedGoal(foundGoal ? processGoal(foundGoal as Goal) : null);
 
       } else {
         setProject(null);
@@ -85,7 +91,7 @@ export default function ProjectDetailPage() {
 
   if (loading) {
     return (
-      <main className="flex-1 p-4 md:p-6 lg:p-8 flex items-center justify-center">
+      <main className="flex flex-1 items-center justify-center p-4 md:p-6 lg:p-8">
         <Loader className="h-12 w-12 animate-spin text-primary" />
       </main>
     );
@@ -93,9 +99,9 @@ export default function ProjectDetailPage() {
 
   if (!project) {
     return (
-      <main className="flex-1 p-4 md:p-6 lg:p-8 flex flex-col items-center justify-center text-center">
-        <h2 className="text-2xl font-bold mb-4">Project Not Found</h2>
-        <p className="text-muted-foreground mb-8">
+      <main className="flex flex-1 flex-col items-center justify-center p-4 text-center md:p-6 lg:p-8">
+        <h2 className="mb-4 text-2xl font-bold">Project Not Found</h2>
+        <p className="mb-8 text-muted-foreground">
           Sorry, we couldn't find the project you're looking for.
         </p>
         <Button asChild>
@@ -112,8 +118,8 @@ export default function ProjectDetailPage() {
 
   return (
     <>
-    <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
-      <div className="max-w-6xl mx-auto">
+    <main className="flex-1 space-y-8 p-4 md:p-6 lg:p-8">
+      <div className="mx-auto max-w-6xl">
         <div className="mb-8">
           <Button asChild variant="outline" size="sm">
             <Link href="/dashboard/projects">
@@ -124,7 +130,7 @@ export default function ProjectDetailPage() {
         </div>
 
         <div className="grid gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-8">
+          <div className="space-y-8 lg:col-span-2">
             <Card>
               <CardHeader className="p-0">
                   <div className="relative h-60 w-full">
@@ -132,7 +138,7 @@ export default function ProjectDetailPage() {
                         src={project.imageUrl}
                         alt={project.name}
                         fill
-                        className="object-cover rounded-t-lg"
+                        className="rounded-t-lg object-cover"
                         data-ai-hint="project goal"
                     />
                   </div>
@@ -145,9 +151,9 @@ export default function ProjectDetailPage() {
                     </CardDescription>
                    </div>
               </CardHeader>
-              <CardContent className="px-6 space-y-6">
+              <CardContent className="space-y-6 px-6">
                 <div>
-                  <div className="flex justify-between items-baseline mb-2">
+                  <div className="mb-2 flex items-baseline justify-between">
                     <span className="text-2xl font-bold text-primary">
                       {formatCurrency(project.currentAmount)}
                     </span>
@@ -156,14 +162,14 @@ export default function ProjectDetailPage() {
                     </span>
                   </div>
                   <Progress value={progress} className="h-4" />
-                  <p className="text-right text-sm mt-2 text-muted-foreground">
+                  <p className="mt-2 text-right text-sm text-muted-foreground">
                     {progress.toFixed(1)}% Complete
                   </p>
                 </div>
               </CardContent>
-              <CardFooter className="px-6 flex flex-col sm:flex-row gap-2">
+              <CardFooter className="flex flex-col gap-2 px-6 sm:flex-row">
                  <Button asChild className="w-full" onClick={() => setIsAddTransactionOpen(true)}>
-                  <p><Plus className="mr-2" /> Add Funds</p>
+                  <p><Plus className="mr-2" /> Add Expense</p>
                 </Button>
                  <Button asChild variant="outline" className="w-full">
                   <Link href={`/dashboard/calculator`}>
@@ -175,9 +181,26 @@ export default function ProjectDetailPage() {
             </Card>
           </div>
           <div className="space-y-8">
+             {linkedGoal && (
+               <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Target className="h-5 w-5" />
+                      Funding Goal
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Link href={`/dashboard/goals/${linkedGoal.id}`} className="block hover:bg-muted/50 p-4 rounded-lg border">
+                      <p className="font-semibold">{linkedGoal.title}</p>
+                      <Progress value={(linkedGoal.current / linkedGoal.target) * 100} className="mt-2 h-2"/>
+                      <p className="text-xs text-muted-foreground mt-1 text-right">{formatCurrency(linkedGoal.current)} / {formatCurrency(linkedGoal.target)}</p>
+                    </Link>
+                  </CardContent>
+                </Card>
+            )}
             <ActivityList 
               transactions={relatedTransactions}
-              title="Project Contributions"
+              title="Project Expenses"
               description="Transactions assigned to this project."
             />
             <ActivityList 

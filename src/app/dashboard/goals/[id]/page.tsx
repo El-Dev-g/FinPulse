@@ -1,3 +1,4 @@
+
 // src/app/dashboard/goals/[id]/page.tsx
 "use client";
 
@@ -13,11 +14,11 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { getGoal, getTasks, getTransactions, addTask } from "@/lib/db";
-import { ArrowLeft, Calculator, Sparkles, ClipboardList, Loader, Lightbulb, Plus } from "lucide-react";
+import { getGoal, getTasks, getTransactions, addTask, getProject } from "@/lib/db";
+import { ArrowLeft, Calculator, Sparkles, ClipboardList, Loader, Lightbulb, Plus, FolderKanban } from "lucide-react";
 import Link from "next/link";
 import { ActivityList } from "@/components/dashboard/activity-list";
-import type { ClientGoal, ClientFinancialTask, ClientTransaction, Goal, Transaction, FinancialTask, Advice } from "@/lib/types";
+import type { ClientGoal, ClientFinancialTask, ClientTransaction, Goal, Transaction, FinancialTask, Advice, Project } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
 import { processGoal, processTasks, processTransactions } from "@/lib/utils";
 import { AddTaskDialog } from "@/components/dashboard/add-task-dialog";
@@ -28,6 +29,7 @@ export default function GoalDetailPage() {
   const { user, formatCurrency } = useAuth();
   
   const [goal, setGoal] = useState<ClientGoal | null>(null);
+  const [linkedProject, setLinkedProject] = useState<Project | null>(null);
   const [relatedTransactions, setRelatedTransactions] = useState<ClientTransaction[]>([]);
   const [relatedTasks, setRelatedTasks] = useState<ClientFinancialTask[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,24 +39,28 @@ export default function GoalDetailPage() {
     if (!user || typeof id !== 'string') return;
     setLoading(true);
     try {
-      const [goalData, transactionsData, tasksData] = await Promise.all([
-        getGoal(id),
+      const goalData = await getGoal(id);
+      if (!goalData) {
+        setGoal(null);
+        setLoading(false);
+        return;
+      }
+      
+      const [transactionsData, tasksData, projectData] = await Promise.all([
         getTransactions(),
         getTasks(),
+        goalData.projectId ? getProject(goalData.projectId) : Promise.resolve(null),
       ]);
 
-      if (goalData) {
-        setGoal(processGoal(goalData as Goal));
-        
-        const filteredTransactions = transactionsData.filter(t => t.goalId === id);
-        setRelatedTransactions(processTransactions(filteredTransactions as Transaction[]));
-        
-        const filteredTasks = tasksData.filter(t => t.goalId === id);
-        setRelatedTasks(processTasks(filteredTasks as FinancialTask[]));
+      setGoal(processGoal(goalData as Goal));
+      setLinkedProject(projectData as Project | null);
+      
+      const filteredTransactions = transactionsData.filter(t => t.goalId === id);
+      setRelatedTransactions(processTransactions(filteredTransactions as Transaction[]));
+      
+      const filteredTasks = tasksData.filter(t => t.goalId === id);
+      setRelatedTasks(processTasks(filteredTasks as FinancialTask[]));
 
-      } else {
-        setGoal(null);
-      }
     } catch (error) {
       console.error("Error fetching goal details:", error);
       setGoal(null);
@@ -74,7 +80,7 @@ export default function GoalDetailPage() {
 
   if (loading) {
     return (
-      <main className="flex-1 p-4 md:p-6 lg:p-8 flex items-center justify-center">
+      <main className="flex flex-1 items-center justify-center p-4 md:p-6 lg:p-8">
         <Loader className="h-12 w-12 animate-spin text-primary" />
       </main>
     );
@@ -82,9 +88,9 @@ export default function GoalDetailPage() {
 
   if (!goal) {
     return (
-      <main className="flex-1 p-4 md:p-6 lg:p-8 flex flex-col items-center justify-center text-center">
-        <h2 className="text-2xl font-bold mb-4">Goal Not Found</h2>
-        <p className="text-muted-foreground mb-8">
+      <main className="flex flex-1 flex-col items-center justify-center p-4 text-center md:p-6 lg:p-8">
+        <h2 className="mb-4 text-2xl font-bold">Goal Not Found</h2>
+        <p className="mb-8 text-muted-foreground">
           Sorry, we couldn't find the goal you're looking for.
         </p>
         <Button asChild>
@@ -102,8 +108,8 @@ export default function GoalDetailPage() {
 
   return (
     <>
-    <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
-      <div className="max-w-6xl mx-auto">
+    <main className="flex-1 space-y-8 p-4 md:p-6 lg:p-8">
+      <div className="mx-auto max-w-6xl">
         <div className="mb-8">
           <Button asChild variant="outline" size="sm">
             <Link href="/dashboard/goals">
@@ -114,7 +120,7 @@ export default function GoalDetailPage() {
         </div>
 
         <div className="grid gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-8">
+          <div className="space-y-8 lg:col-span-2">
             <Card>
               <CardHeader>
                 <CardTitle className="text-3xl font-headline">
@@ -123,10 +129,18 @@ export default function GoalDetailPage() {
                 <CardDescription>
                   Your progress towards this financial milestone.
                 </CardDescription>
+                {linkedProject && (
+                  <Link href={`/dashboard/projects/${linkedProject.id}`} className="!mt-4">
+                    <Badge variant="secondary" className="cursor-pointer hover:bg-muted">
+                        <FolderKanban className="mr-2 h-4 w-4" />
+                        Linked to Project: {linkedProject.name}
+                    </Badge>
+                  </Link>
+                )}
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <div className="flex justify-between items-baseline mb-2">
+                  <div className="mb-2 flex items-baseline justify-between">
                     <span className="text-2xl font-bold text-primary">
                       {formatCurrency(goal.current)}
                     </span>
@@ -135,7 +149,7 @@ export default function GoalDetailPage() {
                     </span>
                   </div>
                   <Progress value={progress} className="h-4" />
-                  <p className="text-right text-sm mt-2 text-muted-foreground">
+                  <p className="mt-2 text-right text-sm text-muted-foreground">
                     {progress.toFixed(1)}% Complete
                   </p>
                 </div>
@@ -154,7 +168,7 @@ export default function GoalDetailPage() {
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="flex flex-col sm:flex-row gap-2">
+              <CardFooter className="flex flex-col gap-2 sm:flex-row">
                  <Button asChild className="w-full">
                   <Link href={`/dashboard/calculator?tab=goals&target=${goal.target}&current=${goal.current}`}>
                     <Calculator className="mr-2" />
@@ -181,7 +195,7 @@ export default function GoalDetailPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                   <ol className="list-decimal list-inside space-y-3 text-sm text-muted-foreground">
+                   <ol className="list-inside list-decimal space-y-3 text-sm text-muted-foreground">
                       {goal.advice.steps && Array.isArray(goal.advice.steps) && goal.advice.steps.map((step, index) => (
                         <li key={index}>{step}</li>
                       ))}

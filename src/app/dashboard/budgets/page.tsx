@@ -1,3 +1,4 @@
+
 // src/app/dashboard/budgets/page.tsx
 "use client";
 
@@ -39,7 +40,7 @@ export default function BudgetsPage() {
     try {
       const [dbBudgets, dbGoals, dbTransactions] = await Promise.all([
         getBudgets(),
-        getGoals(),
+        getGoals('active'),
         getTransactions(),
       ]);
       const processedBudgets = processBudgets(dbBudgets as Budget[], dbTransactions as Transaction[]);
@@ -79,22 +80,26 @@ export default function BudgetsPage() {
     const newGoalAmount = goal.current + remaining;
     await updateGoal(goal.id, { current: newGoalAmount });
 
-    // 2. Create a new transaction for the sweep
+    // 2. Create a new transaction to represent the sweep as a contribution to the goal
+    // This makes it visible in the goal's activity list
     const sweepTransaction = {
       description: `Sweep from ${budget.category} budget`,
       amount: remaining,
+      category: 'Savings', // A neutral, positive category
       date: new Date().toISOString().split("T")[0],
-      category: 'Savings',
+      source: 'manual',
       goalId: goal.id,
     };
     await addTransaction(sweepTransaction);
     
-    // 3. Create a transaction to "reset" the budget's spent amount for this month
+    // 3. Create a negative transaction against the budget category to zero out the 'spent' amount for the current period
+    // This allows the user to see the sweep as a formal transaction while keeping budget tracking accurate
     const resetTransaction = {
       description: `Budget sweep adjustment: ${budget.category}`,
-      amount: -budget.spent,
+      amount: -budget.spent, // Use the spent amount, not the remaining amount
       date: new Date().toISOString().split("T")[0],
       category: budget.category,
+      source: 'manual'
     };
     await addTransaction(resetTransaction);
 
@@ -102,11 +107,11 @@ export default function BudgetsPage() {
   };
   
   return (
-    <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
+    <main className="flex-1 space-y-8 p-4 md:p-6 lg:p-8">
       <div className="w-full">
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-8 flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
+            <h2 className="flex items-center gap-2 text-3xl font-bold font-headline tracking-tight">
               <Wallet className="h-8 w-8" />
               Monthly Budgets
             </h2>
@@ -123,7 +128,7 @@ export default function BudgetsPage() {
                     Add Budget
                   </Button>
                   {hasReachedBudgetLimit && (
-                    <div className="absolute -top-2 -right-2">
+                    <div className="absolute -right-2 -top-2">
                       <ProBadge />
                     </div>
                   )}
@@ -138,17 +143,17 @@ export default function BudgetsPage() {
           </TooltipProvider>
         </div>
          {hasReachedBudgetLimit && (
-            <div className="mb-6 p-4 bg-accent/30 border border-accent/50 rounded-lg text-center text-sm">
+            <div className="mb-6 rounded-lg border border-accent/50 bg-accent/30 p-4 text-center text-sm">
                 <p className="font-semibold text-accent-foreground">You've reached your budget limit!</p>
-                <p className="text-muted-foreground mt-1">The free plan allows for up to {budgetLimit} active budgets. <Button variant="link" className="p-0 h-auto" asChild><Link href="/dashboard/billing">Upgrade to Pro</Link></Button> to add more.</p>
+                <p className="mt-1 text-muted-foreground">The free plan allows for up to {budgetLimit} active budgets. <Button variant="link" className="h-auto p-0" asChild><Link href="/dashboard/billing">Upgrade to Pro</Link></Button> to add more.</p>
             </div>
         )}
         {loading ? (
-            <div className="flex justify-center items-center h-64">
+            <div className="flex h-64 items-center justify-center">
                 <Loader className="h-8 w-8 animate-spin text-primary" />
             </div>
         ) : budgets.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {budgets.map((budget) => (
                 <BudgetCard 
                   key={budget.id} 
@@ -159,7 +164,7 @@ export default function BudgetsPage() {
               ))}
             </div>
         ) : (
-             <div className="text-center py-12 text-muted-foreground">
+             <div className="py-12 text-center text-muted-foreground">
               <h3 className="text-lg font-semibold">No Budgets Yet!</h3>
               <p>Click "Add Budget" to start tracking your spending.</p>
             </div>
@@ -174,7 +179,7 @@ export default function BudgetsPage() {
        <EditBudgetDialog
         budget={editingBudget}
         isOpen={!!editingBudget}
-        onOpenChange={setEditingBudget}
+        onOpenChange={() => setEditingBudget(null)}
         onEditBudget={handleEditBudget}
         onDeleteBudget={handleDeleteBudget}
       />
