@@ -226,6 +226,18 @@ export const addTask = (task: Omit<FinancialTask, 'id'>) => {
 }
 export const getTasks = () => getData<FinancialTask>('tasks');
 export const updateTask = (id: string, task: Partial<FinancialTask>) => updateDataItem('tasks', id, task);
+export const updateTasks = async (taskIds: string[], data: Partial<FinancialTask>): Promise<void> => {
+    const uid = await getUid();
+    if (!uid) throw new Error("User not authenticated");
+
+    const batch = writeBatch(db);
+    taskIds.forEach(taskId => {
+        const docRef = doc(db, `users/${uid}/tasks`, taskId);
+        batch.update(docRef, data);
+    });
+
+    await batch.commit();
+};
 export const deleteTask = (id: string) => deleteDataItem('tasks', id);
 
 // --- Recurring Transactions ---

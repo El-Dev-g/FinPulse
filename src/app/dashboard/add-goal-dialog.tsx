@@ -13,8 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, Landmark } from "lucide-react";
-import type { Goal, AIPlan, Account } from "@/lib/types";
+import { Loader, Landmark, Plus, FolderKanban, Target } from "lucide-react";
+import type { Goal, AIPlan, Account, FinancialTask } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -24,13 +24,15 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { getAccounts } from "@/lib/db";
+import { getAccounts, getTasks, updateTasks, addTask } from "@/lib/db";
+import { MultiSelect, type OptionType } from "@/components/ui/multi-select";
+import { AddTaskDialog } from "./add-task-dialog";
 
 
 interface AddGoalDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddGoal: (newGoal: Omit<Goal, "id" | "current" | "createdAt" | "status">, current?: number) => Promise<void>;
+  onAddGoal: (newGoal: Omit<Goal, "id" | "current" | "createdAt" | "status">, current?: number, linkedTaskIds?: string[]) => Promise<void>;
   isSubmitting?: boolean;
   aiPlans?: AIPlan[];
 }
@@ -50,21 +52,33 @@ export function AddGoalDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Accounts state
   const [accounts, setAccounts] = useState<Account[]>([]);
+
+  // Tasks state
+  const [unassignedTasks, setUnassignedTasks] = useState<OptionType[]>([]);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+  const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
+
   const { toast } = useToast();
   
-  const fetchAccounts = useCallback(async () => {
-    if (user) {
-        const accountsFromDb = (await getAccounts()) as Account[];
+  const fetchData = useCallback(async () => {
+    if (user && isOpen) {
+        const [accountsFromDb, tasksFromDb] = await Promise.all([
+            getAccounts() as Promise<Account[]>,
+            getTasks() as Promise<FinancialTask[]>
+        ]);
         setAccounts(accountsFromDb);
+        const filteredTasks = tasksFromDb
+            .filter(task => !task.goalId && !task.projectId)
+            .map(task => ({ value: task.id, label: task.title }));
+        setUnassignedTasks(filteredTasks);
     }
-  }, [user]);
+  }, [user, isOpen]);
 
   useEffect(() => {
-    if (isOpen) {
-       fetchAccounts();
-    }
-  }, [isOpen, fetchAccounts]);
+    fetchData();
+  }, [isOpen, fetchData]);
 
   const handleAccountLink = (accountId: string) => {
     if (accountId === 'none') {
@@ -79,6 +93,23 @@ export function AddGoalDialog({
             description: `Current amount set to ${account.balance} from ${account.name}.`
         })
     }
+  }
+  
+  const handleAddNewTask = async (newTask: Omit<FinancialTask, "id" | "status" | "createdAt">) => {
+    const newTaskId = await addTask({ ...newTask, status: "To Do" });
+    // Add the new task to the selected list automatically
+    setSelectedTaskIds(prev => [...prev, newTaskId]);
+    await fetchData(); // Refresh the list of unassigned tasks
+  }
+
+  const resetDialog = () => {
+    setTitle("");
+    setTarget("");
+    setCurrent("");
+    setAdviceId("none");
+    setSelectedTaskIds([]);
+    setError(null);
+    setLoading(false);
   }
 
 
@@ -103,7 +134,6 @@ export function AddGoalDialog({
       return;
     }
 
-
     setLoading(true);
 
     const selectedPlan = aiPlans.find(p => p.id === adviceId);
@@ -113,12 +143,9 @@ export function AddGoalDialog({
         title, 
         target: targetAmount,
         advice: selectedPlan ? selectedPlan.advice : undefined,
-      }, currentAmount);
+      }, currentAmount, selectedTaskIds);
       onOpenChange(false);
-      setTitle("");
-      setTarget("");
-      setCurrent("");
-      setAdviceId("none");
+      resetDialog();
     } catch (err) {
        setError("Failed to add goal. Please try again.");
     } finally {
@@ -127,13 +154,10 @@ export function AddGoalDialog({
   };
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) {
-        setTitle("");
-        setTarget("");
-        setCurrent("");
-        setAdviceId("none");
-        setError(null);
+        resetDialog();
       }
       onOpenChange(open);
     }}>
@@ -206,6 +230,21 @@ export function AddGoalDialog({
                   />
                 </div>
             </div>
+            
+            <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                    <Label htmlFor="tasks">Link Tasks (Optional)</Label>
+                    <Button type="button" variant="link" size="sm" className="h-auto p-0" onClick={() => setIsAddTaskDialogOpen(true)}>
+                        <Plus className="mr-1 h-3 w-3" /> New Task
+                    </Button>
+                </div>
+                <MultiSelect
+                    options={unassignedTasks}
+                    selected={selectedTaskIds}
+                    onChange={setSelectedTaskIds}
+                    placeholder="Select unassigned tasks..."
+                />
+            </div>
            
             {aiPlans.length > 0 && (
                 <div className="space-y-2">
@@ -236,5 +275,12 @@ export function AddGoalDialog({
         </form>
       </DialogContent>
     </Dialog>
+    <AddTaskDialog 
+        isOpen={isAddTaskDialogOpen}
+        onOpenChange={setIsAddTaskDialogOpen}
+        onAddTask={handleAddNewTask}
+        goals={[]}
+    />
+    </>
   );
 }
