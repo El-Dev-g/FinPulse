@@ -1,9 +1,8 @@
-
 // src/app/dashboard/link-account/page.tsx
 "use client";
 
-import React, { useState, useEffect, Suspense, useCallback, useMemo } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -22,48 +21,25 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Landmark, Loader, CheckCircle, MoreVertical, Wallet, Trash2, Copy, Check, ChevronDown, Search, X } from 'lucide-react';
+import { Landmark, Loader, MoreVertical, Wallet, Trash2, Copy, Check, ChevronDown, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import type { Account } from '@/lib/types';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { getAccounts, deleteAccount } from '@/lib/db';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { addAccount, getAccounts, deleteAccount } from '@/lib/db';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import Image from 'next/image';
-import MOCK_BANKS from '@/lib/mock-banks.json';
-
-type Bank = {
-  name: string;
-  logo: string;
-};
-
-type Country = {
-  name: string;
-  banks: Bank[];
-};
 
 type Continents = "Africa" | "Asia" | "Europe" | "North America" | "South America";
-
 const continents: Continents[] = ["Africa", "Asia", "Europe", "North America", "South America"];
 
 
@@ -91,88 +67,32 @@ function AccountDetailsRow({ label, value, onCopy }: { label: string; value: str
 }
 
 function LinkAccountPageContent() {
-    const [loading, setLoading] = useState(false);
-    const [step, setStep] = useState<'initial' | 'connecting' | 'success'>('initial');
+    const [loading, setLoading] = useState(true);
     const [connectedAccounts, setConnectedAccounts] = useState<Account[]>([]);
-    const [newlyFetchedAccounts, setNewlyFetchedAccounts] = useState<Account[]>([]);
     const [isUnlinking, setIsUnlinking] = useState<Account | null>(null);
     const [selectedContinent, setSelectedContinent] = useState<Continents | "">("");
-    const [bankSearchTerm, setBankSearchTerm] = useState("");
 
     const { user, formatCurrency } = useAuth();
     const router = useRouter();
-    const searchParams = useSearchParams();
     const { toast } = useToast();
     
     const fetchAccounts = useCallback(async () => {
         if (!user) return;
+        setLoading(true);
         try {
             const accountsFromDb = (await getAccounts()) as Account[];
             setConnectedAccounts(accountsFromDb);
         } catch (error) {
             console.error("Could not fetch accounts:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'Could not load your connected accounts.'});
+        } finally {
+            setLoading(false);
         }
     }, [user, toast]);
 
     useEffect(() => {
         fetchAccounts();
     }, [fetchAccounts]);
-
-    useEffect(() => {
-        const success = searchParams.get('success');
-        const bankName = searchParams.get('bank');
-        const error = searchParams.get('error');
-        
-        async function handleSuccess() {
-            setStep('connecting');
-            // This is the mock data structure that we simulate fetching from a bank.
-            const fetchedAccountsData: Account[] = [
-                { id: `acc_mons${Date.now()}`, name: 'Monzo Current Account', bank: 'Monzo Bank', bankUserName: 'John Doe', last4: '1234', accountNumber: '**** **** **** 1234', type: 'Checking', balance: 2548.75, syncStatus: 'synced' },
-                { id: `acc_revo${Date.now()}`, name: 'Revolut Savings Vault', bank: 'Revolut Ltd', bankUserName: 'John Doe', last4: '5678', accountNumber: '**** **** **** 5678', type: 'Savings', balance: 10500.00, syncStatus: 'synced' },
-            ];
-
-            const specificBankData: Account = {
-                id: `acc_${bankName?.toLowerCase()}${Date.now()}`,
-                name: `${bankName} Account`,
-                bank: bankName || 'Connected Bank',
-                bankUserName: 'John Doe',
-                last4: String(Math.floor(Math.random() * 9000) + 1000),
-                accountNumber: `**** **** **** ${String(Math.floor(Math.random() * 9000) + 1000)}`,
-                type: 'Checking',
-                balance: parseFloat((Math.random() * 8000 + 1000).toFixed(2)),
-                syncStatus: 'synced'
-            };
-            
-            const accountsToSave = bankName ? [specificBankData] : fetchedAccountsData;
-
-            try {
-                await Promise.all(accountsToSave.map(acc => addAccount(acc)));
-
-                setNewlyFetchedAccounts(accountsToSave);
-                fetchAccounts(); // Refetch all accounts from DB to ensure consistency
-                setStep('success');
-            } catch (dbError) {
-                console.error("Failed to save accounts:", dbError);
-                toast({ variant: 'destructive', title: 'Connection Failed', description: 'Could not save your new accounts. Please try again.' });
-                setStep('initial');
-            } finally {
-                router.replace('/dashboard/link-account', { scroll: false });
-            }
-        }
-        
-        if (success === 'true') {
-            handleSuccess();
-        } else if (error) {
-            toast({
-                variant: 'destructive',
-                title: 'Connection Failed',
-                description: `Something went wrong: ${error}. Please try again.`
-            });
-            router.replace('/dashboard/link-account', { scroll: false });
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchParams, router, toast, fetchAccounts]);
 
 
     const handleUnlink = async () => {
@@ -188,75 +108,19 @@ function LinkAccountPageContent() {
         }
     }
 
-    const handleConnectBank = (bankName: string) => {
-        setLoading(true);
-        // In a real app, you would navigate to a partner-specific URL
-        // For this demo, we simulate a successful connection flow.
-        router.push(`/dashboard/link-account?success=true&bank=${encodeURIComponent(bankName)}`);
+    const handleConnectAccount = () => {
+        if (!selectedContinent) return;
+        router.push(`/dashboard/link-account/select-bank?continent=${selectedContinent}`);
     }
-    
-    const filteredBanks = useMemo(() => {
-        if (!selectedContinent) return [];
-        const continentData: Country[] = MOCK_BANKS[selectedContinent];
-        if (!continentData) return [];
 
-        const allBanks = continentData.flatMap(country => country.banks);
-
-        if (!bankSearchTerm) return allBanks;
-
-        return allBanks.filter(bank => 
-            bank.name.toLowerCase().includes(bankSearchTerm.toLowerCase())
-        );
-
-    }, [selectedContinent, bankSearchTerm]);
-
-    
-    if (step === 'connecting') {
+    if (loading) {
         return (
             <div className="flex flex-col items-center justify-center h-64">
                 <Loader className="h-12 w-12 animate-spin text-primary" />
-                <p className="mt-4 text-muted-foreground">Finalizing secure connection...</p>
             </div>
-        )
+        );
     }
     
-    if (step === 'success') {
-         return (
-            <Card className="text-center">
-                <CardHeader>
-                    <CardTitle className="flex items-center justify-center gap-2">
-                        <CheckCircle className="h-8 w-8 text-green-500" />
-                        Connection Successful!
-                    </CardTitle>
-                    <CardDescription>We've successfully linked your new account(s). You can view and manage them below.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Account</TableHead>
-                                <TableHead>Type</TableHead>
-                                <TableHead className="text-right">Balance</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {newlyFetchedAccounts.map(acc => (
-                                <TableRow key={acc.id}>
-                                    <TableCell className="font-medium text-left">{acc.name} (...{acc.last4})</TableCell>
-                                    <TableCell>{acc.type}</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(acc.balance || 0)}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-                <CardFooter>
-                     <Button className="w-full" onClick={() => setStep('initial')}>Done</Button>
-                </CardFooter>
-            </Card>
-        )
-    }
-
     return (
         <>
             <div className="space-y-8">
@@ -342,44 +206,34 @@ function LinkAccountPageContent() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        {selectedContinent && (
-                            <div className="space-y-2 pt-4">
-                                <Label htmlFor="bank-search">2. Find your bank</Label>
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input 
-                                        id="bank-search"
-                                        placeholder="Search for a bank..."
-                                        className="pl-9"
-                                        value={bankSearchTerm}
-                                        onChange={(e) => setBankSearchTerm(e.target.value)}
-                                    />
-                                     {bankSearchTerm && (
-                                        <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                                        onClick={() => setBankSearchTerm('')}
-                                        >
-                                        <X className="h-4 w-4" />
-                                        </Button>
-                                    )}
-                                </div>
-                                <ScrollArea className="h-72 mt-2 rounded-md border">
-                                    <div className="p-4">
-                                        {filteredBanks.length > 0 ? filteredBanks.map((bank, index) => (
-                                            <button key={index} onClick={() => handleConnectBank(bank.name)} className="w-full flex items-center p-3 gap-4 rounded-md hover:bg-muted">
-                                                <Image src={bank.logo} alt={bank.name} width={40} height={40} className="rounded-full" data-ai-hint="bank logo" />
-                                                <span>{bank.name}</span>
-                                            </button>
-                                        )) : (
-                                            <p className="text-center text-sm text-muted-foreground py-10">No banks found for your search.</p>
-                                        )}
-                                    </div>
-                                </ScrollArea>
-                            </div>
-                        )}
                     </CardContent>
+                    <CardFooter>
+                         <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button disabled={!selectedContinent}>
+                                    <Landmark className="mr-2" />
+                                    Connect New Account
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle className="flex items-center gap-2">
+                                        <ShieldCheck className="text-primary"/>
+                                        You are entering a secure connection
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        You will be securely redirected to our trusted partner, to link your bank account. FinPulse never stores your bank login credentials. By continuing, you agree to our partner's terms of service.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleConnectAccount}>
+                                        Agree & Continue
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </CardFooter>
                 </Card>
             </div>
             <AlertDialog open={!!isUnlinking} onOpenChange={() => setIsUnlinking(null)}>
