@@ -132,12 +132,14 @@ export const deleteUserData = async (uid: string): Promise<void> => {
 
 
 // --- Goals ---
-export const addGoal = async (goal: Omit<Goal, 'id' | 'createdAt'>, autoGenerateAdvice: boolean = false) => {
+export const addGoal = async (goal: Omit<Goal, 'id' | 'createdAt'>) => {
     const goalData: Partial<Omit<Goal, 'id' | 'createdAt'>> = {
         ...goal,
         status: 'active',
         current: goal.current || 0,
     };
+    
+    const autoGenerateAdvice = !goal.advice; // Only generate if no advice is passed in
 
     if (autoGenerateAdvice) {
         const prompt = `I am creating a new financial goal to "${goal.title}" with a target of $${goal.target}. Please give me a simple, encouraging financial plan with 3-5 steps to help me get started.`;
@@ -203,14 +205,10 @@ export const deleteBudget = (id: string) => deleteDataItem('budgets', id);
 
 // --- Transactions ---
 export const addTransaction = async (transaction: Omit<Transaction, 'id' | 'Icon'>) => {
-    let finalTransaction = { ...transaction };
-
-    // If a goalId is present, check if that goal is linked to a project
-    if (finalTransaction.projectId) {
-        // Project ID is already set, great.
-    }
-
-    return addDataItem<Omit<Transaction, 'id' | 'Icon'>>('transactions', finalTransaction);
+    const finalTransaction: Omit<Transaction, 'id' | 'Icon'> = { ...transaction };
+    // The transaction object from the dialog already contains projectId and goalId if they were selected.
+    // There is no need for extra logic here; we just need to save it.
+    return addDataItem('transactions', finalTransaction);
 };
 export const getTransactions = () => getData<Transaction>('transactions');
 export const deleteTransaction = (id: string) => deleteDataItem('transactions', id);
@@ -224,6 +222,7 @@ export const addTask = (task: Omit<FinancialTask, 'id'>) => {
     if (task.dueDate) taskData.dueDate = task.dueDate;
     if (task.dueTime) taskData.dueTime = task.dueTime;
     if (task.projectId) taskData.projectId = task.projectId;
+    if (task.goalId) taskData.goalId = task.goalId;
     
     return addDataItem<Partial<Omit<FinancialTask, 'id' | 'createdAt'>>>('tasks', taskData);
 }
