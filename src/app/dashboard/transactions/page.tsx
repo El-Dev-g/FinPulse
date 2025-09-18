@@ -7,6 +7,8 @@ import {
   Card,
   CardContent,
   CardHeader,
+  CardDescription,
+  CardTitle,
 } from "@/components/ui/card";
 import {
   Table,
@@ -166,7 +168,8 @@ export default function TransactionsPage() {
       <div className="w-full">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight font-headline">
+            <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
+              <ArrowRightLeft className="h-8 w-8" />
               Transactions
             </h2>
             <p className="text-muted-foreground">
@@ -236,6 +239,23 @@ export default function TransactionsPage() {
                  <div className="flex justify-center items-center h-64">
                     <Loader className="h-8 w-8 animate-spin text-primary" />
                 </div>
+            ) : filteredTransactions.length === 0 ? (
+                <div className="text-center py-20 text-muted-foreground border-2 border-dashed rounded-lg">
+                    <Card className="max-w-md mx-auto shadow-none border-none bg-transparent">
+                        <CardHeader>
+                            <CardTitle className="text-xl">Your Transaction History is Empty</CardTitle>
+                            <CardDescription>
+                                Add your first transaction to start tracking your finances. This will power your budgets, goals, and reports.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Button onClick={() => setIsAddTransactionDialogOpen(true)}>
+                                <Plus className="mr-2" />
+                                Add Your First Transaction
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
             ) : (
             <ScrollArea className="w-full whitespace-nowrap">
               <Table>
@@ -249,8 +269,7 @@ export default function TransactionsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredTransactions.length > 0 ? (
-                    filteredTransactions.map((transaction) => {
+                  {filteredTransactions.map((transaction) => {
                       const Icon = getIconForCategory(transaction.category);
                       return (
                       <TableRow key={transaction.id}>
@@ -297,14 +316,7 @@ export default function TransactionsPage() {
                           </DropdownMenu>
                         </TableCell>
                       </TableRow>
-                    )})
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center h-24">
-                        No transactions found.
-                      </TableCell>
-                    </TableRow>
-                  )}
+                    )})}
                 </TableBody>
               </Table>
             </ScrollArea>
