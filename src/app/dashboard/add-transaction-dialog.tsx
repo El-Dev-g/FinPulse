@@ -14,8 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, Sparkles } from "lucide-react";
-import type { Transaction, Category } from "@/lib/types";
+import { Loader, Sparkles, Target, FolderKanban } from "lucide-react";
+import type { Transaction, Category, Goal, Project } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/hooks/use-auth";
-import { getCategories, addCategory } from "@/lib/db";
+import { getCategories, addCategory, getGoals, getProjects } from "@/lib/db";
 import { useDebounce } from "@/hooks/use-debounce";
 import { getCategorySuggestion } from "@/lib/actions";
 
@@ -53,6 +53,14 @@ export function AddTransactionDialog({
   const [type, setType] = useState<"expense" | "income">("expense");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Link to Goal/Project State
+  const [goalId, setGoalId] = useState<string | undefined>();
+  const [projectId, setProjectId] = useState<string | undefined>();
+  const [availableGoals, setAvailableGoals] = useState<Goal[]>([]);
+  const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
+
+  // Category State
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
   
   // AI Suggestion State
@@ -60,16 +68,24 @@ export function AddTransactionDialog({
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [isSuggestionLoading, setIsSuggestionLoading] = useState(false);
 
-  const fetchCategories = useCallback(async () => {
+  const fetchData = useCallback(async () => {
       if (user) {
-        const allCategories = (await getCategories()) as Category[];
+        const [allCategories, allGoals, allProjects] = await Promise.all([
+          getCategories() as Promise<Category[]>,
+          getGoals('active') as Promise<Goal[]>,
+          getProjects() as Promise<Project[]>,
+        ]);
         setAvailableCategories(allCategories.filter(c => c.name !== 'Income'));
+        setAvailableGoals(allGoals);
+        setAvailableProjects(allProjects);
       }
   }, [user]);
 
   useEffect(() => {
-    fetchCategories();
-  }, [user, fetchCategories]);
+    if (isOpen) {
+      fetchData();
+    }
+  }, [isOpen, fetchData]);
 
   useEffect(() => {
     async function fetchSuggestion() {
@@ -102,13 +118,15 @@ export function AddTransactionDialog({
     setCategory("");
     setDate(new Date().toISOString().split("T")[0]);
     setType("expense");
+    setGoalId(undefined);
+    setProjectId(undefined);
     setError(null);
     setLoading(false);
     setSuggestion(null);
   }, []);
 
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) {
       resetForm();
     }
   }, [isOpen, resetForm]);
@@ -138,6 +156,8 @@ export function AddTransactionDialog({
         category: type === "income" ? "Income" : category,
         date,
         source: 'manual', // Manually added transactions
+        goalId: goalId === 'none' ? undefined : goalId,
+        projectId: projectId === 'none' ? undefined : projectId,
       });
       onOpenChange(false);
     } catch (err) {
@@ -155,7 +175,7 @@ export function AddTransactionDialog({
         try {
             await addCategory({ name: suggestion.category });
             // Refetch categories to include the new one
-            await fetchCategories();
+            await fetchData();
         } catch (e) {
             console.error("Failed to add new category", e);
             // Don't block the user, just log the error
@@ -166,6 +186,9 @@ export function AddTransactionDialog({
     // Clear the suggestion
     setSuggestion(null);
   };
+  
+  const canLinkToGoal = type === 'expense' && !projectId;
+  const canLinkToProject = type === 'expense' && !goalId;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -264,6 +287,54 @@ export function AddTransactionDialog({
                 </Select>
               </div>
             )}
+            
+            {availableGoals.length > 0 && (
+                <div className="space-y-2">
+                    <Label htmlFor="goalId" className={!canLinkToGoal ? "text-muted-foreground" : ""}>
+                        Link to a Goal (Optional)
+                    </Label>
+                     <Select value={goalId} onValueChange={setGoalId} disabled={!canLinkToGoal}>
+                        <SelectTrigger id="goalId">
+                           <SelectValue placeholder="Select a goal..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                             {availableGoals.map((goal) => (
+                                <SelectItem key={goal.id} value={goal.id}>
+                                    <div className="flex items-center gap-2">
+                                        <Target className="h-4 w-4 text-muted-foreground" />
+                                        <span>{goal.title}</span>
+                                    </div>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
+
+            {availableProjects.length > 0 && (
+                 <div className="space-y-2">
+                    <Label htmlFor="projectId" className={!canLinkToProject ? "text-muted-foreground" : ""}>
+                        Link to a Project (Optional)
+                    </Label>
+                     <Select value={projectId} onValueChange={setProjectId} disabled={!canLinkToProject}>
+                        <SelectTrigger id="projectId">
+                           <SelectValue placeholder="Select a project..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                             {availableProjects.map((project) => (
+                                <SelectItem key={project.id} value={project.id}>
+                                    <div className="flex items-center gap-2">
+                                        <FolderKanban className="h-4 w-4 text-muted-foreground" />
+                                        <span>{project.name}</span>
+                                    </div>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="date">Date</Label>
@@ -287,3 +358,5 @@ export function AddTransactionDialog({
     </Dialog>
   );
 }
+
+    
