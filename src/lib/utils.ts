@@ -14,7 +14,6 @@ import {
   Landmark,
   PiggyBank,
   Briefcase,
-  Gift,
   Ticket,
   Wrench,
   Receipt,
@@ -22,6 +21,7 @@ import {
   Send
 } from "lucide-react";
 import type { ClientTransaction, Transaction, ClientBudget, Budget, ClientRecurringTransaction, RecurringTransaction, ClientFinancialTask, FinancialTask, ClientGoal, Goal, ClientProject, Project } from "./types";
+import { GiftIcon } from "@/components/icons/gift-icon";
 
 
 export function cn(...inputs: ClassValue[]) {
@@ -40,7 +40,8 @@ const categoryIcons: { [key: string]: LucideIcon } = {
   'Income': ArrowRightLeft,
   'Investments': Landmark,
   'Business': Briefcase,
-  'Gifts': Gift,
+  'Gifts': GiftIcon,
+  'Anniversaries': GiftIcon,
   'Travel': Ticket,
   'Utilities': Wrench,
   'Taxes': Receipt,
