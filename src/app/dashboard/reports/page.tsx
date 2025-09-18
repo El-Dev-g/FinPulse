@@ -265,7 +265,7 @@ export default function ReportsPage() {
             <>
                 <ReportMetrics metrics={reportMetrics} />
 
-                <div className="grid gap-8 md:grid-cols-5 mt-8">
+                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-5 mt-8">
                     <Card className="md:col-span-3">
                         <CardHeader>
                             <CardTitle>Income vs. Expense</CardTitle>
@@ -285,7 +285,7 @@ export default function ReportsPage() {
                             </ResponsiveContainer>
                         </CardContent>
                     </Card>
-                    <Card className="md:col-span-2">
+                    <Card className="lg:col-span-2">
                         <CardHeader>
                             <CardTitle>Expense Breakdown</CardTitle>
                             <CardDescription>Spending by category for the selected period.</CardDescription>

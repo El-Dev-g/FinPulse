@@ -209,7 +209,7 @@ function GoalsPageContent() {
 
 function GoalGrid({ goals, onEdit, formatCurrency, isArchived = false }: { goals: Goal[], onEdit: (goal: Goal) => void, formatCurrency: (amount: number) => string, isArchived?: boolean }) {
     return (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {goals.map((goal) => {
             const progress = goal.target > 0 ? (goal.current / goal.target) * 100 : 0;
             return (

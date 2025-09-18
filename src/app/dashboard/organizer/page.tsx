@@ -28,6 +28,7 @@ import { getTasks, getGoals, getProjects, addTask, updateTask, deleteTask } from
 import { startOfToday, isBefore, isSameDay, parseISO } from 'date-fns';
 import { formatTime, processProjects } from "@/lib/utils";
 import Confetti from 'react-confetti';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 function CalendarView({ tasks, onEdit }: { tasks: FinancialTask[], onEdit: (task: FinancialTask) => void; }) {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -65,15 +66,15 @@ function CalendarView({ tasks, onEdit }: { tasks: FinancialTask[], onEdit: (task
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow w-full">
-      <div className="md:col-span-2">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow w-full">
+      <div className="lg:col-span-2">
         <Card>
-          <CardContent className="p-2">
+          <CardContent className="p-0 sm:p-2">
             <CalendarComponent
               mode="single"
               selected={date}
               onSelect={setDate}
-              className="rounded-md"
+              className="rounded-md w-full"
               modifiers={{
                 due: Object.keys(tasksByDate).map((d) => new Date(d + "T00:00:00")),
               }}
@@ -250,6 +251,7 @@ export default function OrganizerPage() {
           <>
             <TabsContent value="board" className="h-full">
               <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+                <ScrollArea className="w-full whitespace-nowrap">
                 <TaskBoard
                   goals={goals}
                   projects={projects}
@@ -263,6 +265,7 @@ export default function OrganizerPage() {
                     "Done": doneTasks
                   }}
                 />
+                </ScrollArea>
               </DndContext>
             </TabsContent>
             <TabsContent value="calendar" className="h-full">

@@ -57,7 +57,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
+    <main className="flex-1 p-4 md:p-6 space-y-8">
       <div className="flex-col md:flex">
         <div className="flex-1 space-y-4">
           <h2 className="text-3xl font-bold tracking-tight font-headline">
@@ -86,7 +86,7 @@ export default function DashboardPage() {
 
       <Alerts />
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <OverviewCards transactions={transactions} goals={goals} accounts={accounts} />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
