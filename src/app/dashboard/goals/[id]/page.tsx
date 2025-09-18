@@ -22,6 +22,7 @@ import type { ClientGoal, ClientFinancialTask, ClientTransaction, Goal, Transact
 import { useAuth } from "@/hooks/use-auth";
 import { processGoal, processTasks, processTransactions } from "@/lib/utils";
 import { AddTaskDialog } from "@/components/dashboard/add-task-dialog";
+import { Badge } from "@/components/ui/badge";
 
 export default function GoalDetailPage() {
   const params = useParams();

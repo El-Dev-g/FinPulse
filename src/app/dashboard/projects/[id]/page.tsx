@@ -53,16 +53,20 @@ export default function ProjectDetailPage() {
       ]);
 
       if (projectData) {
-        setProject(processProject(projectData as Project));
         
         const filteredTransactions = transactionsData.filter(t => t.projectId === id);
+        const currentAmount = filteredTransactions.reduce((sum, t) => sum - t.amount, 0);
+        const processedProject = processProject({...(projectData as Project), currentAmount });
+
+        setProject(processedProject);
+        
         setRelatedTransactions(processTransactions(filteredTransactions as Transaction[]));
         
         const filteredTasks = tasksData.filter(t => t.projectId === id);
         setRelatedTasks(processTasks(filteredTasks as FinancialTask[]));
 
         const foundGoal = goalsData.find(g => g.projectId === id);
-        setLinkedGoal(foundGoal ? processGoal(foundGoal as Goal) : null);
+        setLinkedGoal(foundGoal ? processGoals([foundGoal as Goal])[0] : null);
 
       } else {
         setProject(null);
@@ -203,22 +207,23 @@ export default function ProjectDetailPage() {
               title="Project Expenses"
               description="Transactions assigned to this project."
             />
-            <ActivityList 
-              tasks={relatedTasks}
-              title="Related Tasks"
-              description="Tasks to help you complete this project."
-              Icon={ClipboardList}
-            />
-             <Card>
-                <CardHeader>
-                    <CardTitle>Add Task</CardTitle>
-                    <CardDescription>Add a new task for this project.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                     <Button onClick={() => setIsAddTaskOpen(true)} className="w-full">
-                        <Plus className="mr-2" /> New Task
+            <Card>
+                 <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle className="flex items-center gap-2">
+                            <ClipboardList className="h-5 w-5" />
+                            Related Tasks
+                        </CardTitle>
+                        <CardDescription>Tasks to help you complete this project.</CardDescription>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => setIsAddTaskOpen(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        New
                     </Button>
-                </CardContent>
+                 </CardHeader>
+                 <CardContent>
+                    <ActivityList tasks={relatedTasks} title="" description="" />
+                 </CardContent>
             </Card>
           </div>
         </div>
@@ -234,6 +239,7 @@ export default function ProjectDetailPage() {
       onOpenChange={setIsAddTaskOpen}
       onAddTask={handleAddTask}
       goals={[]}
+      defaultProjectId={id as string}
     />
     </>
   );
