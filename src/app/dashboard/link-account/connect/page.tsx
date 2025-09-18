@@ -5,8 +5,7 @@ import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ArrowLeft, X, Layers, Landmark, Info, CheckCircle } from 'lucide-react';
+import { ArrowLeft, X, Layers, Landmark, Info } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -56,10 +55,6 @@ function ConnectPageContent() {
 
     return (
         <div className="flex flex-col h-screen bg-muted/30">
-            <div className="bg-yellow-500/20 border-b border-yellow-500/30 text-yellow-800 dark:text-yellow-300 text-center p-2 text-sm">
-                <p className="font-bold">Testing mode active</p>
-                <p className="text-xs">This application has not been authorised for production use. Please do not enter your bank credentials if you are not testing this application. To remove this banner, please reach out to <a href="mailto:sales@truelayer.com" className="underline">sales@truelayer.com</a></p>
-            </div>
             <header className="flex items-center justify-between p-4 border-b bg-background">
                 <Button variant="ghost" size="icon" asChild>
                     <Link href={`/dashboard/link-account/select-bank?continent=${searchParams.get('continent')}`}>
@@ -69,9 +64,7 @@ function ConnectPageContent() {
                 <div className="flex items-center gap-4">
                     {bankLogo && <Image src={bankLogo} alt={bankName || 'Bank'} width={32} height={32} className="rounded-full" />}
                     <span className="text-muted-foreground text-sm">...</span>
-                    <div className="p-2 rounded-full border bg-muted">
-                        <Layers className="h-5 w-5 text-muted-foreground" />
-                    </div>
+                    <Logo />
                     <span className="text-muted-foreground text-sm">...</span>
                     <div className="p-2 rounded-full border bg-muted">
                         <Landmark className="h-5 w-5 text-muted-foreground" />
@@ -87,7 +80,7 @@ function ConnectPageContent() {
                  <div className="text-center space-y-2">
                     <h1 className="text-2xl font-bold font-headline">Connect your account</h1>
                     <p className="text-muted-foreground max-w-md mx-auto">
-                        finpulse's data partner, TrueLayer, would like 90-day access to your {bankName} account details.
+                        finpulse's data partner, finpulse, would like 90-day access to your {bankName} account details.
                     </p>
                  </div>
 
@@ -98,7 +91,7 @@ function ConnectPageContent() {
                             <div>
                                 <h2 className="font-semibold text-blue-500">What details am I sharing?</h2>
                                 <p className="text-sm text-muted-foreground mt-2">
-                                    To provide its services, TrueLayer needs permission to access the following information and share it with finpulse:
+                                    To provide its services, finpulse needs permission to access the following information and share it with finpulse:
                                 </p>
                                 <ul className="mt-4 space-y-3 text-sm">
                                     <li className="flex items-center gap-3"><span className="font-mono text-lg">•</span> Full name</li>
@@ -116,7 +109,7 @@ function ConnectPageContent() {
                     Allow
                 </Button>
                 <p className="text-xs text-muted-foreground text-center mt-3 px-4">
-                    By tapping 'Allow', you agree to TrueLayer's <a href="#" className="underline">Terms of Service</a> and <a href="#" className="underline">Privacy Policy</a>.
+                    By tapping 'Allow', you agree to finpulse's <a href="#" className="underline">Terms of Service</a> and <a href="#" className="underline">Privacy Policy</a>.
                 </p>
             </footer>
         </div>
