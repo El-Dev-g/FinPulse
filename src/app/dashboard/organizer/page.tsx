@@ -252,19 +252,21 @@ export default function OrganizerPage() {
             <TabsContent value="board" className="h-full">
               <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
                 <ScrollArea className="w-full whitespace-nowrap">
-                <TaskBoard
-                  goals={goals}
-                  projects={projects}
-                  onEdit={setEditingTask}
-                  onStatusChange={handleUpdateTaskStatus}
-                  sections={{
-                    "Overdue": overdueTasks,
-                    "Today": todayTasks,
-                    "Upcoming": upcomingTasks,
-                    "Other": otherTasks,
-                    "Done": doneTasks
-                  }}
-                />
+                <div className="pb-4">
+                  <TaskBoard
+                    goals={goals}
+                    projects={projects}
+                    onEdit={setEditingTask}
+                    onStatusChange={handleUpdateTaskStatus}
+                    sections={{
+                      "Overdue": overdueTasks,
+                      "Today": todayTasks,
+                      "Upcoming": upcomingTasks,
+                      "Other": otherTasks,
+                      "Done": doneTasks
+                    }}
+                  />
+                </div>
                 </ScrollArea>
               </DndContext>
             </TabsContent>

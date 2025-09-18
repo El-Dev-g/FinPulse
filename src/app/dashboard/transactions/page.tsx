@@ -57,6 +57,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 
 export default function TransactionsPage() {
@@ -236,75 +237,77 @@ export default function TransactionsPage() {
                     <Loader className="h-8 w-8 animate-spin text-primary" />
                 </div>
             ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTransactions.length > 0 ? (
-                  filteredTransactions.map((transaction) => {
-                    const Icon = getIconForCategory(transaction.category);
-                    return (
-                    <TableRow key={transaction.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="bg-muted p-2 rounded-md">
-                            <Icon className="h-4 w-4 text-muted-foreground" />
+            <ScrollArea className="w-full whitespace-nowrap">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredTransactions.length > 0 ? (
+                    filteredTransactions.map((transaction) => {
+                      const Icon = getIconForCategory(transaction.category);
+                      return (
+                      <TableRow key={transaction.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="bg-muted p-2 rounded-md">
+                              <Icon className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <div className="font-medium">
+                              {transaction.description}
+                            </div>
                           </div>
-                          <div className="font-medium">
-                            {transaction.description}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {transaction.date}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{transaction.category}</Badge>
-                      </TableCell>
-                      <TableCell
-                        className={cn(
-                          "text-right font-medium",
-                          transaction.amount > 0
-                            ? "text-green-600"
-                            : "text-foreground"
-                        )}
-                      >
-                        {transaction.amount > 0 ? "+" : ""}
-                        {formatCurrency(transaction.amount)}
-                      </TableCell>
-                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuItem onSelect={() => setDeletingTransaction(transaction)} className="text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4"/>
-                                Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {transaction.date}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{transaction.category}</Badge>
+                        </TableCell>
+                        <TableCell
+                          className={cn(
+                            "text-right font-medium",
+                            transaction.amount > 0
+                              ? "text-green-600"
+                              : "text-foreground"
+                          )}
+                        >
+                          {transaction.amount > 0 ? "+" : ""}
+                          {formatCurrency(transaction.amount)}
+                        </TableCell>
+                         <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem onSelect={() => setDeletingTransaction(transaction)} className="text-destructive">
+                                  <Trash2 className="mr-2 h-4 w-4"/>
+                                  Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    )})
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center h-24">
+                        No transactions found.
                       </TableCell>
                     </TableRow>
-                  )})
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center h-24">
-                      No transactions found.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
+            </ScrollArea>
             )}
           </CardContent>
         </Card>

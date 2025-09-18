@@ -33,6 +33,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function RecurringPage() {
   const { user, formatCurrency } = useAuth();
@@ -115,82 +116,84 @@ export default function RecurringPage() {
                     <Loader className="h-8 w-8 animate-spin text-primary" />
                 </div>
             ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Frequency</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recurring.length > 0 ? (
-                  recurring.map((transaction) => {
-                    const Icon = getIconForCategory(transaction.category);
-                    return (
-                    <TableRow key={transaction.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="bg-muted p-2 rounded-md">
-                            <Icon className="h-4 w-4 text-muted-foreground" />
+            <ScrollArea className="w-full whitespace-nowrap">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Frequency</TableHead>
+                    <TableHead>Start Date</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recurring.length > 0 ? (
+                    recurring.map((transaction) => {
+                      const Icon = getIconForCategory(transaction.category);
+                      return (
+                      <TableRow key={transaction.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="bg-muted p-2 rounded-md">
+                              <Icon className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <div className="font-medium">
+                              {transaction.description}
+                            </div>
                           </div>
-                          <div className="font-medium">
-                            {transaction.description}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{transaction.category}</Badge>
-                      </TableCell>
-                      <TableCell className="capitalize">
-                        {transaction.frequency}
-                      </TableCell>
-                      <TableCell>{transaction.startDate}</TableCell>
-                      <TableCell
-                        className={cn(
-                          "text-right font-medium",
-                          transaction.amount > 0
-                            ? "text-green-600"
-                            : "text-foreground"
-                        )}
-                      >
-                        {transaction.amount > 0 ? "+" : ""}
-                        {formatCurrency(transaction.amount)}
-                      </TableCell>
-                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuItem onSelect={() => setEditingTransaction(transaction)}>
-                              Edit
-                            </DropdownMenuItem>
-                             <DropdownMenuItem
-                              onSelect={() => handleDeleteTransaction(transaction.id)}
-                              className="text-destructive"
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{transaction.category}</Badge>
+                        </TableCell>
+                        <TableCell className="capitalize">
+                          {transaction.frequency}
+                        </TableCell>
+                        <TableCell>{transaction.startDate}</TableCell>
+                        <TableCell
+                          className={cn(
+                            "text-right font-medium",
+                            transaction.amount > 0
+                              ? "text-green-600"
+                              : "text-foreground"
+                          )}
+                        >
+                          {transaction.amount > 0 ? "+" : ""}
+                          {formatCurrency(transaction.amount)}
+                        </TableCell>
+                         <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem onSelect={() => setEditingTransaction(transaction)}>
+                                Edit
+                              </DropdownMenuItem>
+                               <DropdownMenuItem
+                                onSelect={() => handleDeleteTransaction(transaction.id)}
+                                className="text-destructive"
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    )})
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center h-24">
+                        No recurring transactions found.
                       </TableCell>
                     </TableRow>
-                  )})
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center h-24">
-                      No recurring transactions found.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
+            </ScrollArea>
             )}
           </CardContent>
         </Card>

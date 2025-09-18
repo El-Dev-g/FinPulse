@@ -359,7 +359,7 @@ export default function DashboardLayout({
               <Logo />
             </Link>
           </header>
-          <div className="flex-1 overflow-auto">{children}</div>
+          <div className="flex-1 overflow-x-hidden">{children}</div>
         </SidebarInset>
       </div>
     </SidebarProvider>
