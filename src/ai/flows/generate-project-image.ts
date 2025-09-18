@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview A flow to generate a project image using AI.
+ * @fileOverview A flow to generate a project image using a placeholder service.
  *
  * - generateProjectImage - A function that generates an image for a project based on its name.
  * - GenerateProjectImageRequest - The input type for the generateProjectImage function.
@@ -10,6 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { sha256 } from 'js-sha256';
 
 const GenerateProjectImageRequestSchema = z.object({
   projectName: z.string().describe('The name of the financial project.'),
@@ -17,7 +18,7 @@ const GenerateProjectImageRequestSchema = z.object({
 export type GenerateProjectImageRequest = z.infer<typeof GenerateProjectImageRequestSchema>;
 
 const GenerateProjectImageResponseSchema = z.object({
-  imageUrl: z.string().describe("The URL of the generated image as a data URI."),
+  imageUrl: z.string().describe("The URL of the generated placeholder image."),
 });
 export type GenerateProjectImageResponse = z.infer<typeof GenerateProjectImageResponseSchema>;
 
@@ -34,19 +35,13 @@ const generateProjectImageFlow = ai.defineFlow(
     outputSchema: GenerateProjectImageResponseSchema,
   },
   async ({ projectName }) => {
-    // Using the free-tier text-to-image model
-    const { media } = await ai.generate({
-      model: 'googleai/gemini-2.5-flash-image-preview',
-      prompt: `Generate a visually appealing and relevant image for a personal finance project named "${projectName}". The image should be a high-quality, photorealistic representation of the project's theme. For example, for "Kitchen Renovation", show a modern kitchen. For "Hawaii Vacation", show a beautiful Hawaiian beach. The image should be vibrant and inspiring.`,
-      config: {
-        responseModalities: ['IMAGE'],
-      }
-    });
-
-    if (!media?.url) {
-      throw new Error("AI failed to generate an image.");
-    }
+    // Using a placeholder image service to avoid rate limits on the free tier.
+    // We'll create a semi-unique seed from the project name.
+    const hash = sha256(projectName);
+    const seed = parseInt(hash.substring(0, 5), 16) % 1000; // Use a part of the hash as a seed
     
-    return { imageUrl: media.url };
+    const imageUrl = `https://picsum.photos/seed/${seed}/800/600`;
+
+    return { imageUrl };
   }
 );
