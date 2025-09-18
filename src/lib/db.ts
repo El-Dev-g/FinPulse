@@ -132,7 +132,7 @@ export const deleteUserData = async (uid: string): Promise<void> => {
 
 
 // --- Goals ---
-export const addGoal = async (goal: Omit<Goal, 'id' | 'current' | 'createdAt' | 'status'> & {current?: number}, autoGenerateAdvice: boolean = false) => {
+export const addGoal = async (goal: Omit<Goal, 'id' | 'createdAt' | 'status'>, autoGenerateAdvice: boolean = false) => {
     const goalData: { title: string; target: number; current: number; advice?: Advice, status: 'active' | 'archived', projectId?: string } = {
         title: goal.title,
         target: goal.target,

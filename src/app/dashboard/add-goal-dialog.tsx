@@ -33,7 +33,7 @@ import { AddTaskDialog } from "./add-task-dialog";
 interface AddGoalDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddGoal: (newGoal: Omit<Goal, "id" | "current" | "createdAt" | "status">, current?: number, linkedTaskIds?: string[]) => Promise<void>;
+  onAddGoal: (newGoal: Omit<Goal, "id" | "createdAt" | "status">, linkedTaskIds?: string[]) => Promise<void>;
   isSubmitting?: boolean;
   aiPlans?: AIPlan[];
 }
@@ -148,9 +148,10 @@ export function AddGoalDialog({
       await onAddGoal({ 
         title, 
         target: targetAmount,
+        current: currentAmount,
         advice: selectedPlan ? selectedPlan.advice : undefined,
         projectId: projectId === 'none' ? undefined : projectId,
-      }, currentAmount, selectedTaskIds);
+      }, selectedTaskIds);
       onOpenChange(false);
       resetDialog();
     } catch (err) {
