@@ -1,3 +1,4 @@
+
 // src/components/dashboard/edit-goal-dialog.tsx
 "use client";
 
@@ -23,11 +24,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, Trash, Archive, Undo, Plus } from "lucide-react";
-import type { Goal, FinancialTask } from "@/lib/types";
-import { getTasks, updateTask, updateTasks, addTask } from "@/lib/db";
+import { Loader, Trash, Archive, Undo, Plus, FolderKanban } from "lucide-react";
+import type { Goal, FinancialTask, Project } from "@/lib/types";
+import { getTasks, updateTask, updateTasks, addTask, getProjects } from "@/lib/db";
 import { MultiSelect, type OptionType } from "@/components/ui/multi-select";
 import { AddTaskDialog } from "./add-task-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 interface EditGoalDialogProps {
   goal: Goal | null;
@@ -50,6 +52,7 @@ export function EditGoalDialog({
   const [current, setCurrent] = useState("");
   const [target, setTarget] = useState("");
   const [status, setStatus] = useState<"active" | "archived">("active");
+  const [projectId, setProjectId] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -61,13 +64,20 @@ export function EditGoalDialog({
   const [initialTaskIds, setInitialTaskIds] = useState<string[]>([]);
   const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
 
+  // Projects state
+  const [projects, setProjects] = useState<Project[]>([]);
+
 
   const isArchived = status === 'archived';
 
   const fetchData = useCallback(async () => {
     if (goal) {
-      const dbTasks = await getTasks() as FinancialTask[];
+      const [dbTasks, dbProjects] = await Promise.all([
+        getTasks() as Promise<FinancialTask[]>,
+        getProjects() as Promise<Project[]>,
+      ]);
       setAllTasks(dbTasks);
+      setProjects(dbProjects);
       
       const currentlyLinkedIds = dbTasks.filter(t => t.goalId === goal.id).map(t => t.id);
       setInitialTaskIds(currentlyLinkedIds);
@@ -85,6 +95,7 @@ export function EditGoalDialog({
       setCurrent(goal.current.toString());
       setTarget(goal.target.toString());
       setStatus(goal.status);
+      setProjectId(goal.projectId);
       fetchData();
     }
   }, [goal, fetchData]);
@@ -136,6 +147,7 @@ export function EditGoalDialog({
                 current: currentAmount,
                 target: targetAmount,
                 status: isArchived ? 'active' : goal.status, // Restore if it was archived
+                projectId: projectId === 'none' ? undefined : projectId,
             }, linkedTaskIds, unlinkedTaskIds);
         }
         onOpenChange(false);
@@ -221,20 +233,43 @@ export function EditGoalDialog({
               />
             </div>
             {!isArchived && (
-              <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                      <Label htmlFor="tasks">Linked Tasks</Label>
-                      <Button type="button" variant="link" size="sm" className="h-auto p-0" onClick={() => setIsAddTaskDialogOpen(true)}>
-                          <Plus className="mr-1 h-3 w-3" /> New Task
-                      </Button>
-                  </div>
-                  <MultiSelect
-                      options={taskOptions}
-                      selected={selectedTaskIds}
-                      onChange={setSelectedTaskIds}
-                      placeholder="Select tasks..."
-                  />
-              </div>
+              <>
+                <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                        <Label htmlFor="tasks">Linked Tasks</Label>
+                        <Button type="button" variant="link" size="sm" className="h-auto p-0" onClick={() => setIsAddTaskDialogOpen(true)}>
+                            <Plus className="mr-1 h-3 w-3" /> New Task
+                        </Button>
+                    </div>
+                    <MultiSelect
+                        options={taskOptions}
+                        selected={selectedTaskIds}
+                        onChange={setSelectedTaskIds}
+                        placeholder="Select tasks..."
+                    />
+                </div>
+                 {projects.length > 0 && (
+                    <div className="space-y-2">
+                        <Label htmlFor="projectId-edit">Link to a Project (Optional)</Label>
+                        <Select value={projectId || 'none'} onValueChange={setProjectId}>
+                            <SelectTrigger id="projectId-edit">
+                            <SelectValue placeholder="Select a project..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">None</SelectItem>
+                                {projects.map((project) => (
+                                    <SelectItem key={project.id} value={project.id}>
+                                        <div className="flex items-center gap-2">
+                                            <FolderKanban className="h-4 w-4 text-muted-foreground" />
+                                            <span>{project.name}</span>
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
+              </>
             )}
           </div>
           {error && <p className="text-sm text-destructive mb-4">{error}</p>}

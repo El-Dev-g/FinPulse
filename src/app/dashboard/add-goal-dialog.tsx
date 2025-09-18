@@ -1,3 +1,4 @@
+
 // src/components/dashboard/add-goal-dialog.tsx
 "use client";
 
@@ -14,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader, Landmark, Plus, FolderKanban, Target } from "lucide-react";
-import type { Goal, AIPlan, Account, FinancialTask } from "@/lib/types";
+import type { Goal, AIPlan, Account, FinancialTask, Project } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -24,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { getAccounts, getTasks, updateTasks, addTask } from "@/lib/db";
+import { getAccounts, getTasks, updateTasks, addTask, getProjects } from "@/lib/db";
 import { MultiSelect, type OptionType } from "@/components/ui/multi-select";
 import { AddTaskDialog } from "./add-task-dialog";
 
@@ -49,11 +50,13 @@ export function AddGoalDialog({
   const [target, setTarget] = useState("");
   const [current, setCurrent] = useState("");
   const [adviceId, setAdviceId] = useState<string>("none");
+  const [projectId, setProjectId] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Accounts state
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   // Tasks state
   const [unassignedTasks, setUnassignedTasks] = useState<OptionType[]>([]);
@@ -64,11 +67,13 @@ export function AddGoalDialog({
   
   const fetchData = useCallback(async () => {
     if (user && isOpen) {
-        const [accountsFromDb, tasksFromDb] = await Promise.all([
+        const [accountsFromDb, tasksFromDb, projectsFromDb] = await Promise.all([
             getAccounts() as Promise<Account[]>,
-            getTasks() as Promise<FinancialTask[]>
+            getTasks() as Promise<FinancialTask[]>,
+            getProjects() as Promise<Project[]>,
         ]);
         setAccounts(accountsFromDb);
+        setProjects(projectsFromDb);
         const filteredTasks = tasksFromDb
             .filter(task => !task.goalId && !task.projectId)
             .map(task => ({ value: task.id, label: task.title }));
@@ -107,6 +112,7 @@ export function AddGoalDialog({
     setTarget("");
     setCurrent("");
     setAdviceId("none");
+    setProjectId(undefined);
     setSelectedTaskIds([]);
     setError(null);
     setLoading(false);
@@ -143,6 +149,7 @@ export function AddGoalDialog({
         title, 
         target: targetAmount,
         advice: selectedPlan ? selectedPlan.advice : undefined,
+        projectId: projectId === 'none' ? undefined : projectId,
       }, currentAmount, selectedTaskIds);
       onOpenChange(false);
       resetDialog();
@@ -245,6 +252,28 @@ export function AddGoalDialog({
                     placeholder="Select unassigned tasks..."
                 />
             </div>
+
+            {projects.length > 0 && (
+                <div className="space-y-2">
+                    <Label htmlFor="projectId">Link to a Project (Optional)</Label>
+                     <Select value={projectId} onValueChange={setProjectId}>
+                        <SelectTrigger id="projectId">
+                           <SelectValue placeholder="Select a project..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                             {projects.map((project) => (
+                                <SelectItem key={project.id} value={project.id}>
+                                    <div className="flex items-center gap-2">
+                                        <FolderKanban className="h-4 w-4 text-muted-foreground" />
+                                        <span>{project.name}</span>
+                                    </div>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
            
             {aiPlans.length > 0 && (
                 <div className="space-y-2">

@@ -1,3 +1,4 @@
+
 // src/lib/types.ts
 import type { ChartConfig } from "@/components/ui/chart";
 import type { LucideIcon } from "lucide-react";
@@ -93,6 +94,7 @@ export interface Goal {
   advice?: Advice;
   createdAt: any; // Firestore timestamp
   status: 'active' | 'archived';
+  projectId?: string;
 }
 
 export interface ClientGoal extends Omit<Goal, 'createdAt'>{

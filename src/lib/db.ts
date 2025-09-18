@@ -133,11 +133,12 @@ export const deleteUserData = async (uid: string): Promise<void> => {
 
 // --- Goals ---
 export const addGoal = async (goal: Omit<Goal, 'id' | 'current' | 'createdAt' | 'status'> & {current?: number}, autoGenerateAdvice: boolean = false) => {
-    const goalData: { title: string; target: number; current: number; advice?: Advice, status: 'active' | 'archived' } = {
+    const goalData: { title: string; target: number; current: number; advice?: Advice, status: 'active' | 'archived', projectId?: string } = {
         title: goal.title,
         target: goal.target,
         current: goal.current || 0,
-        status: 'active'
+        status: 'active',
+        projectId: goal.projectId,
     };
 
     if (autoGenerateAdvice) {
@@ -207,7 +208,19 @@ export const updateBudget = (id: string, budget: Partial<Budget>) => updateDataI
 export const deleteBudget = (id: string) => deleteDataItem('budgets', id);
 
 // --- Transactions ---
-export const addTransaction = (transaction: Omit<Transaction, 'id' | 'Icon'>) => addDataItem<Omit<Transaction, 'id' | 'Icon'>>('transactions', transaction);
+export const addTransaction = async (transaction: Omit<Transaction, 'id' | 'Icon'>) => {
+    let finalTransaction = { ...transaction };
+
+    // If a goalId is present, check if that goal is linked to a project
+    if (transaction.goalId) {
+        const goal = await getGoal(transaction.goalId);
+        if (goal && goal.projectId) {
+            // Automatically link the transaction to the project as well
+            finalTransaction.projectId = goal.projectId;
+        }
+    }
+    return addDataItem<Omit<Transaction, 'id' | 'Icon'>>('transactions', finalTransaction);
+};
 export const getTransactions = () => getData<Transaction>('transactions');
 export const deleteTransaction = (id: string) => deleteDataItem('transactions', id);
 
