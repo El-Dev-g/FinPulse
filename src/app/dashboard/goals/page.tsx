@@ -99,7 +99,7 @@ function GoalsPageContent() {
   }, [fetchData]);
 
   const handleAddGoal = async (newGoal: Omit<Goal, "id" | "createdAt" | "status">, linkedTaskIds: string[] = []) => {
-    const newGoalId = await addGoal({ ...newGoal }, !isPro);
+    const newGoalId = await addGoal(newGoal, !isPro);
     if (linkedTaskIds.length > 0) {
       await updateTasks(linkedTaskIds, { goalId: newGoalId });
     }
