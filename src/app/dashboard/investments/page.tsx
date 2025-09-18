@@ -11,132 +11,51 @@ import {
   CardTitle,
   CardDescription
 } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Plus, Loader, TrendingUp, FileText, Search, X, ShoppingCart } from "lucide-react";
+import { Plus, Loader, TrendingUp, Search, X, ShoppingCart, AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import type { Investment, ClientInvestment, Transaction, Account } from "@/lib/types";
-import { getInvestments, addInvestment, updateInvestment, deleteInvestment, addTransaction, getAccounts, updateAccount } from "@/lib/db";
-import { getStockData } from "@/lib/actions";
+import type { ClientInvestment, AlpacaAccount } from "@/lib/types";
+import { getPortfolio } from "@/lib/actions";
 import { InvestmentHoldingsTable } from "@/components/dashboard/investment-holdings-table";
-import { AddInvestmentDialog } from "@/components/dashboard/add-investment-dialog";
 import { Alert, AlertTitle, AlertDescription as AlertDescriptionComponent } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { PortfolioSummary } from "@/components/dashboard/portfolio-summary";
 import { InvestmentPerformanceChart } from "@/components/dashboard/investment-performance-chart";
-import { useToast } from "@/hooks/use-toast";
-
-function TradeButton({ investments }: { investments: ClientInvestment[] }) {
-    const router = useRouter();
-
-    if (investments.length === 0) {
-        return null;
-    }
-
-    if (investments.length === 1) {
-        return (
-            <Button className="w-full h-14 text-base flex-grow" onClick={() => router.push(`/dashboard/investments/trade?symbol=${investments[0].symbol}`)}>
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                Trade
-            </Button>
-        )
-    }
-
-    return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                 <Button className="w-full h-14 text-base flex-grow">
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    Trade
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="center" className="w-80 mb-2">
-                {investments.map(inv => (
-                    <DropdownMenuItem key={inv.id} onSelect={() => router.push(`/dashboard/investments/trade?symbol=${inv.symbol}`)}>
-                        {inv.symbol} - {inv.name}
-                    </DropdownMenuItem>
-                ))}
-            </DropdownMenuContent>
-        </DropdownMenu>
-    )
-}
 
 export default function InvestmentsPage() {
   const { user, isPro } = useAuth();
+  const router = useRouter();
   const [investments, setInvestments] = useState<ClientInvestment[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [account, setAccount] = useState<AlpacaAccount | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [deletingInvestment, setDeletingInvestment] = useState<ClientInvestment | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const { toast } = useToast();
 
   const fetchData = useCallback(async () => {
-    if (!user) return;
+    if (!user || !isPro) {
+      setLoading(false);
+      return;
+    };
     setLoading(true);
     setError(null);
     try {
-      const [dbInvestments, dbAccounts] = await Promise.all([
-        getInvestments() as Promise<Investment[]>,
-        getAccounts() as Promise<Account[]>
-      ]);
-
-      setAccounts(dbAccounts);
-      
-      if (dbInvestments.length === 0) {
-        setInvestments([]);
-        setLoading(false);
-        return;
+      const result = await getPortfolio();
+      if (result.error || !result.data) {
+        throw new Error(result.error || "Could not load portfolio data.");
       }
-
-      const stockData = await getStockData(dbInvestments.map(inv => inv.symbol));
       
-      const clientInvestments = dbInvestments.map(inv => {
-        const data = stockData.find(d => d.symbol === inv.symbol);
-        const currentPrice = data?.price || inv.purchasePrice;
-        const currentValue = currentPrice * inv.quantity;
-        const totalCost = inv.purchasePrice * inv.quantity;
-        const gainLoss = currentValue - totalCost;
-        const gainLossPercentage = totalCost > 0 ? (gainLoss / totalCost) * 100 : 0;
-
-        return {
-          ...inv,
-          id: inv.id!,
-          name: data?.name || inv.symbol,
-          currentPrice,
-          currentValue,
-          gainLoss,
-          gainLossPercentage,
-          logoUrl: data?.logo,
-          createdAt: inv.createdAt.toDate(),
-        };
-      });
-
-      setInvestments(clientInvestments);
+      const { portfolio: fetchedPortfolio, account: fetchedAccount } = result.data;
+      
+      setInvestments(fetchedPortfolio || []);
+      setAccount(fetchedAccount || null);
 
     } catch (e: any) {
-      console.error("Error fetching investments:", e);
-       setError("Could not fetch real-time stock data. Prices may not be current. Please check your API key in .env");
+      console.error("Error fetching portfolio:", e);
+       setError("This feature is temporarily unavailable due to issues with the brokerage API connection. The team has been notified.");
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, isPro]);
 
   useEffect(() => {
     fetchData();
@@ -149,53 +68,6 @@ export default function InvestmentsPage() {
     );
   }, [investments, searchTerm]);
 
-
-  const handleAddInvestment = async (investment: Omit<Investment, "id" | "createdAt">, accountId?: string) => {
-    const cost = investment.quantity * investment.purchasePrice;
-
-    if (accountId) {
-        const sourceAccount = accounts.find(acc => acc.id === accountId);
-        if (!sourceAccount) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Selected account not found.'});
-            throw new Error('Selected account not found');
-        }
-        if ((sourceAccount.balance || 0) < cost) {
-            toast({ variant: 'destructive', title: 'Insufficient Funds', description: `Not enough funds in ${sourceAccount.name}.`});
-            throw new Error('Insufficient Funds');
-        }
-        // Deduct from account balance
-        await updateAccount(accountId, { balance: (sourceAccount.balance || 0) - cost });
-    }
-    
-    // 1. Add the holding
-    await addInvestment(investment);
-
-    // 2. Add a corresponding transaction
-    await addTransaction({
-        description: `Buy ${investment.quantity} shares of ${investment.symbol}`,
-        amount: -cost,
-        category: "Investments",
-        date: new Date().toISOString().split('T')[0],
-        source: accountId || 'manual',
-    });
-
-    toast({
-      title: "Investment Added",
-      description: `${investment.quantity} shares of ${investment.symbol.toUpperCase()} added.`,
-    });
-    fetchData();
-  };
-
-  const handleDeleteInvestment = async () => {
-    if (!deletingInvestment) return;
-    await deleteInvestment(deletingInvestment.id);
-    setDeletingInvestment(null);
-    toast({
-        title: "Holding Sold",
-        description: `All shares of ${deletingInvestment.symbol} have been removed from your portfolio.`,
-    });
-    fetchData();
-  };
 
   if (!isPro) {
     return (
@@ -210,9 +82,9 @@ export default function InvestmentsPage() {
                     </CardHeader>
                     <CardContent>
                         <p className="text-muted-foreground mb-4">
-                        This is a Pro feature. Upgrade your plan to track your stock portfolio, analyze performance, and more.
+                        This is a Pro feature. Connect to a brokerage, track your stock portfolio, analyze performance, and execute trades.
                         </p>
-                        <Button>Upgrade to Pro</Button>
+                        <Button onClick={() => router.push('/dashboard/billing')}>Upgrade to Pro</Button>
                     </CardContent>
                 </Card>
             </div>
@@ -220,6 +92,13 @@ export default function InvestmentsPage() {
     )
   }
 
+  if (loading) {
+    return (
+        <main className="flex-1 p-4 md:p-6 lg:p-8 flex items-center justify-center">
+            <Loader className="h-12 w-12 animate-spin text-primary" />
+        </main>
+    )
+  }
 
   return (
     <>
@@ -231,44 +110,35 @@ export default function InvestmentsPage() {
                         <h2 className="text-3xl font-bold tracking-tight font-headline">
                         Investment Portfolio
                         </h2>
-                        <p className="text-muted-foreground">Track and manage your stock holdings.</p>
-                    </div>
-                    <div className="flex gap-2">
-                        <Button onClick={() => setIsAddDialogOpen(true)} size="sm" variant="outline">
-                            <Plus className="mr-2 h-4 w-4" />
-                            New Holding
-                        </Button>
+                        <p className="text-muted-foreground">Track and manage your stock holdings via Alpaca.</p>
                     </div>
                 </div>
 
                 {error && (
                     <Alert variant="destructive" className="mb-6">
-                        <FileText className="h-4 w-4" />
-                        <AlertTitle>Data Fetching Error</AlertTitle>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Feature Unavailable</AlertTitle>
                         <AlertDescriptionComponent>
-                            {error}. You can get a free key from your Alpha Vantage dashboard.
+                            {error}
                         </AlertDescriptionComponent>
                     </Alert>
                 )}
 
-                {loading ? (
-                    <div className="flex justify-center items-center h-96">
-                        <Loader className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                ) : investments.length === 0 ? (
-                    <div className="text-center py-20">
-                        <h3 className="text-lg font-semibold">Your Portfolio is Empty</h3>
-                        <p className="text-muted-foreground mt-2">
-                            Add your first holding to start tracking your investments.
-                        </p>
-                        <Button onClick={() => setIsAddDialogOpen(true)} className="mt-6">
-                            <Plus className="mr-2" />
-                            Add Investment
-                        </Button>
-                    </div>
-                ) : (
+                {!error && (
+                  investments.length === 0 && !loading ? (
+                      <div className="text-center py-20">
+                          <h3 className="text-lg font-semibold">Your Portfolio is Empty</h3>
+                          <p className="text-muted-foreground mt-2">
+                              Buy your first stock to start tracking your investments.
+                          </p>
+                          <Button onClick={() => router.push(`/dashboard/investments/trade?action=buy`)} className="mt-6">
+                              <Plus className="mr-2" />
+                              Make a Trade
+                          </Button>
+                      </div>
+                  ) : (
                     <div className="space-y-6">
-                        <PortfolioSummary investments={investments} />
+                        <PortfolioSummary investments={investments} account={account} />
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <div className="lg:col-span-2">
                                 <Card>
@@ -298,7 +168,6 @@ export default function InvestmentsPage() {
                                         </div>
                                         <InvestmentHoldingsTable 
                                             investments={filteredInvestments}
-                                            onDelete={setDeletingInvestment}
                                         />
                                     </CardContent>
                                 </Card>
@@ -308,39 +177,20 @@ export default function InvestmentsPage() {
                             </div>
                         </div>
                     </div>
+                  )
                 )}
             </div>
         </div>
 
-        {investments.length > 0 && (
+        {!loading && !error && (
             <div className="sticky bottom-0 mt-auto bg-background/80 backdrop-blur-sm border-t p-4">
-                <TradeButton investments={investments} />
+                 <Button className="w-full h-14 text-base flex-grow max-w-lg mx-auto" onClick={() => router.push(`/dashboard/investments/trade`)}>
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    Trade
+                </Button>
             </div>
         )}
-
-       <AddInvestmentDialog
-        isOpen={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        onAddInvestment={handleAddInvestment}
-        accounts={accounts}
-      />
     </main>
-    <AlertDialog open={!!deletingInvestment} onOpenChange={() => setDeletingInvestment(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your holding for {deletingInvestment?.symbol}.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteInvestment} className="bg-destructive hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

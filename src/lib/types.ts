@@ -2,6 +2,7 @@
 // src/lib/types.ts
 import type { ChartConfig } from "@/components/ui/chart";
 import type { LucideIcon } from "lucide-react";
+import type { Position, Account, Bar, Order, News, Asset } from '@alpacahq/alpaca-trade-api/dist/resources/entities';
 
 export interface UserProfile {
   currency?: string;
@@ -27,6 +28,7 @@ export interface Transaction {
   date: string; // ISO string
   category: string;
   projectId?: string;
+  goalId?: string;
   createdAt: any; // Firestore timestamp
   source?: 'manual' | string; // Source can be manual or an account ID
 }
@@ -138,32 +140,34 @@ export interface Category {
   createdAt: any; // Firestore timestamp
 }
 
-export interface Investment {
-  id?: string;
-  symbol: string;
-  quantity: number;
-  purchasePrice: number;
-  createdAt: any; // Firestore timestamp
-}
-
-export interface ClientInvestment extends Omit<Investment, 'createdAt'> {
-  id: string;
-  name: string;
-  currentPrice: number;
-  currentValue: number;
-  gainLoss: number;
-  gainLossPercentage: number;
+// Alpaca & Investment Types
+export type ClientInvestment = Position & {
   logoUrl?: string;
-  createdAt: Date;
+  unrealized_pl: number;
+  unrealized_plpc: number;
+  market_value: number;
+  cost_basis: number;
+  qty: number;
+}
+export type AlpacaAccount = Account;
+
+export interface StockDetails {
+    asset: Asset;
+    bars: Bar[];
+    news: News[];
 }
 
-export interface NewsArticle {
-    title: string;
-    url: string;
-    banner_image?: string;
-    source: string;
-    time_published: string;
+export interface OrderParams {
+    symbol: string;
+    qty: number;
+    side: 'buy' | 'sell';
+    type: 'market' | 'limit' | 'stop' | 'stop_limit';
+    time_in_force: 'day' | 'gtc' | 'opg' | 'cls' | 'ioc' | 'fok';
+    limit_price?: number;
+    stop_price?: number;
 }
+export type AlpacaOrder = Order;
+
 
 
 export const spendingChartConfig = {

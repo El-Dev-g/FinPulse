@@ -3,63 +3,68 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, Wallet, ArrowRight } from "lucide-react";
+import { Loader } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Alert, AlertTitle, AlertDescription } from "../ui/alert";
+import { Alert, AlertDescription } from "../ui/alert";
 import { useAuth } from "@/hooks/use-auth";
-import type { Account, Investment } from "@/lib/types";
+import type { AlpacaAccount, ClientInvestment } from "@/lib/types";
 
 interface InvestmentTradeFormProps {
-  holding: Investment | null;
-  accounts: Account[];
+  holding: ClientInvestment | null;
+  account: AlpacaAccount | null;
   currentPrice: number;
-  onTrade: (action: 'buy' | 'sell', quantity: number, price: number, accountId?: string) => Promise<void>;
+  onTrade: (action: 'buy' | 'sell', quantity: number, price: number, type: 'market' | 'limit', time_in_force: 'day' | 'gtc') => Promise<void>;
   defaultAction?: 'buy' | 'sell';
 }
 
 function TradeForm({
     action,
     holding,
-    accounts,
+    account,
     currentPrice,
     onSubmit
 }: {
     action: 'buy' | 'sell';
-    holding: Investment | null;
-    accounts: Account[];
+    holding: ClientInvestment | null;
+    account: AlpacaAccount | null;
     currentPrice: number;
-    onSubmit: (quantity: number, price: number, accountId?: string) => Promise<void>;
+    onSubmit: (quantity: number, price: number, type: 'market' | 'limit', time_in_force: 'day' | 'gtc') => Promise<void>;
 }) {
+    const [orderType, setOrderType] = useState<'market' | 'limit'>('market');
     const [quantity, setQuantity] = useState("");
-    const [price, setPrice] = useState("");
-    const [accountId, setAccountId] = useState<string | undefined>();
+    const [limitPrice, setLimitPrice] = useState("");
+    const [timeInForce, setTimeInForce] = useState<'day' | 'gtc'>('day');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const { formatCurrency } = useAuth();
     
     useEffect(() => {
-        setPrice(String(currentPrice.toFixed(2)));
+        setLimitPrice(String(currentPrice.toFixed(2)));
     }, [currentPrice]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
         const numQuantity = parseFloat(quantity);
-        const numPrice = parseFloat(price);
 
-        if (isNaN(numQuantity) || numQuantity <= 0 || isNaN(numPrice) || numPrice <= 0) {
-            setError("Please enter valid numbers for quantity and price.");
+        if (isNaN(numQuantity) || numQuantity <= 0) {
+            setError("Please enter a valid quantity.");
+            return;
+        }
+
+        const numLimitPrice = orderType === 'limit' ? parseFloat(limitPrice) : 0;
+        if (orderType === 'limit' && (isNaN(numLimitPrice) || numLimitPrice <= 0)) {
+            setError("Please enter a valid limit price.");
             return;
         }
 
         setLoading(true);
         try {
-            await onSubmit(numQuantity, numPrice, accountId === 'none' ? undefined : accountId);
+            await onSubmit(numQuantity, numLimitPrice, orderType, timeInForce);
             // Parent component will handle success and navigation
         } catch (err: any) {
             setError(err.message || `Failed to ${action} shares.`);
@@ -67,18 +72,33 @@ function TradeForm({
         }
     };
     
-    const maxSellQuantity = holding?.quantity || 0;
-    const accountLabel = action === 'buy' ? 'Source Account (Optional)' : 'Destination Account';
-    const accountPlaceholder = action === 'buy' ? 'Select a source account...' : 'Select a destination account...';
+    const maxSellQuantity = holding?.qty || 0;
+    const estimatedCost = (parseFloat(quantity) || 0) * (orderType === 'limit' ? (parseFloat(limitPrice) || 0) : currentPrice);
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            {action === 'sell' && (
-                <Alert>
-                    <AlertTitle>Available to Sell</AlertTitle>
-                    <AlertDescription>You currently hold {maxSellQuantity} shares.</AlertDescription>
-                </Alert>
-            )}
+             <div className="grid grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                    <Label>Order Type</Label>
+                    <Select value={orderType} onValueChange={(v) => setOrderType(v as 'market' | 'limit')}>
+                        <SelectTrigger><SelectValue/></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="market">Market</SelectItem>
+                            <SelectItem value="limit">Limit</SelectItem>
+                        </SelectContent>
+                    </Select>
+                 </div>
+                  <div className="space-y-2">
+                    <Label>Time in Force</Label>
+                    <Select value={timeInForce} onValueChange={(v) => setTimeInForce(v as 'day' | 'gtc')}>
+                        <SelectTrigger><SelectValue/></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="day">Day</SelectItem>
+                            <SelectItem value="gtc">Good 'til Canceled</SelectItem>
+                        </SelectContent>
+                    </Select>
+                 </div>
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -90,60 +110,48 @@ function TradeForm({
                         onChange={(e) => setQuantity(e.target.value)} 
                         placeholder="0" 
                         max={action === 'sell' ? maxSellQuantity : undefined}
+                        step="1"
                     />
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor={`${action}-price`}>Price per Share ($)</Label>
-                    <Input id={`${action}-price`} type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" />
-                </div>
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor={`${action}-account`}>{accountLabel}</Label>
-                {accounts.length > 0 ? (
-                    <Select value={accountId} onValueChange={setAccountId} required={action === 'sell'}>
-                        <SelectTrigger id={`${action}-account`}>
-                            <SelectValue placeholder={accountPlaceholder} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {action === 'buy' && <SelectItem value="none">Manual Entry (no account)</SelectItem>}
-                            {accounts.map(acc => (
-                                <SelectItem key={acc.id} value={acc.id}>
-                                    <div className="flex justify-between w-full">
-                                        <span>{acc.name} (...{acc.last4})</span>
-                                        <span className="text-muted-foreground ml-2">{formatCurrency(acc.balance || 0)}</span>
-                                    </div>
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                ) : (
-                    <Alert>
-                        <Wallet className="h-4 w-4" />
-                        <AlertTitle>No Bank Account Linked</AlertTitle>
-                        <AlertDescription>Connect an account to move funds.</AlertDescription>
-                        <Button asChild variant="link" className="p-0 h-auto mt-2">
-                            <Link href="/dashboard/link-account">
-                                Link Account Now <ArrowRight className="ml-2" />
-                            </Link>
-                        </Button>
-                    </Alert>
+                {orderType === 'limit' && (
+                    <div className="space-y-2">
+                        <Label htmlFor={`${action}-limit-price`}>Limit Price ($)</Label>
+                        <Input id={`${action}-limit-price`} type="number" value={limitPrice} onChange={(e) => setLimitPrice(e.target.value)} placeholder="0.00" />
+                    </div>
                 )}
             </div>
+            
+            {action === 'sell' && (
+                <Alert variant="default">
+                    <AlertDescription>You have {maxSellQuantity} shares available to sell.</AlertDescription>
+                </Alert>
+            )}
 
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            <Alert variant="default">
+                <AlertDescription className="flex justify-between items-center">
+                    <span>{action === 'buy' ? 'Estimated Cost:' : 'Estimated Proceeds:'}</span>
+                    <span className="font-bold">{formatCurrency(estimatedCost)}</span>
+                </AlertDescription>
+                <AlertDescription className="flex justify-between items-center mt-1">
+                    <span>Buying Power:</span>
+                    <span className="font-bold">{formatCurrency(parseFloat(account?.buying_power || '0'))}</span>
+                </AlertDescription>
+            </Alert>
+
+
+            {error && <p className="text-sm text-destructive mt-4">{error}</p>}
 
             <div className="flex justify-end pt-4">
                 <Button type="submit" disabled={loading} className="w-full capitalize">
                     {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-                    {action} Shares
+                    Submit {action} Order
                 </Button>
             </div>
         </form>
     );
 }
 
-export function InvestmentTradeForm({ holding, accounts, currentPrice, onTrade, defaultAction = 'buy' }: InvestmentTradeFormProps) {
+export function InvestmentTradeForm({ holding, account, currentPrice, onTrade, defaultAction = 'buy' }: InvestmentTradeFormProps) {
     const [activeTab, setActiveTab] = useState(defaultAction);
 
     useEffect(() => {
@@ -151,27 +159,27 @@ export function InvestmentTradeForm({ holding, accounts, currentPrice, onTrade, 
     }, [defaultAction]);
 
     return (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'buy' | 'sell')} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="buy">Buy</TabsTrigger>
                 <TabsTrigger value="sell" disabled={!holding}>Sell</TabsTrigger>
             </TabsList>
-            <TabsContent value="buy">
+            <TabsContent value="buy" className="pt-4">
                 <TradeForm
                     action="buy"
                     holding={holding}
-                    accounts={accounts}
+                    account={account}
                     currentPrice={currentPrice}
-                    onSubmit={(quantity, price, accountId) => onTrade('buy', quantity, price, accountId)}
+                    onSubmit={(quantity, price, type, tif) => onTrade('buy', quantity, price, type, tif)}
                 />
             </TabsContent>
-            <TabsContent value="sell">
+            <TabsContent value="sell" className="pt-4">
                 <TradeForm
                     action="sell"
                     holding={holding}
-                    accounts={accounts}
+                    account={account}
                     currentPrice={currentPrice}
-                    onSubmit={(quantity, price, accountId) => onTrade('sell', quantity, price, accountId)}
+                    onSubmit={(quantity, price, type, tif) => onTrade('sell', quantity, price, type, tif)}
                 />
             </TabsContent>
         </Tabs>
