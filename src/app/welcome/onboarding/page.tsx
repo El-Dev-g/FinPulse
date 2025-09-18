@@ -50,10 +50,10 @@ export default function OnboardingPage() {
     });
   }, [api]);
   
-  const handleAddGoal = async (newGoal: Omit<Goal, "id" | "current" | "createdAt">) => {
+  const handleAddGoal = async (newGoal: Omit<Goal, "id" | "current" | "createdAt" | "status">, currentAmount = 0) => {
     setIsSubmitting(true);
     try {
-      await addGoal({ ...newGoal, current: 0 });
+      await addGoal({ ...newGoal, current: currentAmount });
       api?.scrollNext();
     } catch(e) {
       console.error("Failed to add goal", e);
