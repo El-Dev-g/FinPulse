@@ -50,15 +50,16 @@ export default function OnboardingPage() {
     });
   }, [api]);
   
-  const handleAddGoal = async (newGoal: Omit<Goal, "id" | "current" | "createdAt" | "status">, currentAmount = 0) => {
+  const handleAddGoal = async (newGoal: Omit<Goal, "id" | "createdAt" | "status">, linkedTaskIds: string[] = []) => {
     setIsSubmitting(true);
     try {
-      await addGoal({ ...newGoal, current: currentAmount });
+      await addGoal({ ...newGoal, status: "active" }, linkedTaskIds);
       api?.scrollNext();
     } catch(e) {
       console.error("Failed to add goal", e);
     } finally {
       setIsSubmitting(false);
+      setIsAddGoalDialogOpen(false);
     }
   };
   
@@ -71,6 +72,7 @@ export default function OnboardingPage() {
       console.error("Failed to add budget", e);
     } finally {
       setIsSubmitting(false);
+      setIsAddBudgetDialogOpen(false);
     }
   };
 
