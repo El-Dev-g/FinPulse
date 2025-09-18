@@ -113,10 +113,18 @@ const placeAlpacaOrderTool = ai.defineTool(
 
 // Exported functions that call the flows
 export async function getMarketData(request: MarketDataRequest): Promise<MarketDataResponse> {
+  // This is a temporary measure to prevent the app from crashing.
+  // The Alpaca package installation is failing.
+  if (getAlpacaClient() === null) {
+      throw new Error("Alpaca client is temporarily unavailable due to package installation issues.");
+  }
   return marketDataFlow(request);
 }
 
 export async function placeOrder(order: OrderParams): Promise<OrderResponse> {
+  if (getAlpacaClient() === null) {
+      throw new Error("Alpaca client is temporarily unavailable due to package installation issues.");
+  }
   return placeOrderFlow(order);
 }
 
