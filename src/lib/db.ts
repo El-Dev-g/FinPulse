@@ -281,12 +281,7 @@ export const updateProject = (id: string, project: Partial<Project>) => updateDa
 export const deleteProject = (id: string) => deleteDataItem('projects', id);
 
 // --- Linked Accounts ---
-export const addAccount = (account: Account) => {
-    // The account object comes with an 'id'. We need to use that as the document ID.
-    const { id, ...data } = account;
-    const dataWithTimestamp = { ...data, createdAt: new Date() };
-    return setDataItem('accounts', id, dataWithTimestamp, true);
-};
+export const addAccount = (account: Omit<Account, 'id'>) => addDataItem('accounts', account);
 export const getAccounts = () => getData<Account>('accounts');
 export const updateAccount = (id: string, account: Partial<Account>) => updateDataItem('accounts', id, account);
 export const deleteAccount = (id: string) => deleteDataItem('accounts', id);

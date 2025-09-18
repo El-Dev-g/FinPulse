@@ -28,14 +28,13 @@ function SelectBankPageContent() {
     const searchParams = useSearchParams();
     const continent = searchParams.get('continent') as Continents | null;
     const [bankSearchTerm, setBankSearchTerm] = useState("");
-    const [loading, setLoading] = useState(false);
 
-    const handleConnectBank = (bankName: string) => {
-        setLoading(true);
-        // Simulate API call and redirect
-        setTimeout(() => {
-            router.push(`/dashboard/link-account?success=true&bank=${encodeURIComponent(bankName)}`);
-        }, 1500);
+    const handleConnectBank = (bank: Bank) => {
+        const params = new URLSearchParams();
+        params.set('continent', continent || '');
+        params.set('bank', bank.name);
+        params.set('logo', bank.logo);
+        router.push(`/dashboard/link-account/connect?${params.toString()}`);
     }
     
     const filteredBanks = useMemo(() => {
@@ -95,13 +94,8 @@ function SelectBankPageContent() {
             </div>
             <ScrollArea className="h-[60vh] mt-4 rounded-md border">
                 <div className="p-4">
-                    {loading ? (
-                        <div className="flex items-center justify-center h-full">
-                            <Loader className="animate-spin" />
-                            <p className="ml-2">Connecting...</p>
-                        </div>
-                    ) : filteredBanks.length > 0 ? filteredBanks.map((bank, index) => (
-                        <button key={index} onClick={() => handleConnectBank(bank.name)} className="w-full flex items-center p-3 gap-4 rounded-md hover:bg-muted">
+                    {filteredBanks.length > 0 ? filteredBanks.map((bank, index) => (
+                        <button key={index} onClick={() => handleConnectBank(bank)} className="w-full flex items-center p-3 gap-4 rounded-md hover:bg-muted">
                             <Image src={bank.logo} alt={bank.name} width={40} height={40} className="rounded-full" data-ai-hint="bank logo" />
                             <span>{bank.name}</span>
                         </button>
