@@ -1,0 +1,93 @@
+
+{
+  "Africa": [
+    {
+      "name": "Ghana",
+      "banks": [
+        { "name": "GCB Bank", "logo": "https://picsum.photos/seed/gcb/40/40" },
+        { "name": "Ecobank Ghana", "logo": "https://picsum.photos/seed/ecobank_gh/40/40" },
+        { "name": "Fidelity Bank Ghana", "logo": "https://picsum.photos/seed/fidelity_gh/40/40" },
+        { "name": "Absa Bank Ghana", "logo": "https://picsum.photos/seed/absa_gh/40/40" },
+        { "name": "Standard Chartered Ghana", "logo": "https://picsum.photos/seed/sc_gh/40/40" }
+      ]
+    },
+    {
+      "name": "Nigeria",
+      "banks": [
+        { "name": "Access Bank", "logo": "https://picsum.photos/seed/access/40/40" },
+        { "name": "Guaranty Trust Bank", "logo": "https://picsum.photos/seed/gtb/40/40" },
+        { "name": "First Bank of Nigeria", "logo": "https://picsum.photos/seed/firstbank/40/40" },
+        { "name": "United Bank for Africa", "logo": "https://picsum.photos/seed/uba/40/40" },
+        { "name": "Zenith Bank", "logo": "https://picsum.photos/seed/zenith/40/40" }
+      ]
+    },
+    {
+      "name": "Togo",
+      "banks": [
+        { "name": "Ecobank Togo", "logo": "https://picsum.photos/seed/ecobank_tg/40/40" },
+        { "name": "Banque Togolaise pour le Commerce et l'Industrie", "logo": "https://picsum.photos/seed/btci/40/40" },
+        { "name": "Orabank Togo", "logo": "https://picsum.photos/seed/orabank/40/40" }
+      ]
+    }
+  ],
+  "Asia": [
+    {
+      "name": "Japan",
+      "banks": [
+        { "name": "MUFG Bank", "logo": "https://picsum.photos/seed/mufg/40/40" },
+        { "name": "SMBC", "logo": "https://picsum.photos/seed/smbc/40/40" }
+      ]
+    },
+    {
+        "name": "India",
+        "banks": [
+            { "name": "State Bank of India", "logo": "https://picsum.photos/seed/sbi/40/40" },
+            { "name": "HDFC Bank", "logo": "https://picsum.photos/seed/hdfc/40/40" }
+        ]
+    }
+  ],
+  "Europe": [
+    {
+      "name": "United Kingdom",
+      "banks": [
+        { "name": "Monzo", "logo": "https://picsum.photos/seed/monzo/40/40" },
+        { "name": "Revolut", "logo": "https://picsum.photos/seed/revolut/40/40" },
+        { "name": "Barclays", "logo": "https://picsum.photos/seed/barclays/40/40" }
+      ]
+    },
+    {
+      "name": "Germany",
+      "banks": [
+        { "name": "Deutsche Bank", "logo": "https://picsum.photos/seed/deutsche/40/40" },
+        { "name": "N26", "logo": "https://picsum.photos/seed/n26/40/40" }
+      ]
+    }
+  ],
+  "North America": [
+    {
+      "name": "United States",
+      "banks": [
+        { "name": "Chase", "logo": "https://picsum.photos/seed/chase/40/40" },
+        { "name": "Bank of America", "logo": "https://picsum.photos/seed/boa/40/40" },
+        { "name": "Wells Fargo", "logo": "https://picsum.photos/seed/wells/40/40" },
+        { "name": "American Express", "logo": "https://picsum.photos/seed/amex/40/40" }
+      ]
+    },
+    {
+      "name": "Canada",
+      "banks": [
+        { "name": "RBC", "logo": "https://picsum.photos/seed/rbc/40/40" },
+        { "name": "TD Bank", "logo": "https://picsum.photos/seed/td/40/40" }
+      ]
+    }
+  ],
+  "South America": [
+    {
+      "name": "Brazil",
+      "banks": [
+        { "name": "Nubank", "logo": "https://picsum.photos/seed/nubank/40/40" },
+        { "name": "Banco do Brasil", "logo": "https://picsum.photos/seed/bdb/40/40" }
+      ]
+    }
+  ]
+}

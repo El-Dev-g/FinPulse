@@ -2,7 +2,7 @@
 // src/app/dashboard/link-account/page.tsx
 "use client";
 
-import React, { useState, useEffect, Suspense, useCallback } from 'react';
+import React, { useState, useEffect, Suspense, useCallback, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Landmark, Loader, CheckCircle, MoreVertical, Info, ArrowRight, Wallet, Trash2, Copy, Check, ChevronDown } from 'lucide-react';
+import { Landmark, Loader, CheckCircle, MoreVertical, Wallet, Trash2, Copy, Check, ChevronDown, Search, X } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import type { Account } from '@/lib/types';
 import {
@@ -42,20 +42,30 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import Link from 'next/link';
 import { addAccount, getAccounts, deleteAccount } from '@/lib/db';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import Image from 'next/image';
+import MOCK_BANKS from '@/lib/mock-banks.json';
 
-const continents = [
-  { name: 'Africa', path: '/africa' },
-  { name: 'Asia', path: '/asia' },
-  { name: 'Europe', path: '/europe' },
-  { name: 'North America', path: '/north-america' },
-  { name: 'South America', path: '/south-america' },
-];
+type Bank = {
+  name: string;
+  logo: string;
+};
+
+type Country = {
+  name: string;
+  banks: Bank[];
+};
+
+type Continents = "Africa" | "Asia" | "Europe" | "North America" | "South America";
+
+const continents: Continents[] = ["Africa", "Asia", "Europe", "North America", "South America"];
+
 
 function AccountDetailsRow({ label, value, onCopy }: { label: string; value: string, onCopy: () => void }) {
     const [copied, setCopied] = useState(false);
@@ -86,7 +96,8 @@ function LinkAccountPageContent() {
     const [connectedAccounts, setConnectedAccounts] = useState<Account[]>([]);
     const [newlyFetchedAccounts, setNewlyFetchedAccounts] = useState<Account[]>([]);
     const [isUnlinking, setIsUnlinking] = useState<Account | null>(null);
-    const [selectedContinent, setSelectedContinent] = useState<string>("");
+    const [selectedContinent, setSelectedContinent] = useState<Continents | "">("");
+    const [bankSearchTerm, setBankSearchTerm] = useState("");
 
     const { user, formatCurrency } = useAuth();
     const router = useRouter();
@@ -110,23 +121,35 @@ function LinkAccountPageContent() {
 
     useEffect(() => {
         const success = searchParams.get('success');
+        const bankName = searchParams.get('bank');
         const error = searchParams.get('error');
         
         async function handleSuccess() {
             setStep('connecting');
             // This is the mock data structure that we simulate fetching from a bank.
             const fetchedAccountsData: Account[] = [
-                { id: 'acc1', name: 'Monzo', bank: 'Monzo Bank', bankUserName: 'John Doe', last4: '1234', accountNumber: '**** **** **** 1234', type: 'Checking', balance: 2548.75, syncStatus: 'synced' },
-                { id: 'acc2', name: 'Revolut', bank: 'Revolut Ltd', bankUserName: 'John Doe', last4: '5678', accountNumber: '**** **** **** 5678', type: 'Savings', balance: 10500.00, syncStatus: 'synced' },
-                { id: 'acc3', name: 'AMEX', bank: 'American Express', bankUserName: 'John Doe', last4: '0005', accountNumber: '**** ****** *0005', type: 'Credit Card', balance: -450.23, syncStatus: 'pending' },
+                { id: `acc_mons${Date.now()}`, name: 'Monzo Current Account', bank: 'Monzo Bank', bankUserName: 'John Doe', last4: '1234', accountNumber: '**** **** **** 1234', type: 'Checking', balance: 2548.75, syncStatus: 'synced' },
+                { id: `acc_revo${Date.now()}`, name: 'Revolut Savings Vault', bank: 'Revolut Ltd', bankUserName: 'John Doe', last4: '5678', accountNumber: '**** **** **** 5678', type: 'Savings', balance: 10500.00, syncStatus: 'synced' },
             ];
-            
-            try {
-                // Save new accounts to the database. The `addAccount` function in db.ts
-                // expects the full Account object, including the `id`.
-                await Promise.all(fetchedAccountsData.map(acc => addAccount(acc)));
 
-                setNewlyFetchedAccounts(fetchedAccountsData);
+            const specificBankData: Account = {
+                id: `acc_${bankName?.toLowerCase()}${Date.now()}`,
+                name: `${bankName} Account`,
+                bank: bankName || 'Connected Bank',
+                bankUserName: 'John Doe',
+                last4: String(Math.floor(Math.random() * 9000) + 1000),
+                accountNumber: `**** **** **** ${String(Math.floor(Math.random() * 9000) + 1000)}`,
+                type: 'Checking',
+                balance: parseFloat((Math.random() * 8000 + 1000).toFixed(2)),
+                syncStatus: 'synced'
+            };
+            
+            const accountsToSave = bankName ? [specificBankData] : fetchedAccountsData;
+
+            try {
+                await Promise.all(accountsToSave.map(acc => addAccount(acc)));
+
+                setNewlyFetchedAccounts(accountsToSave);
                 fetchAccounts(); // Refetch all accounts from DB to ensure consistency
                 setStep('success');
             } catch (dbError) {
@@ -134,7 +157,6 @@ function LinkAccountPageContent() {
                 toast({ variant: 'destructive', title: 'Connection Failed', description: 'Could not save your new accounts. Please try again.' });
                 setStep('initial');
             } finally {
-                // Clean the URL
                 router.replace('/dashboard/link-account', { scroll: false });
             }
         }
@@ -166,16 +188,28 @@ function LinkAccountPageContent() {
         }
     }
 
-    const handleConnectAccount = () => {
-        if (!selectedContinent) {
-            toast({ variant: 'destructive', title: 'Please select a continent' });
-            return;
-        }
+    const handleConnectBank = (bankName: string) => {
         setLoading(true);
         // In a real app, you would navigate to a partner-specific URL
         // For this demo, we simulate a successful connection flow.
-        router.push('/dashboard/link-account?success=true');
+        router.push(`/dashboard/link-account?success=true&bank=${encodeURIComponent(bankName)}`);
     }
+    
+    const filteredBanks = useMemo(() => {
+        if (!selectedContinent) return [];
+        const continentData: Country[] = MOCK_BANKS[selectedContinent];
+        if (!continentData) return [];
+
+        const allBanks = continentData.flatMap(country => country.banks);
+
+        if (!bankSearchTerm) return allBanks;
+
+        return allBanks.filter(bank => 
+            bank.name.toLowerCase().includes(bankSearchTerm.toLowerCase())
+        );
+
+    }, [selectedContinent, bankSearchTerm]);
+
     
     if (step === 'connecting') {
         return (
@@ -194,7 +228,7 @@ function LinkAccountPageContent() {
                         <CheckCircle className="h-8 w-8 text-green-500" />
                         Connection Successful!
                     </CardTitle>
-                    <CardDescription>We've successfully linked your accounts. You can view and manage them below.</CardDescription>
+                    <CardDescription>We've successfully linked your new account(s). You can view and manage them below.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -217,9 +251,7 @@ function LinkAccountPageContent() {
                     </Table>
                 </CardContent>
                 <CardFooter>
-                     <Button asChild className="w-full" onClick={() => setStep('initial')}>
-                        <p>Done</p>
-                    </Button>
+                     <Button className="w-full" onClick={() => setStep('initial')}>Done</Button>
                 </CardFooter>
             </Card>
         )
@@ -298,25 +330,56 @@ function LinkAccountPageContent() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                          <div className="space-y-2">
-                            <Label htmlFor="continent-select">Select Continent</Label>
-                             <Select value={selectedContinent} onValueChange={setSelectedContinent}>
+                            <Label htmlFor="continent-select">1. Select your continent</Label>
+                             <Select value={selectedContinent} onValueChange={(value) => setSelectedContinent(value as Continents)}>
                                 <SelectTrigger id="continent-select">
                                     <SelectValue placeholder="Choose your continent..." />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {continents.map((c) => (
-                                        <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
+                                        <SelectItem key={c} value={c}>{c}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
+                        {selectedContinent && (
+                            <div className="space-y-2 pt-4">
+                                <Label htmlFor="bank-search">2. Find your bank</Label>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input 
+                                        id="bank-search"
+                                        placeholder="Search for a bank..."
+                                        className="pl-9"
+                                        value={bankSearchTerm}
+                                        onChange={(e) => setBankSearchTerm(e.target.value)}
+                                    />
+                                     {bankSearchTerm && (
+                                        <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                                        onClick={() => setBankSearchTerm('')}
+                                        >
+                                        <X className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                </div>
+                                <ScrollArea className="h-72 mt-2 rounded-md border">
+                                    <div className="p-4">
+                                        {filteredBanks.length > 0 ? filteredBanks.map((bank, index) => (
+                                            <button key={index} onClick={() => handleConnectBank(bank.name)} className="w-full flex items-center p-3 gap-4 rounded-md hover:bg-muted">
+                                                <Image src={bank.logo} alt={bank.name} width={40} height={40} className="rounded-full" data-ai-hint="bank logo" />
+                                                <span>{bank.name}</span>
+                                            </button>
+                                        )) : (
+                                            <p className="text-center text-sm text-muted-foreground py-10">No banks found for your search.</p>
+                                        )}
+                                    </div>
+                                </ScrollArea>
+                            </div>
+                        )}
                     </CardContent>
-                    <CardFooter>
-                         <Button onClick={handleConnectAccount} disabled={loading || !selectedContinent}>
-                            {loading ? <Loader className="mr-2 animate-spin" /> : <Landmark className="mr-2" />}
-                            Connect New Account
-                        </Button>
-                    </CardFooter>
                 </Card>
             </div>
             <AlertDialog open={!!isUnlinking} onOpenChange={() => setIsUnlinking(null)}>
