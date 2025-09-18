@@ -41,14 +41,15 @@ export default function InvestmentsPage() {
     try {
       const result = await getPortfolio();
       if (result.error || !result.data) {
-        throw new Error(result.error || "Could not load portfolio data.");
+        // Set the error state instead of throwing an error
+        setError(result.error || "Could not load portfolio data.");
+        setInvestments([]);
+        setAccount(null);
+      } else {
+        const { portfolio: fetchedPortfolio, account: fetchedAccount } = result.data;
+        setInvestments(fetchedPortfolio || []);
+        setAccount(fetchedAccount || null);
       }
-      
-      const { portfolio: fetchedPortfolio, account: fetchedAccount } = result.data;
-      
-      setInvestments(fetchedPortfolio || []);
-      setAccount(fetchedAccount || null);
-
     } catch (e: any) {
       console.error("Error fetching portfolio:", e);
        setError("This feature is temporarily unavailable due to issues with the brokerage API connection. The team has been notified.");
