@@ -290,7 +290,7 @@ export default function BillingPage() {
         )}
 
         <Card>
-          <CardHeader className="md:flex-row md:items-center md:justify-between">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <CardTitle>Your Current Plan</CardTitle>
               <CardDescription>You are currently on the {isPro ? "Pro" : "Free"} Plan.</CardDescription>

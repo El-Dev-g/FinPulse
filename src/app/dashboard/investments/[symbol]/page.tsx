@@ -58,7 +58,7 @@ type StockDetails = {
 
 function FinancialsStat({ label, value }: { label: string, value: string | number}) {
     return (
-        <div className="flex justify-between py-4 border-b px-4 md:px-6 lg:px-8">
+        <div className="flex justify-between py-4 border-b px-4 sm:px-6">
             <span className="text-muted-foreground">{label}</span>
             <span className="font-medium">{value}</span>
         </div>
@@ -175,13 +175,13 @@ export default function StockDetailPage() {
                     </div>
 
                     <Tabs defaultValue="about" className="w-full">
-                        <TabsList className="w-full justify-start border-b gap-4 px-4 md:px-6 lg:px-8" variant="underline">
+                        <TabsList className="w-full justify-start border-b gap-4 px-4 sm:px-6" variant="underline">
                             <TabsTrigger value="about">About</TabsTrigger>
                             <TabsTrigger value="financials">Financials</TabsTrigger>
                             <TabsTrigger value="news">News</TabsTrigger>
                         </TabsList>
                         
-                        <div className="px-4 md:px-6 lg:px-8 mt-6">
+                        <div className="px-4 sm:px-6 mt-6">
                             <div className="flex items-start gap-4">
                                 <Avatar className="h-12 w-12">
                                     <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
@@ -202,34 +202,32 @@ export default function StockDetailPage() {
                             </div>
                         </div>
 
-                        <TabsContent value="about" className="w-full mt-6 px-4 md:px-6 lg:px-8">
-                             <div className="space-y-6">
-                                 <StockPriceChart data={stockData.history} isPositive={isPositiveChange}/>
-                                <div className="pt-6">
-                                    <RecurringPurchaseCard />
-                                </div>
-                                {stockData.industry && (
-                                     <div className="space-y-2">
-                                        <h3 className="text-lg font-semibold font-headline">Featured In</h3>
-                                        <Button variant="outline" className="bg-primary/10 dark:bg-primary/20 border-primary/20 dark:border-primary/30 text-primary dark:text-primary-foreground/80 hover:bg-primary/20 dark:hover:bg-primary/30">
-                                            <Zap className="mr-2 h-4 w-4"/> {stockData.industry}
-                                        </Button>
-                                    </div>
-                                )}
-                                <div className="space-y-4">
-                                    <h3 className="text-lg font-semibold font-headline">About {stockData.symbol}</h3>
-                                    <p className="text-muted-foreground text-sm">{stockData.description}</p>
-                                </div>
-                                 <div className="space-y-2">
-                                    <h4 className="text-sm font-medium text-muted-foreground">CEO</h4>
-                                    <p className="font-semibold">{stockData.ceo || 'N/A'}</p>
-                                </div>
-                                <div className="space-y-2">
-                                    <h4 className="text-sm font-medium text-muted-foreground">Sector</h4>
-                                    <p className="font-semibold">{stockData.sector || 'N/A'}</p>
-                                </div>
-                                <Button variant="link" className="p-0 text-primary dark:text-green-400">Read More</Button>
+                        <TabsContent value="about" className="w-full mt-6 px-4 sm:px-6 space-y-6">
+                             <StockPriceChart data={stockData.history} isPositive={isPositiveChange}/>
+                            <div className="pt-6">
+                                <RecurringPurchaseCard />
                             </div>
+                            {stockData.industry && (
+                                 <div className="space-y-2">
+                                    <h3 className="text-lg font-semibold font-headline">Featured In</h3>
+                                    <Button variant="outline" className="bg-primary/10 dark:bg-primary/20 border-primary/20 dark:border-primary/30 text-primary dark:text-primary-foreground/80 hover:bg-primary/20 dark:hover:bg-primary/30">
+                                        <Zap className="mr-2 h-4 w-4"/> {stockData.industry}
+                                    </Button>
+                                </div>
+                            )}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold font-headline">About {stockData.symbol}</h3>
+                                <p className="text-muted-foreground text-sm">{stockData.description}</p>
+                            </div>
+                             <div className="space-y-2">
+                                <h4 className="text-sm font-medium text-muted-foreground">CEO</h4>
+                                <p className="font-semibold">{stockData.ceo || 'N/A'}</p>
+                            </div>
+                            <div className="space-y-2">
+                                <h4 className="text-sm font-medium text-muted-foreground">Sector</h4>
+                                <p className="font-semibold">{stockData.sector || 'N/A'}</p>
+                            </div>
+                            <Button variant="link" className="p-0 text-primary dark:text-green-400">Read More</Button>
                         </TabsContent>
                          <TabsContent value="financials" className="w-full mt-6 p-0">
                             <div className="text-sm border-t">
@@ -249,7 +247,7 @@ export default function StockDetailPage() {
                             <div className="space-y-0 border-t">
                                 {stockData.news && stockData.news.length > 0 ? (
                                     stockData.news.map((article, index) => (
-                                        <a key={index} href={article.url} target="_blank" rel="noopener noreferrer" className="block p-4 md:p-6 lg:p-8 border-b hover:bg-muted/50">
+                                        <a key={index} href={article.url} target="_blank" rel="noopener noreferrer" className="block p-4 sm:p-6 border-b hover:bg-muted/50">
                                             <div className="flex gap-4 items-start">
                                                 <div className="flex-grow">
                                                     <p className="font-semibold leading-snug">{article.title}</p>
@@ -284,8 +282,8 @@ export default function StockDetailPage() {
             </div>
 
             <div className="sticky bottom-0 mt-auto bg-transparent p-4">
-                <div className="flex items-center gap-4 max-w-7xl mx-auto">
-                    <Avatar className="h-12 w-12">
+                <div className="flex items-center gap-4 max-w-lg mx-auto">
+                    <Avatar className="h-12 w-12 hidden sm:flex">
                         <AvatarImage src={stockData.logo || `https://ui-avatars.com/api/?name=${symbol}`} alt={symbol as string} />
                         <AvatarFallback>{(symbol as string).slice(0, 2)}</AvatarFallback>
                     </Avatar>

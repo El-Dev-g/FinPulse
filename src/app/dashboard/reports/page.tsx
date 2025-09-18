@@ -245,8 +245,8 @@ export default function ReportsPage() {
                 </p>
             </div>
             {isPro && (
-                <div className="flex gap-2 items-center">
-                    <Button variant="outline" onClick={() => printJS('printable-report', 'html')}>
+                <div className="flex flex-col sm:flex-row gap-2 items-center">
+                    <Button variant="outline" onClick={() => printJS('printable-report', 'html')} className="w-full sm:w-auto">
                       <FileText className="mr-2" />
                       Export to PDF
                     </Button>
@@ -265,8 +265,8 @@ export default function ReportsPage() {
             <>
                 <ReportMetrics metrics={reportMetrics} />
 
-                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-5 mt-8">
-                    <Card className="md:col-span-3">
+                <div className="grid gap-8 grid-cols-1 lg:grid-cols-5 mt-8">
+                    <Card className="lg:col-span-3">
                         <CardHeader>
                             <CardTitle>Income vs. Expense</CardTitle>
                             <CardDescription>Trend for the selected period.</CardDescription>

@@ -1,3 +1,4 @@
+
 // src/app/dashboard/organizer/page.tsx
 "use client";
 
@@ -69,12 +70,12 @@ function CalendarView({ tasks, onEdit }: { tasks: FinancialTask[], onEdit: (task
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow w-full">
       <div className="lg:col-span-2">
         <Card>
-          <CardContent className="p-0 sm:p-2">
+          <CardContent className="p-0 sm:p-2 flex justify-center">
             <CalendarComponent
               mode="single"
               selected={date}
               onSelect={setDate}
-              className="rounded-md w-full"
+              className="rounded-md"
               modifiers={{
                 due: Object.keys(tasksByDate).map((d) => new Date(d + "T00:00:00")),
               }}
@@ -215,7 +216,7 @@ export default function OrganizerPage() {
     <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8 flex flex-col relative">
       {showConfetti && <Confetti recycle={false} numberOfPieces={200} />}
       <div className="w-full">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
             <h2 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
               <ClipboardList className="h-8 w-8" />
@@ -251,22 +252,22 @@ export default function OrganizerPage() {
           <>
             <TabsContent value="board" className="h-full">
               <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
-                <ScrollArea className="w-full whitespace-nowrap">
-                <div className="pb-4">
-                  <TaskBoard
-                    goals={goals}
-                    projects={projects}
-                    onEdit={setEditingTask}
-                    onStatusChange={handleUpdateTaskStatus}
-                    sections={{
-                      "Overdue": overdueTasks,
-                      "Today": todayTasks,
-                      "Upcoming": upcomingTasks,
-                      "Other": otherTasks,
-                      "Done": doneTasks
-                    }}
-                  />
-                </div>
+                <ScrollArea className="w-full">
+                  <div className="pb-4">
+                    <TaskBoard
+                      goals={goals}
+                      projects={projects}
+                      onEdit={setEditingTask}
+                      onStatusChange={handleUpdateTaskStatus}
+                      sections={{
+                        "Overdue": overdueTasks,
+                        "Today": todayTasks,
+                        "Upcoming": upcomingTasks,
+                        "Other": otherTasks,
+                        "Done": doneTasks
+                      }}
+                    />
+                  </div>
                 </ScrollArea>
               </DndContext>
             </TabsContent>

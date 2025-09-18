@@ -50,7 +50,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <main className="flex-1 p-4 md:p-6 lg:p-8 flex items-center justify-center">
+      <main className="flex-1 p-4 md:p-6 flex items-center justify-center">
          <Loader className="h-12 w-12 animate-spin text-primary" />
       </main>
     );

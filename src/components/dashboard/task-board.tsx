@@ -1,3 +1,4 @@
+
 // src/components/dashboard/task-board.tsx
 "use client";
 
@@ -34,18 +35,13 @@ interface TaskSectionColumnProps {
 function TaskSectionColumn({ title, tasks, goals, projects, onEdit, onStatusChange, isOverdue = false }: TaskSectionColumnProps) {
     const { setNodeRef } = useDroppable({ id: title });
 
-    // Only render the column if it has tasks, except for the "Done" column which should always be visible.
-    if (tasks.length === 0 && title !== 'Done') {
-        return null;
-    }
-
     const isDoneColumn = title === 'Done';
 
     return (
-        <div className="space-y-4">
+        <div className="flex-shrink-0 w-full">
             <h3 className="text-base font-semibold text-muted-foreground px-1">{title} ({tasks.length})</h3>
             <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
-                <div ref={setNodeRef} className="space-y-3 p-1 rounded-md min-h-12 bg-background">
+                <div ref={setNodeRef} className="space-y-3 p-1 rounded-md min-h-12 bg-transparent mt-2">
                     {tasks.map(task => {
                         const goal = task.goalId ? goals.find(g => g.id === task.goalId) : null;
                         const project = task.projectId ? projects.find(p => p.id === task.projectId) : null;
@@ -61,9 +57,9 @@ function TaskSectionColumn({ title, tasks, goals, projects, onEdit, onStatusChan
                             />
                         )
                     })}
-                     {isDoneColumn && tasks.length === 0 && (
+                     {tasks.length === 0 && (
                         <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed border-muted-foreground/20 rounded-lg min-h-24 flex items-center justify-center">
-                            <p>Completed tasks appear here</p>
+                            <p>{isDoneColumn ? 'Completed tasks appear here' : 'No tasks in this section'}</p>
                         </div>
                     )}
                 </div>
@@ -76,57 +72,19 @@ function TaskSectionColumn({ title, tasks, goals, projects, onEdit, onStatusChan
 
 export function TaskBoard({ sections, goals, projects, onEdit, onStatusChange }: TaskBoardProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-8 w-full">
-        {/* Main Columns */}
-        <div className="space-y-6">
-             <TaskSectionColumn 
-                title="Overdue" 
-                tasks={sections["Overdue"]}
-                goals={goals}
-                projects={projects}
-                onEdit={onEdit}
-                onStatusChange={onStatusChange}
-                isOverdue
-             />
-             <TaskSectionColumn 
-                title="Today" 
-                tasks={sections["Today"]}
-                goals={goals}
-                projects={projects}
-                onEdit={onEdit}
-                onStatusChange={onStatusChange}
-             />
-        </div>
-        <div className="space-y-6">
-             <TaskSectionColumn 
-                title="Upcoming" 
-                tasks={sections["Upcoming"]}
-                goals={goals}
-                projects={projects}
-                onEdit={onEdit}
-                onStatusChange={onStatusChange}
-             />
-        </div>
-        <div className="space-y-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8 w-full">
+        {Object.entries(sections).map(([title, tasks]) => (
             <TaskSectionColumn 
-                title="Other" 
-                tasks={sections["Other"]}
+                key={title}
+                title={title} 
+                tasks={tasks}
                 goals={goals}
                 projects={projects}
                 onEdit={onEdit}
                 onStatusChange={onStatusChange}
-            />
-        </div>
-        <div className="space-y-6 bg-muted/30 p-4 rounded-lg">
-             <TaskSectionColumn 
-                title="Done" 
-                tasks={sections["Done"]}
-                goals={goals}
-                projects={projects}
-                onEdit={onEdit}
-                onStatusChange={onStatusChange}
+                isOverdue={title === "Overdue"}
              />
-        </div>
+        ))}
     </div>
   );
 }
