@@ -68,7 +68,7 @@ export const getBars = async (params: { symbols: string[]; timeframe: string; st
 }
 
 export const getNews = async (params: { symbols: string[]; limit?: number }) => {
-    return makeApiCall(dataApi, { url: '/stocks/news', method: 'GET', params: { ...params, symbols: params.symbols.join(',') } });
+    return makeApiCall(dataApi, { url: '/stocks/news', method: 'GET', params: { ...params, symbols: params.symbols.join(','), feed: 'iex' } });
 }
 
 // --- Orders ---
