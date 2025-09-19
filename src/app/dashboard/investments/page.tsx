@@ -1,3 +1,4 @@
+
 // src/app/dashboard/investments/page.tsx
 "use client";
 
@@ -45,11 +46,15 @@ export default function InvestmentsPage() {
         setAccount(null);
       } else {
         const { portfolio: fetchedPortfolio, account: fetchedAccount } = result.data;
-        const processedPortfolio = (fetchedPortfolio || []).map((pos: Position) => ({
+        
+        // Ensure fetchedPortfolio is an array, as Alpaca might return an empty object
+        const positionsArray = Array.isArray(fetchedPortfolio) ? fetchedPortfolio : [];
+
+        const processedPortfolio = positionsArray.map((pos: Position) => ({
             ...pos,
-            id: pos.asset_id, // Use asset_id as the unique key, as id is not guaranteed
+            id: pos.asset_id, // Use asset_id as the unique key
+            name: pos.symbol, // Use symbol as name
             logoUrl: `https://c-alpha.imgix.net/logos/${pos.symbol}.svg`,
-            name: pos.name || pos.symbol, // Fallback to symbol if name is not present
             currentValue: parseFloat(pos.market_value),
         }));
 
