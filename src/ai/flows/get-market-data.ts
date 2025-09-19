@@ -15,6 +15,7 @@ import {
   getBars,
   getNews,
   createOrder,
+  getLatestQuote,
 } from '@/lib/alpaca-service';
 import type { OrderParams } from '@/lib/types';
 import { endOfDay, startOfDay, sub } from 'date-fns';
@@ -47,7 +48,8 @@ export async function getMarketData(request: MarketDataRequest) {
   }
   if (request.dataType === 'stock-details' && request.symbol) {
     const today = new Date();
-    const [asset, bars, news] = await Promise.all([
+    // Fetch latest quote separately for guaranteed price, even if bars are empty
+    const [asset, bars, news, latestQuote] = await Promise.all([
       getAsset(request.symbol),
       getBars({
         symbols: [request.symbol],
@@ -59,11 +61,29 @@ export async function getMarketData(request: MarketDataRequest) {
         symbols: [request.symbol],
         limit: 10,
       }),
+      getLatestQuote(request.symbol),
     ]);
+    
+    const barsData = bars[request.symbol] || [];
+    
+    // If we have a latest quote but no bars, create a single bar entry for today
+    if (latestQuote && barsData.length === 0) {
+        barsData.push({
+            t: new Date().toISOString(),
+            o: latestQuote.c,
+            h: latestQuote.c,
+            l: latestQuote.c,
+            c: latestQuote.c,
+            v: 0,
+        });
+    }
+
+
     return {
       asset,
-      bars: bars[request.symbol] || [],
+      bars: barsData,
       news,
+      latestQuote: latestQuote, // Pass this down
     };
   }
   throw new Error('Invalid request');

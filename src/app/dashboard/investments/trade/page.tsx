@@ -1,3 +1,4 @@
+
 // src/app/dashboard/investments/trade/page.tsx
 "use client";
 
@@ -116,7 +117,10 @@ function TradePageContent() {
         }
     }
 
-    const latestQuote = stockDetails?.bars?.[stockDetails.bars.length - 1];
+    const latestQuote = stockDetails?.bars && stockDetails.bars.length > 0 
+        ? stockDetails.bars[stockDetails.bars.length - 1] 
+        : stockDetails?.latestQuote;
+
 
     return (
         <>

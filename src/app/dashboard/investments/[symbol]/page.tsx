@@ -1,3 +1,4 @@
+
 // src/app/dashboard/investments/[symbol]/page.tsx
 "use client";
 
@@ -92,8 +93,8 @@ export default function StockDetailPage() {
         )
     }
 
-    const latestQuote = stockData?.bars?.[stockData.bars.length - 1];
-    const prevQuote = stockData?.bars?.[stockData.bars.length - 2];
+    const latestQuote = stockData?.bars && stockData.bars.length > 0 ? stockData.bars[stockData.bars.length - 1] : stockData.latestQuote;
+    const prevQuote = stockData?.bars && stockData.bars.length > 1 ? stockData.bars[stockData.bars.length - 2] : null;
     const priceChange = latestQuote && prevQuote ? latestQuote.c - prevQuote.c : 0;
     const priceChangePercent = prevQuote && prevQuote.c > 0 && latestQuote ? (priceChange / prevQuote.c) * 100 : 0;
     const isPositiveChange = priceChange >= 0;
@@ -212,7 +213,7 @@ export default function StockDetailPage() {
 
             <div className="sticky bottom-0 mt-auto bg-transparent p-4">
                 <div className="flex items-center gap-4 max-w-lg mx-auto">
-                     <Button className="w-full h-14 text-base flex-grow" onClick={() => router.push(`/dashboard/investments/trade?symbol=${symbol}`)}>
+                     <Button className="w-full h-14 text-base flex-grow" onClick={() => router.push(`/dashboard/investments/trade?symbol=${symbol}`)} disabled={!latestQuote}>
                         <ShoppingCart className="mr-2" />
                         Trade
                     </Button>

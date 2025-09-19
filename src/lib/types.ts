@@ -205,6 +205,10 @@ export interface Bar {
     v: number; // Volume
 }
 
+export interface LatestQuote {
+    c: number; // Close price
+}
+
 export interface Asset {
     id: string;
     asset_class: string;
@@ -237,6 +241,7 @@ export interface StockDetails {
     asset: Asset;
     bars: Bar[];
     news: News[];
+    latestQuote?: LatestQuote;
 }
 
 export interface OrderParams {
