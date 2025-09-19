@@ -1,3 +1,4 @@
+
 // src/lib/alpaca-service.ts
 import axios from 'axios';
 import type { OrderParams } from './types';
@@ -9,7 +10,7 @@ const tradingApi = axios.create({
 
 // The base URL for market data endpoints
 const dataApi = axios.create({
-  baseURL: 'https://data.alpaca.markets', // Base URL for data endpoints
+  baseURL: 'https://data.alpaca.markets',
 });
 
 const getHeaders = () => {
@@ -58,12 +59,13 @@ export const getPositions = async () => {
 
 // --- Assets (Trading API) ---
 export const getAsset = async (symbol: string) => {
+    // This calls GET /v2/assets/{symbol} which is the documented way to get a single asset by symbol
     return makeApiCall(tradingApi, { url: `/assets/${symbol}`, method: 'GET' });
 }
 
+
 // --- Market Data (Data API) ---
 export const getBars = async (params: { symbols: string[]; timeframe: string; start: string; end: string; }) => {
-    // Note: Using the Data API for this call
     return makeApiCall(dataApi, { url: '/v2/stocks/bars', method: 'GET', params: { ...params, symbols: params.symbols.join(','), feed: 'iex' } });
 }
 
