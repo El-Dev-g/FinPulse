@@ -10,7 +10,6 @@ const getHeaders = () => {
   const secretKey = process.env.APCA_API_SECRET_KEY;
 
   if (!keyId || !secretKey) {
-    // Return null instead of throwing to be handled by the caller
     return null;
   }
 
@@ -29,7 +28,6 @@ const alpacaApi = axios.create({
 alpacaApi.interceptors.request.use(config => {
     const headers = getHeaders();
     if (!headers) {
-      // Cancel the request if headers are not available
       return Promise.reject(new axios.Cancel('Alpaca API keys are not configured in environment variables.'));
     }
     config.headers = { ...config.headers, ...headers };
@@ -43,6 +41,7 @@ alpacaApi.interceptors.request.use(config => {
 async function makeApiCall<T>(apiCall: () => Promise<T>): Promise<T> {
   const headers = getHeaders();
   if (!headers) {
+    // This is the change: Throw a specific, catchable error message.
     throw new Error('Alpaca API keys are not configured in environment variables.');
   }
   
