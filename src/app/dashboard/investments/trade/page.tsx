@@ -1,4 +1,3 @@
-
 // src/app/dashboard/investments/trade/page.tsx
 "use client";
 
@@ -17,11 +16,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader, AlertCircle, Search } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { InvestmentTradeForm } from '@/components/dashboard/investment-trade-form';
 import type { AlpacaAccount, ClientInvestment, OrderParams } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
+import BrokerErrorBanner from '@/components/dashboard/broker-error-banner';
 
 function TradePageContent() {
     const router = useRouter();
@@ -120,7 +119,11 @@ function TradePageContent() {
 
     return (
         <>
-            {!symbol ? (
+            {error ? (
+                <div className="text-center">
+                    <BrokerErrorBanner />
+                </div>
+            ) : !symbol ? (
                 <Card>
                     <CardHeader>
                         <CardTitle>Search for a Stock</CardTitle>
@@ -135,13 +138,9 @@ function TradePageContent() {
                 </Card>
             ) : loading ? (
                 <div className="flex justify-center items-center h-96"><Loader className="h-8 w-8 animate-spin" /></div>
-            ) : error || !stockDetails ? (
-                <div className="text-center">
-                    <Alert variant="destructive" className="max-w-lg mx-auto">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Error Loading Data</AlertTitle>
-                        <AlertDescription>{error || "Could not find stock details."}</AlertDescription>
-                    </Alert>
+            ) : !stockDetails ? (
+                 <div className="text-center">
+                    <BrokerErrorBanner />
                 </div>
             ) : (
                 <Card>

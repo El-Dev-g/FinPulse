@@ -1,4 +1,3 @@
-
 // src/app/dashboard/investments/[symbol]/page.tsx
 "use client";
 
@@ -18,11 +17,11 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader, AlertCircle, ShoppingCart, ArrowUpRight, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StockPriceChart } from '@/components/dashboard/stock-price-chart';
 import { format, parseISO } from 'date-fns';
 import type { NewsArticle, StockDetails } from '@/lib/types';
+import BrokerErrorBanner from '@/components/dashboard/broker-error-banner';
 
 function FinancialsStat({ label, value }: { label: string, value: string | number | undefined}) {
     if (value === undefined || value === null) return null;
@@ -80,11 +79,9 @@ export default function StockDetailPage() {
     if (error || !stockData) {
         return (
              <main className="flex-1 p-4 md:p-6 lg:p-8 flex flex-col items-center justify-center text-center">
-                <Alert variant="destructive" className="max-w-md">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Error Loading Stock Data</AlertTitle>
-                    <AlertDescription>{error}</AlertDescription>
-                </Alert>
+                <div className="max-w-md w-full">
+                  <BrokerErrorBanner />
+                </div>
                  <Button asChild variant="outline" className="mt-6">
                     <Link href="/dashboard/investments">
                         <ArrowLeft className="mr-2" />

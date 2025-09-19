@@ -1,4 +1,3 @@
-
 // src/app/dashboard/investments/page.tsx
 "use client";
 
@@ -21,6 +20,7 @@ import { Alert, AlertTitle, AlertDescription as AlertDescriptionComponent } from
 import { Input } from "@/components/ui/input";
 import { PortfolioSummary } from "@/components/dashboard/portfolio-summary";
 import { InvestmentPerformanceChart } from "@/components/dashboard/investment-performance-chart";
+import BrokerErrorBanner from "@/components/dashboard/broker-error-banner";
 
 export default function InvestmentsPage() {
   const { user, isPro } = useAuth();
@@ -119,13 +119,7 @@ export default function InvestmentsPage() {
                     <p className="text-muted-foreground">Track and manage your stock holdings via Alpaca.</p>
                 </div>
             </div>
-             <Alert variant="destructive" className="mb-6">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Feature Temporarily Unavailable</AlertTitle>
-                <AlertDescriptionComponent>
-                    The investment tracking feature is currently offline due to a technical issue with our brokerage partner integration. We are working to resolve this.
-                </AlertDescriptionComponent>
-            </Alert>
+             <BrokerErrorBanner />
         </main>
     )
   }
