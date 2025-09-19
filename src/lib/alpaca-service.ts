@@ -19,69 +19,54 @@ const getHeaders = () => {
   };
 };
 
-const alpacaApi = axios.create({
-  baseURL: BASE_URL,
-});
-
-alpacaApi.interceptors.request.use(config => {
+const makeApiCall = async (config: any) => {
     const headers = getHeaders();
     if (!headers) {
-      // This will be caught by the makeApiCall wrapper
-      return Promise.reject(new Error('Alpaca API keys are not configured in environment variables.'));
+        throw new Error('Alpaca API keys are not configured in environment variables.');
     }
-    config.headers = { ...config.headers, ...headers };
-    return config;
-}, error => {
-    return Promise.reject(error);
-});
+
+    try {
+        const response = await axios({ ...config, baseURL: BASE_URL, headers });
+        return response.data;
+    } catch (error: any) {
+        if (axios.isAxiosError(error)) {
+            const alpacaError = error.response?.data?.message || 'An unknown Alpaca API error occurred.';
+            throw new Error(alpacaError);
+        }
+        throw error; // Re-throw other errors
+    }
+}
 
 // --- Account ---
 export const getAccount = async () => {
-    const response = await alpacaApi.get('/account');
-    return response.data;
+    return makeApiCall({ url: '/account', method: 'GET' });
 };
 
 // --- Portfolio ---
 export const getPortfolioHistory = async (params: { period?: string; timeframe?: string; date_end?: string; extended_hours?: boolean; }) => {
-    const response = await alpacaApi.get('/account/portfolio/history', { params });
-    return response.data;
+    return makeApiCall({ url: '/account/portfolio/history', method: 'GET', params });
 };
 
 // --- Positions ---
 export const getPositions = async () => {
-    const response = await alpacaApi.get('/positions');
-    return response.data;
+    return makeApiCall({ url: '/positions', method: 'GET' });
 };
 
 // --- Assets ---
 export const getAsset = async (symbol: string) => {
-    const response = await alpacaApi.get(`/assets/${symbol}`);
-    return response.data;
+    return makeApiCall({ url: `/assets/${symbol}`, method: 'GET' });
 }
 
 // --- Market Data ---
 export const getBars = async (params: { symbols: string[]; timeframe: string; start: string; end: string; }) => {
-    const response = await alpacaApi.get('/stocks/bars', { 
-        params: {
-            ...params,
-            symbols: params.symbols.join(',')
-        }
-    });
-    return response.data;
+    return makeApiCall({ url: '/stocks/bars', method: 'GET', params: { ...params, symbols: params.symbols.join(',') } });
 }
 
 export const getNews = async (params: { symbols: string[]; limit?: number }) => {
-    const response = await alpacaApi.get('/news', {
-        params: {
-            ...params,
-            symbols: params.symbols.join(','),
-        }
-    });
-    return response.data;
+    return makeApiCall({ url: '/news', method: 'GET', params: { ...params, symbols: params.symbols.join(',') } });
 }
 
 // --- Orders ---
 export const createOrder = async (order: OrderParams) => {
-    const response = await alpacaApi.post('/orders', order);
-    return response.data;
+    return makeApiCall({ url: '/orders', method: 'POST', data: order });
 }

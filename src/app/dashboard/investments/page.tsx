@@ -107,23 +107,6 @@ export default function InvestmentsPage() {
     )
   }
   
-  if (error) {
-     return (
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight font-headline">
-                    Investment Portfolio
-                    </h2>
-                    <p className="text-muted-foreground">Track and manage your stock holdings via Alpaca.</p>
-                </div>
-            </div>
-             <BrokerErrorBanner error={error} />
-        </main>
-    )
-  }
-
-
   return (
     <>
     <main className="flex-1 flex flex-col">
@@ -138,7 +121,9 @@ export default function InvestmentsPage() {
                     </div>
                 </div>
 
-                {investments.length === 0 && !loading ? (
+                {error ? (
+                    <BrokerErrorBanner error={error} />
+                ) : investments.length === 0 && !loading ? (
                     <div className="text-center py-20">
                         <h3 className="text-lg font-semibold">Your Portfolio is Empty</h3>
                         <p className="text-muted-foreground mt-2">

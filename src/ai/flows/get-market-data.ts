@@ -37,10 +37,12 @@ export async function getMarketData(request: MarketDataRequest) {
       }),
     ]);
     return {
-      account,
+      account: {
+        ...account,
+        equity_change_today: parseFloat(account.equity) - parseFloat(account.last_equity)
+      },
       portfolio: positions,
       history: portfolioHistory,
-      equity_change_today: account.equity_last_day,
     };
   }
   if (request.dataType === 'stock-details' && request.symbol) {
