@@ -2,7 +2,7 @@
 // src/lib/db.ts
 import { db } from './firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy, setDoc, writeBatch } from 'firebase/firestore';
-import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category, AIPlan, UserProfile, Advice, Project, Account, Position } from './types';
+import type { Goal, Budget, Transaction, FinancialTask, RecurringTransaction, Category, AIPlan, UserProfile, Advice, Project, Account } from './types';
 import { auth } from './firebase';
 import { getFinancialAdvice } from './actions';
 
@@ -286,35 +286,3 @@ export const addAccount = (account: Omit<Account, 'id'>) => addDataItem('account
 export const getAccounts = () => getData<Account>('accounts');
 export const updateAccount = (id: string, account: Partial<Account>) => updateDataItem('accounts', id, account);
 export const deleteAccount = (id: string) => deleteDataItem('accounts', id);
-
-// --- Investments ---
-export const getInvestments = async (): Promise<Position[]> => {
-    const uid = await getUid();
-    if (!uid) return [];
-    // Investments don't have a createdAt field, so we just get them.
-    const querySnapshot = await getDocs(collection(db, `users/${uid}/investments`));
-    return querySnapshot.docs.map(doc => doc.data() as Position);
-}
-
-export const syncInvestments = async (investments: Position[]): Promise<void> => {
-    const uid = await getUid();
-    if (!uid) throw new Error("User not authenticated");
-
-    const batch = writeBatch(db);
-    const investmentsCollectionRef = collection(db, `users/${uid}/investments`);
-
-    // 1. Delete all existing investments for the user
-    const existingInvestmentsSnapshot = await getDocs(investmentsCollectionRef);
-    existingInvestmentsSnapshot.forEach(doc => {
-        batch.delete(doc.ref);
-    });
-
-    // 2. Add the new investments
-    investments.forEach(investment => {
-        // Use asset_id as the document ID for idempotency
-        const docRef = doc(investmentsCollectionRef, investment.asset_id);
-        batch.set(docRef, investment);
-    });
-
-    await batch.commit();
-}

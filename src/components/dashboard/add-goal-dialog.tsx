@@ -1,7 +1,8 @@
+
 // src/components/dashboard/add-goal-dialog.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,8 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, Landmark } from "lucide-react";
-import type { Goal, AIPlan } from "@/lib/types";
+import { Loader, Landmark, Plus, FolderKanban, Target } from "lucide-react";
+import type { Goal, AIPlan, Account, Project } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -23,18 +24,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-
+import { useAuth } from "@/hooks/use-auth";
+import { getAccounts, getProjects } from "@/lib/db";
 
 interface AddGoalDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddGoal: (newGoal: Omit<Goal, "id" | "current" | "createdAt" | "status">, current?: number) => Promise<void>;
+  onAddGoal: (newGoal: Omit<Goal, "id" | "createdAt" | "status">) => Promise<void>;
   isSubmitting?: boolean;
   aiPlans?: AIPlan[];
 }
-
-type Account = { id: string; name: string; bank: string; last4: string; type: string; };
-const LOCAL_STORAGE_KEY = 'finpulse_connected_accounts';
 
 export function AddGoalDialog({
   isOpen,
@@ -43,29 +42,35 @@ export function AddGoalDialog({
   isSubmitting = false,
   aiPlans = [],
 }: AddGoalDialogProps) {
+  const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [target, setTarget] = useState("");
   const [current, setCurrent] = useState("");
   const [adviceId, setAdviceId] = useState<string>("none");
+  const [projectId, setProjectId] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Accounts state
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+
   const { toast } = useToast();
   
-  useEffect(() => {
-    if (isOpen) {
-       try {
-            const storedAccounts = localStorage.getItem(LOCAL_STORAGE_KEY);
-            if (storedAccounts) {
-                setAccounts(JSON.parse(storedAccounts));
-            }
-        } catch (error) {
-            console.error("Could not access localStorage:", error);
-            setAccounts([]);
-        }
+  const fetchData = useCallback(async () => {
+    if (user && isOpen) {
+        const [accountsFromDb, projectsFromDb] = await Promise.all([
+            getAccounts() as Promise<Account[]>,
+            getProjects() as Promise<Project[]>,
+        ]);
+        setAccounts(accountsFromDb);
+        setProjects(projectsFromDb);
     }
-  }, [isOpen]);
+  }, [user, isOpen]);
+
+  useEffect(() => {
+    fetchData();
+  }, [isOpen, fetchData]);
 
   const handleAccountLink = (accountId: string) => {
     if (accountId === 'none') {
@@ -73,15 +78,23 @@ export function AddGoalDialog({
         return;
     }
     const account = accounts.find(acc => acc.id === accountId);
-    if (account) {
-        // In a real app, you would fetch the account balance. Here, we'll use a mock balance.
-        const mockBalance = parseFloat((Math.random() * 5000 + 500).toFixed(2));
-        setCurrent(String(mockBalance));
+    if (account && account.balance) {
+        setCurrent(String(account.balance));
         toast({
             title: "Balance Pre-filled",
-            description: `Current amount set to ${mockBalance} from ${account.name}.`
+            description: `Current amount set to ${account.balance} from ${account.name}.`
         })
     }
+  }
+
+  const resetDialog = () => {
+    setTitle("");
+    setTarget("");
+    setCurrent("");
+    setAdviceId("none");
+    setProjectId(undefined);
+    setError(null);
+    setLoading(false);
   }
 
 
@@ -106,7 +119,6 @@ export function AddGoalDialog({
       return;
     }
 
-
     setLoading(true);
 
     const selectedPlan = aiPlans.find(p => p.id === adviceId);
@@ -115,13 +127,12 @@ export function AddGoalDialog({
       await onAddGoal({ 
         title, 
         target: targetAmount,
+        current: currentAmount,
         advice: selectedPlan ? selectedPlan.advice : undefined,
-      }, currentAmount);
+        projectId: projectId === 'none' ? undefined : projectId,
+      });
       onOpenChange(false);
-      setTitle("");
-      setTarget("");
-      setCurrent("");
-      setAdviceId("none");
+      resetDialog();
     } catch (err) {
        setError("Failed to add goal. Please try again.");
     } finally {
@@ -132,11 +143,7 @@ export function AddGoalDialog({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) {
-        setTitle("");
-        setTarget("");
-        setCurrent("");
-        setAdviceId("none");
-        setError(null);
+        resetDialog();
       }
       onOpenChange(open);
     }}>
@@ -209,6 +216,28 @@ export function AddGoalDialog({
                   />
                 </div>
             </div>
+
+            {projects.length > 0 && (
+                <div className="space-y-2">
+                    <Label htmlFor="projectId">Link to a Project (Optional)</Label>
+                     <Select value={projectId} onValueChange={setProjectId}>
+                        <SelectTrigger id="projectId">
+                           <SelectValue placeholder="Select a project..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                             {projects.map((project) => (
+                                <SelectItem key={project.id} value={project.id}>
+                                    <div className="flex items-center gap-2">
+                                        <FolderKanban className="h-4 w-4 text-muted-foreground" />
+                                        <span>{project.name}</span>
+                                    </div>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
            
             {aiPlans.length > 0 && (
                 <div className="space-y-2">

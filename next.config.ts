@@ -31,12 +31,6 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'c-alpha.imgix.net',
-        port: '',
-        pathname: '/**',
-      }
     ],
   },
 };
