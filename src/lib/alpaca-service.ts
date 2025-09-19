@@ -14,8 +14,8 @@ const dataApi = axios.create({
 });
 
 const getHeaders = () => {
-  const keyId = process.env.NEXT_PUBLIC_APCA_API_KEY_ID;
-  const secretKey = process.env.NEXT_PUBLIC_APCA_API_SECRET_KEY;
+  const keyId = process.env.APCA_API_KEY_ID;
+  const secretKey = process.env.APCA_API_SECRET_KEY;
 
   if (!keyId || !secretKey) {
     throw new Error('Alpaca API keys are not configured in environment variables.');
