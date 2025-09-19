@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plus, Loader, TrendingUp, Search, X, ShoppingCart, AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import type { ClientInvestment, AlpacaAccount } from "@/lib/types";
+import type { ClientInvestment, AlpacaAccount, Position } from "@/lib/types";
 import { getPortfolio } from "@/lib/actions";
 import { InvestmentHoldingsTable } from "@/components/dashboard/investment-holdings-table";
 import { Input } from "@/components/ui/input";
@@ -45,10 +45,11 @@ export default function InvestmentsPage() {
         setAccount(null);
       } else {
         const { portfolio: fetchedPortfolio, account: fetchedAccount } = result.data;
-        const processedPortfolio = (fetchedPortfolio || []).map((pos: any) => ({
+        const processedPortfolio = (fetchedPortfolio || []).map((pos: Position) => ({
             ...pos,
+            id: pos.asset_id, // Use asset_id as the unique key, as id is not guaranteed
             logoUrl: `https://c-alpha.imgix.net/logos/${pos.symbol}.svg`,
-            name: pos.symbol, // In a real app, you might fetch the full name
+            name: pos.name || pos.symbol, // Fallback to symbol if name is not present
             currentValue: parseFloat(pos.market_value),
         }));
 
