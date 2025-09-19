@@ -2,9 +2,14 @@
 import axios from 'axios';
 import type { OrderParams } from './types';
 
-// The base URL for all Alpaca API v2 requests.
-const api = axios.create({
+// The base URL for trading and account management endpoints
+const tradingApi = axios.create({
   baseURL: 'https://paper-api.alpaca.markets/v2',
+});
+
+// The base URL for market data endpoints
+const dataApi = axios.create({
+  baseURL: 'https://data.alpaca.markets/v2',
 });
 
 const getHeaders = () => {
@@ -22,50 +27,52 @@ const getHeaders = () => {
   };
 };
 
-const makeApiCall = async (config: any) => {
+const makeApiCall = async (apiInstance: typeof tradingApi | typeof dataApi, config: any) => {
     try {
         const headers = getHeaders();
-        const response = await api({ ...config, headers });
+        const response = await apiInstance({ ...config, headers });
         return response.data;
     } catch (error: any) {
-        if (axios.isAxiosError(error)) {
-            const alpacaError = error.response?.data?.message || `An unknown Alpaca API error occurred: ${error.message}`;
-            throw new Error(alpacaError);
+        if (axios.isAxiosError(error) && error.response) {
+             const alpacaError = error.response.data?.message || `An unknown Alpaca API error occurred: ${error.message}`;
+             throw new Error(alpacaError);
         }
         throw error;
     }
 }
 
-// --- Account ---
+// --- Account (Trading API) ---
 export const getAccount = async () => {
-    return makeApiCall({ url: '/account', method: 'GET' });
+    return makeApiCall(tradingApi, { url: '/account', method: 'GET' });
 };
 
-// --- Portfolio ---
+// --- Portfolio (Trading API) ---
 export const getPortfolioHistory = async (params: { period?: string; timeframe?: string; date_end?: string; extended_hours?: boolean; }) => {
-    return makeApiCall({ url: '/account/portfolio/history', method: 'GET', params });
+    return makeApiCall(tradingApi, { url: '/account/portfolio/history', method: 'GET', params });
 };
 
-// --- Positions ---
+// --- Positions (Trading API) ---
 export const getPositions = async () => {
-    return makeApiCall({ url: '/positions', method: 'GET' });
+    return makeApiCall(tradingApi, { url: '/positions', method: 'GET' });
 };
 
-// --- Assets ---
+// --- Assets (Trading API) ---
 export const getAsset = async (symbol: string) => {
-    return makeApiCall({ url: `/assets/${symbol}`, method: 'GET' });
+    return makeApiCall(tradingApi, { url: `/assets/${symbol}`, method: 'GET' });
 }
 
-// --- Market Data ---
+// --- Market Data (Data API) ---
 export const getBars = async (params: { symbols: string[]; timeframe: string; start: string; end: string; }) => {
-    return makeApiCall({ url: '/stocks/bars', method: 'GET', params: { ...params, symbols: params.symbols.join(','), feed: 'iex' } });
+    // Note: Using the Data API for this call
+    return makeApiCall(dataApi, { url: '/stocks/bars', method: 'GET', params: { ...params, symbols: params.symbols.join(','), feed: 'iex' } });
 }
 
 export const getNews = async (params: { symbols: string[]; limit?: number }) => {
-    return makeApiCall({ url: '/stocks/news', method: 'GET', params: { ...params, symbols: params.symbols.join(','), feed: 'iex' } });
+    // Note: Using the Data API for this call
+    return makeApiCall(dataApi, { url: '/stocks/news', method: 'GET', params: { ...params, symbols: params.symbols.join(','), feed: 'iex' } });
 }
 
-// --- Orders ---
+// --- Orders (Trading API) ---
 export const createOrder = async (order: OrderParams) => {
-    return makeApiCall({ url: '/orders', method: 'POST', data: order });
+    return makeApiCall(tradingApi, { url: '/orders', method: 'POST', data: order });
 }
