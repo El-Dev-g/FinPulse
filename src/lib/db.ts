@@ -1,4 +1,3 @@
-
 // src/lib/db.ts
 import { db } from './firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy, setDoc, writeBatch } from 'firebase/firestore';
@@ -102,7 +101,6 @@ export const deleteUserData = async (uid: string): Promise<void> => {
         'ai_plans',
         'projects',
         'accounts',
-        'investments',
         'profile' // This will also delete the profile/settings doc
     ];
 
@@ -131,14 +129,14 @@ export const deleteUserData = async (uid: string): Promise<void> => {
 
 
 // --- Goals ---
-export const addGoal = async (goal: Omit<Goal, 'id' | 'createdAt'>) => {
-    const goalData: Partial<Omit<Goal, 'id' | 'createdAt'>> = {
+export const addGoal = async (goal: Omit<Goal, 'id' | 'createdAt'>, isPro: boolean = true) => {
+    const goalData: Omit<Goal, 'id' | 'createdAt'> = {
         ...goal,
         status: 'active',
         current: goal.current || 0,
     };
     
-    const autoGenerateAdvice = !goal.advice; // Only generate if no advice is passed in
+    const autoGenerateAdvice = !goal.advice && isPro;
 
     if (autoGenerateAdvice) {
         const prompt = `I am creating a new financial goal to "${goal.title}" with a target of $${goal.target}. Please give me a simple, encouraging financial plan with 3-5 steps to help me get started.`;
@@ -202,8 +200,7 @@ export const deleteBudget = (id: string) => deleteDataItem('budgets', id);
 
 // --- Transactions ---
 export const addTransaction = async (transaction: Omit<Transaction, 'id' | 'Icon'>) => {
-    const finalTransaction: Omit<Transaction, 'id' | 'Icon'> = { ...transaction };
-    return addDataItem('transactions', finalTransaction);
+    return addDataItem('transactions', transaction);
 };
 export const getTransactions = () => getData<Transaction>('transactions');
 export const deleteTransaction = (id: string) => deleteDataItem('transactions', id);
@@ -217,6 +214,7 @@ export const addTask = (task: Omit<FinancialTask, 'id'>) => {
     if (task.dueDate) taskData.dueDate = task.dueDate;
     if (task.dueTime) taskData.dueTime = task.dueTime;
     if (task.projectId) taskData.projectId = task.projectId;
+    if (task.goalId) taskData.goalId = task.goalId;
     
     return addDataItem<Partial<Omit<FinancialTask, 'id' | 'createdAt'>>>('tasks', taskData);
 }

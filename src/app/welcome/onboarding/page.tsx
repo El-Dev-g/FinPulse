@@ -23,7 +23,7 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 
 export default function OnboardingPage() {
-  const { user } = useAuth();
+  const { user, isPro } = useAuth();
   const router = useRouter();
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
@@ -50,10 +50,10 @@ export default function OnboardingPage() {
     });
   }, [api]);
   
-  const handleAddGoal = async (newGoal: Omit<Goal, "id" | "createdAt" | "status">, linkedTaskIds: string[] = []) => {
+  const handleAddGoal = async (newGoal: Omit<Goal, "id" | "createdAt" | "status">) => {
     setIsSubmitting(true);
     try {
-      await addGoal({ ...newGoal, status: "active" }, linkedTaskIds);
+      await addGoal({ ...newGoal, status: "active" }, isPro);
       api?.scrollNext();
     } catch(e) {
       console.error("Failed to add goal", e);
