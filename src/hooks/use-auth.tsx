@@ -1,3 +1,4 @@
+
 // src/hooks/use-auth.tsx
 "use client";
 
@@ -103,6 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(null);
             setProfile(null);
             setSubscriptionStatusState('free');
+            localStorage.removeItem('subscriptionStatus');
         }
       } catch (err) {
         console.error("Error loading profile:", err);
@@ -121,14 +123,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const isUnprotectedPage = unprotectedRoutes.includes(pathname) || unprotectedRoutes.some(p => p !== '/' && pathname.startsWith(p + '/'));
     const isOnboardingPage = isOnboardingRoute(pathname);
 
-    if (!user) {
-      if (!isUnprotectedPage && !isOnboardingPage) {
+    if (!user && !isUnprotectedPage && !isOnboardingPage) {
         router.push("/signin");
-      }
-    } else {
-      if (pathname === "/signin" || pathname === "/signup") {
-        router.push("/dashboard");
-      }
     }
   }, [user, checked, pathname, router]);
 
