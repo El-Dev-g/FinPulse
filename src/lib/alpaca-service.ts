@@ -10,7 +10,8 @@ const getHeaders = () => {
   const secretKey = process.env.APCA_API_SECRET_KEY;
 
   if (!keyId || !secretKey) {
-    throw new Error('Alpaca API keys are not configured in environment variables.');
+    // Return null instead of throwing to be handled by the caller
+    return null;
   }
 
   return {
@@ -26,57 +27,97 @@ const alpacaApi = axios.create({
 
 // We need to intercept requests to add headers dynamically
 alpacaApi.interceptors.request.use(config => {
-    config.headers = { ...config.headers, ...getHeaders() };
+    const headers = getHeaders();
+    if (!headers) {
+      // Cancel the request if headers are not available
+      return Promise.reject(new axios.Cancel('Alpaca API keys are not configured in environment variables.'));
+    }
+    config.headers = { ...config.headers, ...headers };
     return config;
+}, error => {
+    return Promise.reject(error);
 });
+
+
+// Helper to wrap API calls with the key check
+async function makeApiCall<T>(apiCall: () => Promise<T>): Promise<T> {
+  const headers = getHeaders();
+  if (!headers) {
+    throw new Error('Alpaca API keys are not configured in environment variables.');
+  }
+  
+  try {
+    return await apiCall();
+  } catch (error) {
+     if (axios.isCancel(error)) {
+      throw new Error(error.message);
+    }
+    // Re-throw other errors
+    throw error;
+  }
+}
 
 // --- Account ---
 export const getAccount = async () => {
-  const response = await alpacaApi.get('/account');
-  return response.data;
+  return makeApiCall(async () => {
+    const response = await alpacaApi.get('/account');
+    return response.data;
+  });
 };
 
 // --- Portfolio ---
 export const getPortfolioHistory = async (params: { period?: string; timeframe?: string; date_end?: string; extended_hours?: boolean; }) => {
-    const response = await alpacaApi.get('/account/portfolio/history', { params });
-    return response.data;
+    return makeApiCall(async () => {
+        const response = await alpacaApi.get('/account/portfolio/history', { params });
+        return response.data;
+    });
 };
 
 // --- Positions ---
 export const getPositions = async () => {
-  const response = await alpacaApi.get('/positions');
-  return response.data;
+  return makeApiCall(async () => {
+    const response = await alpacaApi.get('/positions');
+    return response.data;
+  });
 };
 
 // --- Assets ---
 export const getAsset = async (symbol: string) => {
-    const response = await alpacaApi.get(`/assets/${symbol}`);
-    return response.data;
+    return makeApiCall(async () => {
+        const response = await alpacaApi.get(`/assets/${symbol}`);
+        return response.data;
+    });
 }
 
 // --- Market Data ---
 export const getBars = async (params: { symbols: string[]; timeframe: string; start: string; end: string; }) => {
-    const response = await alpacaApi.get('/stocks/bars', { 
-        params: {
-            ...params,
-            symbols: params.symbols.join(',')
-        }
-     });
-    return response.data;
+    return makeApiCall(async () => {
+        const response = await alpacaApi.get('/stocks/bars', { 
+            params: {
+                ...params,
+                symbols: params.symbols.join(',')
+            }
+        });
+        return response.data;
+    });
 }
 
 export const getNews = async (params: { symbols: string[]; limit?: number }) => {
-    const response = await alpacaApi.get('/news', {
-        params: {
-            ...params,
-            symbols: params.symbols.join(','),
-        }
+    return makeApiCall(async () => {
+        const response = await alpacaApi.get('/news', {
+            params: {
+                ...params,
+                symbols: params.symbols.join(','),
+            }
+        });
+        return response.data;
     });
-    return response.data;
 }
 
 // --- Orders ---
 export const createOrder = async (order: OrderParams) => {
-    const response = await alpacaApi.post('/orders', order);
-    return response.data;
+    return makeApiCall(async () => {
+        const response = await alpacaApi.post('/orders', order);
+        return response.data;
+    });
 }
