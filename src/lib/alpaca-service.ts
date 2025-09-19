@@ -9,7 +9,7 @@ const tradingApi = axios.create({
 
 // The base URL for market data endpoints
 const dataApi = axios.create({
-  baseURL: 'https://data.alpaca.markets/v2',
+  baseURL: 'https://data.alpaca.markets', // Base URL for data endpoints
 });
 
 const getHeaders = () => {
@@ -64,12 +64,12 @@ export const getAsset = async (symbol: string) => {
 // --- Market Data (Data API) ---
 export const getBars = async (params: { symbols: string[]; timeframe: string; start: string; end: string; }) => {
     // Note: Using the Data API for this call
-    return makeApiCall(dataApi, { url: '/stocks/bars', method: 'GET', params: { ...params, symbols: params.symbols.join(','), feed: 'iex' } });
+    return makeApiCall(dataApi, { url: '/v2/stocks/bars', method: 'GET', params: { ...params, symbols: params.symbols.join(','), feed: 'iex' } });
 }
 
 export const getNews = async (params: { symbols: string[]; limit?: number }) => {
-    // Note: Using the Data API for this call
-    return makeApiCall(dataApi, { url: '/stocks/news', method: 'GET', params: { ...params, symbols: params.symbols.join(','), feed: 'iex' } });
+    // Note: Using the Data API with v1beta1 for news
+    return makeApiCall(dataApi, { url: '/v1beta1/news', method: 'GET', params: { ...params, symbols: params.symbols.join(',') } });
 }
 
 // --- Orders (Trading API) ---
