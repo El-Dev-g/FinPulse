@@ -121,7 +121,7 @@ function TradePageContent() {
         <>
             {error ? (
                 <div className="text-center">
-                    <BrokerErrorBanner />
+                    <BrokerErrorBanner error={error} />
                 </div>
             ) : !symbol ? (
                 <Card>
@@ -140,7 +140,7 @@ function TradePageContent() {
                 <div className="flex justify-center items-center h-96"><Loader className="h-8 w-8 animate-spin" /></div>
             ) : !stockDetails ? (
                  <div className="text-center">
-                    <BrokerErrorBanner />
+                    <BrokerErrorBanner error={error} />
                 </div>
             ) : (
                 <Card>

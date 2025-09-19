@@ -16,11 +16,10 @@ import { useAuth } from "@/hooks/use-auth";
 import type { ClientInvestment, AlpacaAccount } from "@/lib/types";
 import { getPortfolio } from "@/lib/actions";
 import { InvestmentHoldingsTable } from "@/components/dashboard/investment-holdings-table";
-import { Alert, AlertTitle, AlertDescription as AlertDescriptionComponent } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { PortfolioSummary } from "@/components/dashboard/portfolio-summary";
 import { InvestmentPerformanceChart } from "@/components/dashboard/investment-performance-chart";
-import BrokerErrorBanner from "@/components/dashboard/broker-error-banner";
+import BrokerErrorBanner from '@/components/dashboard/broker-error-banner';
 
 export default function InvestmentsPage() {
   const { user, isPro } = useAuth();
@@ -119,7 +118,7 @@ export default function InvestmentsPage() {
                     <p className="text-muted-foreground">Track and manage your stock holdings via Alpaca.</p>
                 </div>
             </div>
-             <BrokerErrorBanner />
+             <BrokerErrorBanner error={error} />
         </main>
     )
   }

@@ -80,7 +80,7 @@ export default function StockDetailPage() {
         return (
              <main className="flex-1 p-4 md:p-6 lg:p-8 flex flex-col items-center justify-center text-center">
                 <div className="max-w-md w-full">
-                  <BrokerErrorBanner />
+                  <BrokerErrorBanner error={error} />
                 </div>
                  <Button asChild variant="outline" className="mt-6">
                     <Link href="/dashboard/investments">

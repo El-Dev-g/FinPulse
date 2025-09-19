@@ -7,9 +7,17 @@
  * - placeOrder - Submits a trade order to Alpaca.
  */
 import { z } from 'zod';
-
-// NOTE: The Alpaca integration is temporarily disabled due to package installation issues.
-// These functions will return an error until the issue is resolved.
+import {
+  getAccount,
+  getPortfolioHistory,
+  getPositions,
+  getAsset,
+  getBars,
+  getNews,
+  createOrder,
+} from '@/lib/alpaca-service';
+import type { OrderParams } from '@/lib/types';
+import { endOfDay, startOfDay, sub } from 'date-fns';
 
 const MarketDataRequestSchema = z.object({
   dataType: z.enum(['portfolio', 'stock-details']),
@@ -17,35 +25,48 @@ const MarketDataRequestSchema = z.object({
 });
 export type MarketDataRequest = z.infer<typeof MarketDataRequestSchema>;
 
-const OrderParamsSchema = z.object({
-  symbol: z.string(),
-  qty: z.number(),
-  side: z.enum(['buy', 'sell']),
-  type: z.enum(['market', 'limit', 'stop', 'stop_limit']),
-  time_in_force: z.enum(['day', 'gtc', 'opg', 'cls', 'ioc', 'fok']),
-  limit_price: z.number().optional(),
-  stop_price: z.number().optional(),
-});
-export type OrderParams = z.infer<typeof OrderParamsSchema>;
-
-
-const errorResponse = {
-    account: null,
-    portfolio: [],
-    asset: null,
-    bars: [],
-    news: [],
-    equity_change_today: "0",
-};
-
-
 // Exported functions that call the flows
 export async function getMarketData(request: MarketDataRequest) {
-  // Bypassing flow and tool to throw error immediately
-  throw new Error("Alpaca client is temporarily unavailable due to package installation issues.");
+  if (request.dataType === 'portfolio') {
+    const [account, positions, portfolioHistory] = await Promise.all([
+      getAccount(),
+      getPositions(),
+      getPortfolioHistory({
+        period: '3M',
+        timeframe: '1D',
+      }),
+    ]);
+    return {
+      account,
+      portfolio: positions,
+      history: portfolioHistory,
+      equity_change_today: account.equity_last_day,
+    };
+  }
+  if (request.dataType === 'stock-details' && request.symbol) {
+    const today = new Date();
+    const [asset, bars, news] = await Promise.all([
+      getAsset(request.symbol),
+      getBars({
+        symbols: [request.symbol],
+        timeframe: '1Day',
+        start: sub(startOfDay(today), { years: 1 }).toISOString(),
+        end: endOfDay(today).toISOString(),
+      }),
+      getNews({
+        symbols: [request.symbol],
+        limit: 10,
+      }),
+    ]);
+    return {
+      asset,
+      bars: bars[request.symbol] || [],
+      news,
+    };
+  }
+  throw new Error('Invalid request');
 }
 
 export async function placeOrder(order: OrderParams) {
-  // Bypassing flow and tool to throw error immediately
-  throw new Error("Alpaca client is temporarily unavailable due to package installation issues.");
+  return createOrder(order);
 }
