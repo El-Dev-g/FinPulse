@@ -31,7 +31,7 @@ export default function InvestmentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (sync = false) => {
     if (!user || !isPro) {
       setLoading(false);
       return;
@@ -39,7 +39,8 @@ export default function InvestmentsPage() {
     setLoading(true);
     setError(null);
     try {
-      const result = await getPortfolio();
+      // Pass sync flag to the action
+      const result = await getPortfolio(sync);
       if (result.error || !result.data) {
         setError(result.error || "Could not load portfolio data.");
         setInvestments([]);
@@ -47,13 +48,12 @@ export default function InvestmentsPage() {
       } else {
         const { portfolio: fetchedPortfolio, account: fetchedAccount } = result.data;
         
-        // Ensure fetchedPortfolio is an array, as Alpaca might return an empty object
         const positionsArray = Array.isArray(fetchedPortfolio) ? fetchedPortfolio : [];
 
         const processedPortfolio = positionsArray.map((pos: Position) => ({
             ...pos,
             id: pos.asset_id, // Use asset_id as the unique key
-            name: pos.symbol, // Use symbol as name
+            name: pos.symbol, // Use symbol as name,
             logoUrl: `https://c-alpha.imgix.net/logos/${pos.symbol}.svg`,
             currentValue: parseFloat(pos.market_value),
         }));
@@ -70,7 +70,13 @@ export default function InvestmentsPage() {
   }, [user, isPro]);
 
   useEffect(() => {
-    fetchData();
+    fetchData(); // Initial fetch from DB
+    
+    // Then sync with Alpaca in the background
+    setTimeout(() => {
+        fetchData(true);
+    }, 100);
+
   }, [fetchData]);
 
   const filteredInvestments = useMemo(() => {
@@ -105,7 +111,7 @@ export default function InvestmentsPage() {
     )
   }
 
-  if (loading) {
+  if (loading && investments.length === 0) {
     return (
         <main className="flex-1 p-4 md:p-6 lg:p-8 flex items-center justify-center">
             <Loader className="h-12 w-12 animate-spin text-primary" />
@@ -163,7 +169,7 @@ export default function InvestmentsPage() {
                                           <Button 
                                           variant="ghost" 
                                           size="icon" 
-                                          className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                                          className="absolute right-1 top-1/2 -translate-y-1-2 h-7 w-7"
                                           onClick={() => setSearchTerm('')}
                                           >
                                           <X className="h-4 w-4" />

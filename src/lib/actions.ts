@@ -7,8 +7,8 @@ import { answerQuestion } from "@/ai/flows/chatbot";
 import { generateDescription } from "@/ai/flows/generate-description";
 import { generateSmartAlerts } from "@/ai/flows/generate-smart-alerts";
 import { getMarketData, placeOrder } from "@/ai/flows/get-market-data";
-import { getBudgets, getCategories, getGoals, getRecurringTransactions, getTransactions } from "./db";
-import type { Advice, Budget, Category, Goal, RecurringTransaction, Transaction, OrderParams } from "./types";
+import { getBudgets, getCategories, getGoals, getRecurringTransactions, getTransactions, getInvestments, syncInvestments } from "./db";
+import type { Advice, Budget, Category, Goal, RecurringTransaction, Transaction, OrderParams, Position, AlpacaAccount } from "./types";
 import { processBudgets } from "./utils";
 import fs from 'fs/promises';
 import path from 'path';
@@ -97,11 +97,27 @@ export async function getSmartAlerts(): Promise<SmartAlert[]> {
 
 
 // New Alpaca-based market data functions
-export async function getPortfolio() {
+export async function getPortfolio(sync: boolean = false) {
     try {
-        const result = await getMarketData({ dataType: 'portfolio' });
-        return { data: result, error: null };
+        // Always fetch from Alpaca if a sync is requested or if there's no data in DB
+        const dbInvestments = await getInvestments();
+        if (sync || dbInvestments.length === 0) {
+            console.log("Syncing portfolio from Alpaca...");
+            const alpacaData = await getMarketData({ dataType: 'portfolio' });
+            if (alpacaData?.portfolio) {
+                const positionsArray = Array.isArray(alpacaData.portfolio) ? alpacaData.portfolio : [];
+                await syncInvestments(positionsArray as Position[]);
+            }
+            return { data: alpacaData, error: null };
+        }
+
+        // If not syncing, return data from DB + account info from Alpaca
+        console.log("Fetching portfolio from DB...");
+        const accountData = await getMarketData({ dataType: 'portfolio' }); // Still need account data
+        return { data: { portfolio: dbInvestments, account: accountData.account }, error: null };
+
     } catch(e: any) {
+        console.error("Error in getPortfolio action:", e);
         return { data: null, error: e.message || "An unknown error occurred while fetching portfolio." };
     }
 }
@@ -118,6 +134,8 @@ export async function getStockDetails(symbol: string) {
 export async function submitOrder(order: OrderParams) {
     try {
         const result = await placeOrder(order);
+        // After a successful order, trigger a sync
+        await getPortfolio(true); 
         return { data: result, error: null };
     } catch (e: any) {
         return { data: null, error: e.message || "An unknown error occurred while placing the order." };

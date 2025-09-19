@@ -193,7 +193,7 @@ export interface AlpacaAccount {
   account_blocked: boolean;
   shorting_enabled: boolean;
   multiplier: string;
-  equity_change_today?: string; // Custom property I'll add
+  equity_change_today?: number; // Changed to number
 }
 
 export interface Bar {

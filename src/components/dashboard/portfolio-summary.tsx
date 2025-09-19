@@ -29,23 +29,28 @@ export function PortfolioSummary({ investments, account }: PortfolioSummaryProps
             totalGainLoss: 0,
             totalGainLossPercentage: 0,
             buyingPower: 0,
+            equityChangeToday: 0,
         }
     }
-    const { portfolio_value, buying_power } = account;
+    const { portfolio_value, buying_power, equity, last_equity } = account;
     const totalCost = investments.reduce((sum, pos) => sum + (parseFloat(pos.cost_basis)), 0);
     const totalMarketValue = investments.reduce((sum, pos) => sum + (parseFloat(pos.market_value)), 0);
     const totalGainLoss = totalMarketValue - totalCost;
     const totalGainLossPercentage = totalCost > 0 ? (totalGainLoss / totalCost) * 100 : 0;
+    const equityChangeToday = parseFloat(equity) - parseFloat(last_equity);
     
     return {
       totalValue: parseFloat(portfolio_value),
       buyingPower: parseFloat(buying_power),
       totalGainLoss,
-      totalGainLossPercentage
+      totalGainLossPercentage,
+      equityChangeToday,
     };
   }, [investments, account]);
 
   const isOverallGain = summary.totalGainLoss >= 0;
+  const isTodayGain = summary.equityChangeToday >= 0;
+
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -61,11 +66,11 @@ export function PortfolioSummary({ investments, account }: PortfolioSummaryProps
         <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">Today's Change</CardTitle>
-                {parseFloat(account?.equity_change_today || '0') >= 0 ? <TrendingUp className="h-4 w-4 text-green-600"/> : <TrendingDown className="h-4 w-4 text-destructive"/>}
+                {isTodayGain ? <TrendingUp className="h-4 w-4 text-green-600"/> : <TrendingDown className="h-4 w-4 text-destructive"/>}
             </CardHeader>
             <CardContent>
-                 <p className={cn("text-2xl font-bold", parseFloat(account?.equity_change_today || '0') >= 0 ? "text-green-600" : "text-destructive")}>
-                    {formatCurrency(parseFloat(account?.equity_change_today || '0'))}
+                 <p className={cn("text-2xl font-bold", isTodayGain ? "text-green-600" : "text-destructive")}>
+                    {formatCurrency(summary.equityChangeToday)}
                 </p>
             </CardContent>
         </Card>
