@@ -6,12 +6,22 @@ import { suggestCategory } from "@/ai/flows/suggest-category";
 import { answerQuestion } from "@/ai/flows/chatbot";
 import { generateDescription } from "@/ai/flows/generate-description";
 import { generateSmartAlerts } from "@/ai/flows/generate-smart-alerts";
-import { getMarketData, placeOrder } from "@/ai/flows/get-market-data";
+import {
+  getAccount,
+  getPortfolioHistory,
+  getPositions,
+  getAsset,
+  getBars,
+  getNews,
+  createOrder,
+  getLatestQuote,
+} from '@/lib/alpaca-service';
 import { getBudgets, getCategories, getGoals, getRecurringTransactions, getTransactions, getInvestments, syncInvestments } from "./db";
 import type { Advice, Budget, Category, Goal, RecurringTransaction, Transaction, OrderParams, Position, AlpacaAccount } from "./types";
 import { processBudgets } from "./utils";
 import fs from 'fs/promises';
 import path from 'path';
+import { endOfDay, startOfDay, sub } from "date-fns";
 
 export async function getFinancialAdvice(prompt: string) {
   const advice = await getPersonalizedFinancialAdvice({ prompt });
@@ -99,11 +109,27 @@ export async function getSmartAlerts(): Promise<SmartAlert[]> {
 // New Alpaca-based market data functions
 export async function getPortfolio(sync: boolean = false) {
     try {
-        // Always fetch from Alpaca if a sync is requested or if there's no data in DB
         const dbInvestments = await getInvestments();
         if (sync || dbInvestments.length === 0) {
             console.log("Syncing portfolio from Alpaca...");
-            const alpacaData = await getMarketData({ dataType: 'portfolio' });
+             const [account, positions, portfolioHistory] = await Promise.all([
+                getAccount(),
+                getPositions(),
+                getPortfolioHistory({
+                    period: '3M',
+                    timeframe: '1D',
+                }),
+            ]);
+
+            const alpacaData = {
+                account: {
+                    ...account,
+                    equity_change_today: parseFloat(account.equity) - parseFloat(account.last_equity)
+                },
+                portfolio: positions,
+                history: portfolioHistory,
+            };
+
             if (alpacaData?.portfolio) {
                 const positionsArray = Array.isArray(alpacaData.portfolio) ? alpacaData.portfolio : [];
                 await syncInvestments(positionsArray as Position[]);
@@ -111,10 +137,14 @@ export async function getPortfolio(sync: boolean = false) {
             return { data: alpacaData, error: null };
         }
 
-        // If not syncing, return data from DB + account info from Alpaca
         console.log("Fetching portfolio from DB...");
-        const accountData = await getMarketData({ dataType: 'portfolio' }); // Still need account data
-        return { data: { portfolio: dbInvestments, account: accountData.account }, error: null };
+        const accountInfo = await getAccount(); // Still need live account data
+        const accountData = {
+            ...accountInfo,
+            equity_change_today: parseFloat(accountInfo.equity) - parseFloat(accountInfo.last_equity)
+        };
+
+        return { data: { portfolio: dbInvestments, account: accountData }, error: null };
 
     } catch(e: any) {
         console.error("Error in getPortfolio action:", e);
@@ -124,7 +154,42 @@ export async function getPortfolio(sync: boolean = false) {
 
 export async function getStockDetails(symbol: string) {
     try {
-        const result = await getMarketData({ dataType: 'stock-details', symbol });
+        const today = new Date();
+        const [asset, bars, news, latestQuote] = await Promise.all([
+            getAsset(symbol),
+            getBars({
+                symbols: [symbol],
+                timeframe: '1Day',
+                start: sub(startOfDay(today), { years: 1 }).toISOString(),
+                end: endOfDay(today).toISOString(),
+            }),
+            getNews({
+                symbols: [symbol],
+                limit: 10,
+            }),
+            getLatestQuote(symbol),
+        ]);
+        
+        const barsData = bars[symbol] || [];
+        
+        if (latestQuote && barsData.length === 0) {
+            barsData.push({
+                t: new Date().toISOString(),
+                o: latestQuote.c,
+                h: latestQuote.c,
+                l: latestQuote.c,
+                c: latestQuote.c,
+                v: 0,
+            });
+        }
+        
+        const result = {
+            asset,
+            bars: barsData,
+            news,
+            latestQuote: latestQuote,
+        };
+
         return { data: result, error: null };
     } catch(e: any) {
         return { data: null, error: e.message || "An unknown error occurred while fetching stock details." };
@@ -133,8 +198,8 @@ export async function getStockDetails(symbol: string) {
 
 export async function submitOrder(order: OrderParams) {
     try {
-        const result = await placeOrder(order);
-        // After a successful order, trigger a sync
+        const result = await createOrder(order);
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s for Alpaca to process order
         await getPortfolio(true); 
         return { data: result, error: null };
     } catch (e: any) {

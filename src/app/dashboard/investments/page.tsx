@@ -1,4 +1,3 @@
-
 // src/app/dashboard/investments/page.tsx
 "use client";
 
@@ -39,7 +38,6 @@ export default function InvestmentsPage() {
     setLoading(true);
     setError(null);
     try {
-      // Pass sync flag to the action
       const result = await getPortfolio(sync);
       if (result.error || !result.data) {
         setError(result.error || "Could not load portfolio data.");
@@ -48,12 +46,12 @@ export default function InvestmentsPage() {
       } else {
         const { portfolio: fetchedPortfolio, account: fetchedAccount } = result.data;
         
-        const positionsArray = Array.isArray(fetchedPortfolio) ? fetchedPortfolio : [];
+        const positionsArray = Array.isArray(fetchedPortfolio) ? fetchedPortfolio : Object.values(fetchedPortfolio);
 
         const processedPortfolio = positionsArray.map((pos: Position) => ({
             ...pos,
-            id: pos.asset_id, // Use asset_id as the unique key
-            name: pos.symbol, // Use symbol as name,
+            id: pos.asset_id,
+            name: pos.symbol,
             logoUrl: `https://c-alpha.imgix.net/logos/${pos.symbol}.svg`,
             currentValue: parseFloat(pos.market_value),
         }));
@@ -70,9 +68,8 @@ export default function InvestmentsPage() {
   }, [user, isPro]);
 
   useEffect(() => {
-    fetchData(); // Initial fetch from DB
+    fetchData();
     
-    // Then sync with Alpaca in the background
     setTimeout(() => {
         fetchData(true);
     }, 100);
