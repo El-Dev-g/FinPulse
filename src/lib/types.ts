@@ -2,7 +2,8 @@
 // src/lib/types.ts
 import type { ChartConfig } from "@/components/ui/chart";
 import type { LucideIcon } from "lucide-react";
-import type { Position, Account, Bar, Order, News, Asset } from '@alpacahq/alpaca-trade-api/dist/resources/entities';
+import type { Position, Account as AlpacaAPIAccount, Bar, Order, News, Asset } from '@alpacahq/alpaca-trade-api/dist/resources/entities';
+
 
 export interface UserProfile {
   currency?: string;
@@ -61,6 +62,7 @@ export interface FinancialTask {
   dueDate?: string; // ISO string
   dueTime?: string; // HH:mm format
   projectId?: string;
+  goalId?: string;
   createdAt: any; // Firestore timestamp
 }
 
@@ -148,8 +150,10 @@ export type ClientInvestment = Position & {
   market_value: number;
   cost_basis: number;
   qty: number;
+  name: string;
+  currentValue: number;
 }
-export type AlpacaAccount = Account;
+export type AlpacaAccount = AlpacaAPIAccount;
 
 export interface StockDetails {
     asset: Asset;
@@ -167,6 +171,7 @@ export interface OrderParams {
     stop_price?: number;
 }
 export type AlpacaOrder = Order;
+export type NewsArticle = News;
 
 
 

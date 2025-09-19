@@ -41,18 +41,24 @@ export default function InvestmentsPage() {
     try {
       const result = await getPortfolio();
       if (result.error || !result.data) {
-        // Set the error state instead of throwing an error
         setError(result.error || "Could not load portfolio data.");
         setInvestments([]);
         setAccount(null);
       } else {
         const { portfolio: fetchedPortfolio, account: fetchedAccount } = result.data;
-        setInvestments(fetchedPortfolio || []);
+        const processedPortfolio = (fetchedPortfolio || []).map((pos: any) => ({
+            ...pos,
+            logoUrl: `https://c-alpha.imgix.net/logos/${pos.symbol}.svg`,
+            name: pos.symbol, // In a real app, you might fetch the full name
+            currentValue: parseFloat(pos.market_value),
+        }));
+
+        setInvestments(processedPortfolio);
         setAccount(fetchedAccount || null);
       }
     } catch (e: any) {
       console.error("Error fetching portfolio:", e);
-       setError("This feature is temporarily unavailable due to issues with the brokerage API connection. The team has been notified.");
+       setError(e.message || "An unexpected error occurred. Please ensure your Alpaca API keys are correctly set in the .env file.");
     } finally {
       setLoading(false);
     }
@@ -63,6 +69,7 @@ export default function InvestmentsPage() {
   }, [fetchData]);
 
   const filteredInvestments = useMemo(() => {
+    if (!investments) return [];
     return investments.filter(inv => 
       inv.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       inv.symbol.toLowerCase().includes(searchTerm.toLowerCase())
@@ -100,6 +107,29 @@ export default function InvestmentsPage() {
         </main>
     )
   }
+  
+  if (error) {
+     return (
+        <main className="flex-1 p-4 md:p-6 lg:p-8">
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h2 className="text-3xl font-bold tracking-tight font-headline">
+                    Investment Portfolio
+                    </h2>
+                    <p className="text-muted-foreground">Track and manage your stock holdings via Alpaca.</p>
+                </div>
+            </div>
+             <Alert variant="destructive" className="mb-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Feature Temporarily Unavailable</AlertTitle>
+                <AlertDescriptionComponent>
+                    The investment tracking feature is currently offline due to a technical issue with our brokerage partner integration. We are working to resolve this.
+                </AlertDescriptionComponent>
+            </Alert>
+        </main>
+    )
+  }
+
 
   return (
     <>
@@ -115,70 +145,58 @@ export default function InvestmentsPage() {
                     </div>
                 </div>
 
-                {error && (
-                    <Alert variant="destructive" className="mb-6">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Feature Unavailable</AlertTitle>
-                        <AlertDescriptionComponent>
-                            {error}
-                        </AlertDescriptionComponent>
-                    </Alert>
-                )}
-
-                {!error && (
-                  investments.length === 0 && !loading ? (
-                      <div className="text-center py-20">
-                          <h3 className="text-lg font-semibold">Your Portfolio is Empty</h3>
-                          <p className="text-muted-foreground mt-2">
-                              Buy your first stock to start tracking your investments.
-                          </p>
-                          <Button onClick={() => router.push(`/dashboard/investments/trade?action=buy`)} className="mt-6">
-                              <Plus className="mr-2" />
-                              Make a Trade
-                          </Button>
-                      </div>
-                  ) : (
-                    <div className="space-y-6">
-                        <PortfolioSummary investments={investments} account={account} />
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div className="lg:col-span-2">
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>Holdings</CardTitle>
-                                        <CardDescription>Your current investment positions.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="relative mb-4">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <Input 
-                                            placeholder="Search holdings..." 
-                                            className="pl-9"
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                        />
-                                        {searchTerm && (
-                                            <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                                            onClick={() => setSearchTerm('')}
-                                            >
-                                            <X className="h-4 w-4" />
-                                            </Button>
-                                        )}
-                                        </div>
-                                        <InvestmentHoldingsTable 
-                                            investments={filteredInvestments}
-                                        />
-                                    </CardContent>
-                                </Card>
-                            </div>
-                            <div className="lg:col-span-1">
-                                <InvestmentPerformanceChart investments={investments} />
-                            </div>
-                        </div>
+                {investments.length === 0 && !loading ? (
+                    <div className="text-center py-20">
+                        <h3 className="text-lg font-semibold">Your Portfolio is Empty</h3>
+                        <p className="text-muted-foreground mt-2">
+                            Buy your first stock to start tracking your investments.
+                        </p>
+                        <Button onClick={() => router.push(`/dashboard/investments/trade?action=buy`)} className="mt-6">
+                            <Plus className="mr-2" />
+                            Make a Trade
+                        </Button>
                     </div>
-                  )
+                ) : (
+                  <div className="space-y-6">
+                      <PortfolioSummary investments={investments} account={account} />
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                          <div className="lg:col-span-2">
+                              <Card>
+                                  <CardHeader>
+                                      <CardTitle>Holdings</CardTitle>
+                                      <CardDescription>Your current investment positions.</CardDescription>
+                                  </CardHeader>
+                                  <CardContent>
+                                      <div className="relative mb-4">
+                                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                      <Input 
+                                          placeholder="Search holdings..." 
+                                          className="pl-9"
+                                          value={searchTerm}
+                                          onChange={(e) => setSearchTerm(e.target.value)}
+                                      />
+                                      {searchTerm && (
+                                          <Button 
+                                          variant="ghost" 
+                                          size="icon" 
+                                          className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                                          onClick={() => setSearchTerm('')}
+                                          >
+                                          <X className="h-4 w-4" />
+                                          </Button>
+                                      )}
+                                      </div>
+                                      <InvestmentHoldingsTable 
+                                          investments={filteredInvestments}
+                                      />
+                                  </CardContent>
+                              </Card>
+                          </div>
+                          <div className="lg:col-span-1">
+                              <InvestmentPerformanceChart investments={investments} />
+                          </div>
+                      </div>
+                  </div>
                 )}
             </div>
         </div>

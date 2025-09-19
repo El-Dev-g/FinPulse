@@ -52,7 +52,7 @@ export default function StockDetailPage() {
             const result = await getStockDetails(symbol as string);
 
             if (result.error || !result.data?.asset) {
-                throw new Error(result.error || "Could not load data for this stock.");
+                throw new Error(result.error || "Could not load data for this stock. Please ensure your Alpaca API keys are set correctly.");
             }
             
             setStockData(result.data as StockDetails);
@@ -69,12 +69,6 @@ export default function StockDetailPage() {
         fetchData();
     }, [fetchData]);
     
-    const latestQuote = stockData?.bars?.[stockData.bars.length - 1];
-    const prevQuote = stockData?.bars?.[stockData.bars.length - 2];
-    const priceChange = latestQuote && prevQuote ? latestQuote.c - prevQuote.c : 0;
-    const priceChangePercent = prevQuote ? (priceChange / prevQuote.c) * 100 : 0;
-    const isPositiveChange = priceChange >= 0;
-
     if (loading) {
         return (
             <main className="flex-1 p-4 md:p-6 lg:p-8 flex items-center justify-center">
@@ -86,7 +80,7 @@ export default function StockDetailPage() {
     if (error || !stockData) {
         return (
              <main className="flex-1 p-4 md:p-6 lg:p-8 flex flex-col items-center justify-center text-center">
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="max-w-md">
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Error Loading Stock Data</AlertTitle>
                     <AlertDescription>{error}</AlertDescription>
@@ -100,6 +94,12 @@ export default function StockDetailPage() {
             </main>
         )
     }
+
+    const latestQuote = stockData?.bars?.[stockData.bars.length - 1];
+    const prevQuote = stockData?.bars?.[stockData.bars.length - 2];
+    const priceChange = latestQuote && prevQuote ? latestQuote.c - prevQuote.c : 0;
+    const priceChangePercent = prevQuote && prevQuote.c > 0 ? (priceChange / prevQuote.c) * 100 : 0;
+    const isPositiveChange = priceChange >= 0;
     
     const formatPublishedDate = (dateString: string) => {
         return format(parseISO(dateString), 'LLL dd, yyyy');
@@ -149,7 +149,7 @@ export default function StockDetailPage() {
                         </div>
 
                         <TabsContent value="about" className="w-full mt-6 px-4 sm:px-6 space-y-6">
-                             <StockPriceChart data={stockData.bars} isPositive={isPositiveChange}/>
+                             <StockPriceChart data={stockData.bars.map(b => ({ date: b.t, close: b.c }))} isPositive={isPositiveChange}/>
                             {stockData.asset.industry && (
                                  <div className="space-y-2">
                                     <h3 className="text-lg font-semibold font-headline">Industry</h3>
@@ -174,7 +174,7 @@ export default function StockDetailPage() {
                          <TabsContent value="news" className="w-full mt-6 p-0">
                             <div className="space-y-0 border-t">
                                 {stockData.news && stockData.news.length > 0 ? (
-                                    stockData.news.map((article) => (
+                                    stockData.news.map((article: NewsArticle) => (
                                         <a key={article.id} href={article.url} target="_blank" rel="noopener noreferrer" className="block p-4 sm:p-6 border-b hover:bg-muted/50">
                                             <div className="flex gap-4 items-start">
                                                 <div className="flex-grow">

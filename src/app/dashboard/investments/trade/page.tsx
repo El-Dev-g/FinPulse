@@ -61,7 +61,7 @@ function TradePageContent() {
             setStockDetails(stockDetailsResult.data);
             setAccount(portfolioResult.data.account);
             
-            const currentHolding = portfolioResult.data.portfolio?.find(inv => inv.symbol === sym);
+            const currentHolding = portfolioResult.data.portfolio?.find((inv: any) => inv.symbol === sym);
             setHolding(currentHolding || null);
 
         } catch (e: any) {
