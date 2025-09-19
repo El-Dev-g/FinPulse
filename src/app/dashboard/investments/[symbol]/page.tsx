@@ -95,7 +95,7 @@ export default function StockDetailPage() {
     const latestQuote = stockData?.bars?.[stockData.bars.length - 1];
     const prevQuote = stockData?.bars?.[stockData.bars.length - 2];
     const priceChange = latestQuote && prevQuote ? latestQuote.c - prevQuote.c : 0;
-    const priceChangePercent = prevQuote && prevQuote.c > 0 ? (priceChange / prevQuote.c) * 100 : 0;
+    const priceChangePercent = prevQuote && prevQuote.c > 0 && latestQuote ? (priceChange / prevQuote.c) * 100 : 0;
     const isPositiveChange = priceChange >= 0;
     
     const formatPublishedDate = (dateString: string) => {
@@ -146,7 +146,11 @@ export default function StockDetailPage() {
                         </div>
 
                         <TabsContent value="about" className="w-full mt-6 px-4 sm:px-6 space-y-6">
-                             <StockPriceChart data={stockData.bars.map(b => ({ date: b.t, close: b.c }))} isPositive={isPositiveChange}/>
+                            {stockData.bars && stockData.bars.length > 0 ? (
+                                <StockPriceChart data={stockData.bars.map(b => ({ date: b.t, close: b.c }))} isPositive={isPositiveChange}/>
+                            ) : (
+                                <div className="h-[300px] flex items-center justify-center text-muted-foreground">No chart data available.</div>
+                            )}
                             {stockData.asset.industry && (
                                  <div className="space-y-2">
                                     <h3 className="text-lg font-semibold font-headline">Industry</h3>

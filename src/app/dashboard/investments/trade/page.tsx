@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader, AlertCircle, Search } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { InvestmentTradeForm } from '@/components/dashboard/investment-trade-form';
-import type { AlpacaAccount, ClientInvestment, OrderParams } from '@/lib/types';
+import type { AlpacaAccount, ClientInvestment, OrderParams, StockDetails } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import BrokerErrorBanner from '@/components/dashboard/broker-error-banner';
@@ -31,7 +31,7 @@ function TradePageContent() {
     const [symbol, setSymbol] = useState(searchParams.get('symbol') || '');
     const [action, setAction] = useState(searchParams.get('action') || 'buy');
 
-    const [stockDetails, setStockDetails] = useState<any>(null);
+    const [stockDetails, setStockDetails] = useState<StockDetails | null>(null);
     const [account, setAccount] = useState<AlpacaAccount | null>(null);
     const [holding, setHolding] = useState<ClientInvestment | null>(null);
     
@@ -57,7 +57,7 @@ function TradePageContent() {
                  throw new Error(portfolioResult.error || "Could not load account data.");
             }
             
-            setStockDetails(stockDetailsResult.data);
+            setStockDetails(stockDetailsResult.data as StockDetails);
             setAccount(portfolioResult.data.account);
             
             const currentHolding = portfolioResult.data.portfolio?.find((inv: any) => inv.symbol === sym);
@@ -116,6 +116,7 @@ function TradePageContent() {
         }
     }
 
+    const latestQuote = stockDetails?.bars?.[stockDetails.bars.length - 1];
 
     return (
         <>
@@ -152,18 +153,24 @@ function TradePageContent() {
                             </Avatar>
                             <div>
                                 <CardTitle className="text-2xl font-bold tracking-tight font-headline">{stockDetails.asset.name}</CardTitle>
-                                <CardDescription>{stockDetails.asset.symbol} - Current Price: {formatCurrency(stockDetails.bars[stockDetails.bars.length - 1].c)}</CardDescription>
+                                <CardDescription>{stockDetails.asset.symbol} - Current Price: {latestQuote ? formatCurrency(latestQuote.c) : 'N/A'}</CardDescription>
                             </div>
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <InvestmentTradeForm
-                            holding={holding}
-                            account={account}
-                            currentPrice={stockDetails.bars[stockDetails.bars.length - 1].c}
-                            onTrade={handleTrade}
-                            defaultAction={(action === 'buy' || action === 'sell') ? action : 'buy'}
-                        />
+                         {latestQuote ? (
+                            <InvestmentTradeForm
+                                holding={holding}
+                                account={account}
+                                currentPrice={latestQuote.c}
+                                onTrade={handleTrade}
+                                defaultAction={(action === 'buy' || action === 'sell') ? action : 'buy'}
+                            />
+                        ) : (
+                            <div className="text-center py-10 text-muted-foreground">
+                                <p>Could not retrieve live price data for this stock.</p>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             )}
