@@ -1,3 +1,4 @@
+
 // src/lib/db.ts
 import { db } from './firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, orderBy, setDoc, writeBatch } from 'firebase/firestore';
@@ -129,7 +130,7 @@ export const deleteUserData = async (uid: string): Promise<void> => {
 
 
 // --- Goals ---
-export const addGoal = async (goal: Omit<Goal, 'id' | 'createdAt'>, isPro: boolean = true) => {
+export const addGoal = async (goal: Omit<Goal, 'id' | 'createdAt' | 'status'>, isPro: boolean = true) => {
     const goalData: Omit<Goal, 'id' | 'createdAt'> = {
         ...goal,
         status: 'active',
@@ -199,8 +200,19 @@ export const updateBudget = (id: string, budget: Partial<Budget>) => updateDataI
 export const deleteBudget = (id: string) => deleteDataItem('budgets', id);
 
 // --- Transactions ---
-export const addTransaction = async (transaction: Omit<Transaction, 'id' | 'Icon'>) => {
-    return addDataItem('transactions', transaction);
+export const addTransaction = (transaction: Omit<Transaction, 'id' | 'Icon' | 'createdAt'>) => {
+    const transactionData: Partial<Omit<Transaction, 'id' | 'createdAt'>> = {
+        description: transaction.description,
+        amount: transaction.amount,
+        category: transaction.category,
+        date: transaction.date,
+        source: transaction.source,
+    };
+
+    if (transaction.goalId) transactionData.goalId = transaction.goalId;
+    if (transaction.projectId) transactionData.projectId = transaction.projectId;
+    
+    return addDataItem('transactions', transactionData);
 };
 export const getTransactions = () => getData<Transaction>('transactions');
 export const deleteTransaction = (id: string) => deleteDataItem('transactions', id);
@@ -242,19 +254,7 @@ export const deleteRecurringTransaction = (id: string) => deleteDataItem('recurr
 
 // --- Categories ---
 export const addCategory = async (category: Omit<Category, 'id' | 'createdAt'>, customUid?: string): Promise<string> => {
-    const uid = customUid || await getUid();
-    if (!uid) throw new Error("User not authenticated");
-    
-    // Create a new document with an auto-generated ID
-    const docRef = doc(collection(db, `users/${uid}/categories`));
-    
-    // Use set to create the document with the desired data
-    await setDoc(docRef, {
-        ...category,
-        createdAt: new Date(),
-    });
-    
-    return docRef.id;
+    return addDataItem('categories', category, customUid);
 };
 export const getCategories = () => getData<Category>('categories');
 export const deleteCategory = (id: string) => deleteDataItem('categories', id);
