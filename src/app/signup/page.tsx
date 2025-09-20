@@ -1,3 +1,4 @@
+
 // src/app/signup/page.tsx
 "use client";
 
@@ -14,6 +15,9 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
   CardFooter,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -99,7 +103,7 @@ function EmailSignUpForm() {
 
   return (
     <form onSubmit={handleSignUp}>
-      <CardContent className="space-y-4">
+      <CardContent className="p-0 space-y-4">
         <div className="space-y-2">
           <Label htmlFor="displayName">Username</Label>
           <Input
@@ -153,9 +157,9 @@ function EmailSignUpForm() {
 
         {error && <p className="text-sm text-destructive">{error}</p>}
       </CardContent>
-      <CardFooter className="flex flex-col gap-4">
-         <div className="flex items-center space-x-2">
-          <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(checked) => setTermsAccepted(Boolean(checked))} />
+      <CardFooter className="p-0 flex flex-col gap-4 mt-6">
+         <div className="flex items-start space-x-2">
+          <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(checked) => setTermsAccepted(Boolean(checked))} className="mt-0.5" />
             <label
               htmlFor="terms"
               className="text-sm text-muted-foreground"
@@ -200,29 +204,40 @@ export default function SignUpPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full space-y-6">
-        <div className="flex flex-col items-center text-center">
+      <div className="w-full max-w-4xl space-y-6">
+        <div className="flex justify-center">
           <Link href="/">
             <Logo />
           </Link>
-           <h1 className="text-2xl font-semibold tracking-tight mt-6">
-            Create an account
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Enter your details below to create your account
-          </p>
         </div>
-        <Card className="w-full">
-          <EmailSignUpForm />
-          <p className="mt-4 px-6 pb-6 text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link
-              href="/signin"
-              className="font-semibold text-primary hover:underline"
-            >
-              Sign In
-            </Link>
-          </p>
+        <Card className="w-full overflow-hidden">
+          <div className="grid md:grid-cols-2">
+             <div className="hidden md:flex flex-col justify-between bg-muted p-8">
+                <div>
+                  <h2 className="text-2xl font-bold font-headline">Join FinPulse Today</h2>
+                  <p className="text-muted-foreground mt-2">
+                    Start your journey to financial clarity. Create your free account to track spending, set goals, and build a brighter financial future.
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} FinPulse Inc.</p>
+              </div>
+            <div className="p-6 sm:p-8">
+              <CardHeader className="p-0 mb-6">
+                <CardTitle>Create an account</CardTitle>
+                <CardDescription>Enter your details below to create your account</CardDescription>
+              </CardHeader>
+              <EmailSignUpForm />
+              <p className="mt-6 text-center text-sm text-muted-foreground">
+                Already have an account?{" "}
+                <Link
+                  href="/signin"
+                  className="font-semibold text-primary hover:underline"
+                >
+                  Sign In
+                </Link>
+              </p>
+            </div>
+          </div>
         </Card>
       </div>
     </div>

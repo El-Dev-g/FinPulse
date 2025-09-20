@@ -1,3 +1,4 @@
+
 // src/app/forgot-password/page.tsx
 "use client";
 
@@ -51,60 +52,75 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full space-y-6">
+      <div className="w-full max-w-4xl space-y-6">
         <div className="flex justify-center">
           <Link href="/">
             <Logo />
           </Link>
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Forgot Password</CardTitle>
-            <CardDescription>
-              Enter your email to receive a password reset link.
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={handleResetPassword}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading || !!successMessage}
-                />
+        <Card className="overflow-hidden">
+          <div className="grid md:grid-cols-2">
+            <div className="hidden md:block bg-muted p-8">
+              <div className="flex flex-col h-full justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold font-headline">Reset Your Password</h2>
+                  <p className="text-muted-foreground mt-2">
+                    Don't worry, it happens to the best of us. Just enter your email and we'll help you get back on track.
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} FinPulse Inc.</p>
               </div>
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
-              )}
-              {successMessage && (
-                 <p className="text-sm text-green-600 dark:text-green-500">{successMessage}</p>
-              )}
-            </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading || !!successMessage}
-              >
-                {loading ? <Loader className="animate-spin" /> : <Mail />}
-                Send Reset Link
-              </Button>
-            </CardFooter>
-          </form>
-          <p className="text-center text-sm text-muted-foreground pb-6">
-            Remember your password?{" "}
-            <Link
-              href="/signin"
-              className="font-semibold text-primary hover:underline"
-            >
-              Sign In
-            </Link>
-          </p>
+            </div>
+            <div className="p-6 sm:p-8">
+              <CardHeader className="p-0 mb-6">
+                <CardTitle>Forgot Password</CardTitle>
+                <CardDescription>
+                  Enter your email to receive a password reset link.
+                </CardDescription>
+              </CardHeader>
+              <form onSubmit={handleResetPassword}>
+                <CardContent className="p-0 space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="m@example.com"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={loading || !!successMessage}
+                    />
+                  </div>
+                  {error && (
+                    <p className="text-sm text-destructive">{error}</p>
+                  )}
+                  {successMessage && (
+                    <p className="text-sm text-green-600 dark:text-green-500">{successMessage}</p>
+                  )}
+                </CardContent>
+                <CardFooter className="p-0 flex flex-col gap-4 mt-6">
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={loading || !!successMessage}
+                  >
+                    {loading ? <Loader className="animate-spin" /> : <Mail />}
+                    Send Reset Link
+                  </Button>
+                </CardFooter>
+              </form>
+              <p className="text-center text-sm text-muted-foreground pt-6">
+                Remember your password?{" "}
+                <Link
+                  href="/signin"
+                  className="font-semibold text-primary hover:underline"
+                >
+                  Sign In
+                </Link>
+              </p>
+            </div>
+          </div>
         </Card>
       </div>
     </div>

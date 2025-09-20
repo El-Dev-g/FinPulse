@@ -1,3 +1,4 @@
+
 // src/app/signin/page.tsx
 "use client";
 
@@ -54,7 +55,7 @@ function EmailSignInForm() {
 
   return (
     <form onSubmit={handleSignIn}>
-      <CardContent className="space-y-4">
+      <CardContent className="p-0 space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input
@@ -96,7 +97,7 @@ function EmailSignInForm() {
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
       </CardContent>
-      <CardFooter>
+      <CardFooter className="p-0 mt-6">
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? <Loader className="animate-spin" /> : <LogIn />}
           Sign In
@@ -126,29 +127,40 @@ export default function SignInPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full space-y-6">
-         <div className="flex flex-col items-center text-center">
+      <div className="w-full max-w-4xl space-y-6">
+         <div className="flex justify-center">
           <Link href="/">
             <Logo />
           </Link>
-           <h1 className="text-2xl font-semibold tracking-tight mt-6">
-            Welcome Back
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Enter your credentials to access your account
-          </p>
         </div>
-        <Card className="w-full text-left">
-          <EmailSignInForm />
-          <p className="px-6 pb-6 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link
-              href="/signup"
-              className="font-semibold text-primary hover:underline"
-            >
-              Sign Up
-            </Link>
-          </p>
+        <Card className="w-full text-left overflow-hidden">
+          <div className="grid md:grid-cols-2">
+            <div className="hidden md:flex flex-col justify-between bg-muted p-8">
+              <div>
+                <h2 className="text-2xl font-bold font-headline">Welcome Back!</h2>
+                <p className="text-muted-foreground mt-2">
+                  Sign in to access your financial dashboard and continue your journey towards financial freedom.
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} FinPulse Inc.</p>
+            </div>
+            <div className="p-6 sm:p-8">
+              <CardHeader className="p-0 mb-6">
+                <CardTitle>Sign In</CardTitle>
+                <CardDescription>Enter your credentials to access your account.</CardDescription>
+              </CardHeader>
+              <EmailSignInForm />
+              <p className="mt-6 text-center text-sm text-muted-foreground">
+                Don&apos;t have an account?{" "}
+                <Link
+                  href="/signup"
+                  className="font-semibold text-primary hover:underline"
+                >
+                  Sign Up
+                </Link>
+              </p>
+            </div>
+          </div>
         </Card>
       </div>
     </div>
