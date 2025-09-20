@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader, Mail } from "lucide-react";
 import { Logo } from "@/components/logo";
+import Image from "next/image";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -60,15 +61,22 @@ export default function ForgotPasswordPage() {
         </div>
         <Card className="overflow-hidden">
           <div className="grid md:grid-cols-2">
-            <div className="hidden md:block bg-muted p-8">
-              <div className="flex flex-col h-full justify-between">
-                <div>
+            <div className="relative hidden md:block">
+              <Image
+                src="https://picsum.photos/seed/auth-bg-3/800/1000"
+                alt="Abstract background image"
+                fill
+                className="object-cover"
+                data-ai-hint="abstract texture"
+              />
+              <div className="relative z-10 flex h-full flex-col justify-between bg-primary/70 p-8 text-primary-foreground">
+                 <div>
                   <h2 className="text-2xl font-bold font-headline">Reset Your Password</h2>
-                  <p className="text-muted-foreground mt-2">
+                  <p className="mt-2 text-primary-foreground/80">
                     Don't worry, it happens to the best of us. Just enter your email and we'll help you get back on track.
                   </p>
                 </div>
-                <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} FinPulse Inc.</p>
+                <p className="text-xs text-primary-foreground/70">© {new Date().getFullYear()} FinPulse Inc.</p>
               </div>
             </div>
             <div className="p-6 sm:p-8">

@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Loader, LogIn, Eye, EyeOff } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/hooks/use-auth";
+import Image from "next/image";
 
 function EmailSignInForm() {
   const [email, setEmail] = useState("");
@@ -135,14 +136,23 @@ export default function SignInPage() {
         </div>
         <Card className="w-full text-left overflow-hidden">
           <div className="grid md:grid-cols-2">
-            <div className="hidden md:flex flex-col justify-between bg-muted p-8">
-              <div>
-                <h2 className="text-2xl font-bold font-headline">Welcome Back!</h2>
-                <p className="text-muted-foreground mt-2">
-                  Sign in to access your financial dashboard and continue your journey towards financial freedom.
-                </p>
+            <div className="relative hidden md:block">
+              <Image
+                src="https://picsum.photos/seed/auth-bg-1/800/1000"
+                alt="Abstract background image"
+                fill
+                className="object-cover"
+                data-ai-hint="abstract texture"
+              />
+              <div className="relative z-10 flex h-full flex-col justify-between bg-primary/70 p-8 text-primary-foreground">
+                <div>
+                  <h2 className="text-2xl font-bold font-headline">Welcome Back!</h2>
+                  <p className="mt-2 text-primary-foreground/80">
+                    Sign in to access your financial dashboard and continue your journey towards financial freedom.
+                  </p>
+                </div>
+                <p className="text-xs text-primary-foreground/70">© {new Date().getFullYear()} FinPulse Inc.</p>
               </div>
-              <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} FinPulse Inc.</p>
             </div>
             <div className="p-6 sm:p-8">
               <CardHeader className="p-0 mb-6">

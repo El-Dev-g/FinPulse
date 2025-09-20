@@ -28,6 +28,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { addCategory, updateUserProfile } from "@/lib/db";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
+import Image from "next/image";
 
 
 function PasswordRequirement({ met, label }: { met: boolean; label: string }) {
@@ -212,15 +213,24 @@ export default function SignUpPage() {
         </div>
         <Card className="w-full overflow-hidden">
           <div className="grid md:grid-cols-2">
-             <div className="hidden md:flex flex-col justify-between bg-muted p-8">
+             <div className="relative hidden md:block">
+              <Image
+                src="https://picsum.photos/seed/auth-bg-2/800/1000"
+                alt="Abstract background image"
+                fill
+                className="object-cover"
+                data-ai-hint="abstract texture"
+              />
+              <div className="relative z-10 flex h-full flex-col justify-between bg-primary/70 p-8 text-primary-foreground">
                 <div>
                   <h2 className="text-2xl font-bold font-headline">Join FinPulse Today</h2>
-                  <p className="text-muted-foreground mt-2">
+                  <p className="mt-2 text-primary-foreground/80">
                     Start your journey to financial clarity. Create your free account to track spending, set goals, and build a brighter financial future.
                   </p>
                 </div>
-                <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} FinPulse Inc.</p>
+                <p className="text-xs text-primary-foreground/70">© {new Date().getFullYear()} FinPulse Inc.</p>
               </div>
+            </div>
             <div className="p-6 sm:p-8">
               <CardHeader className="p-0 mb-6">
                 <CardTitle>Create an account</CardTitle>
